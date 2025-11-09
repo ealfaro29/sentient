@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "version": "5.0",
+    "name": "Sentient Theme"
+  },
+  "theme": {
+    "colors": {
+      "accent": "#CCFF00",
+      "bg": "#09090b",
+      "panel": "#111113",
+      "border": "#2b2b30",
+      "text-primary": "#e4e4e7",
+      "text-secondary": "#a1a1aa"
+    },
+    "fonts": {
+      "primary": "Inter, sans-serif",
+      "googleFontUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap"
+    }
+  },
+  "defaults": {
+    "overlay": 75,
+    "logoSize": 200,
+    "tagText": "LATEST",
+    "initialHeadline": "YOUR HEADLINE\nGOES HERE"
+  },
+  "layouts": [
+    {
+      "id": 0,
+      "name": "Standard",
+      "container": ["justify-end", "items-start", "text-left"],
+      "pill": ["mb-8"],
+      "defaultLogoPos": "tr"
+    },
+    {
+      "id": 1,
+      "name": "Centered",
+      "container": ["justify-center", "items-center", "text-center"],
+      "pill": ["mb-8"],
+      "defaultLogoPos": "bc"
+    },
+    {
+      "id": 2,
+      "name": "Bold Top",
+      "container": ["justify-start", "items-start", "text-left", "pt-[140px]"],
+      "pill": ["order-last", "mt-12", "mb-0"],
+      "defaultLogoPos": "br"
+    }
+  ]
+}
