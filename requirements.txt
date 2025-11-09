@@ -1,7 +1,8 @@
-streamlit
-pillow
+flask
+gunicorn
 requests
 newspaper3k
 openai
 python-dotenv
 lxml_html_clean
+pillow

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from newspaper import Article
 import requests
 
+# --- CONFIGURACIÓN ---
 load_dotenv()
 OPENAI_CLIENT = None
 api_key = os.getenv("OPENAI_API_KEY")
@@ -18,6 +19,8 @@ if api_key:
     except: print("⚠️ ERROR: Falta librería 'openai'")
 
 PEXELS_KEY = os.getenv("PEXELS_API_KEY")
+if PEXELS_KEY: print("✅ IMÁGENES (Pexels): Activo")
+else: print("⚠️ AVISO: Falta PEXELS_API_KEY en .env")
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 
@@ -25,7 +28,9 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 def handle_error(e): return jsonify({"error": str(e)}), 500
 
 @app.route('/')
-def home(): return app.send_static_file('index.html')
+def home():
+    # Sirve el index.html desde la carpeta 'static'
+    return app.send_static_file('index.html')
 
 def get_pexels_images(query, count=3):
     if not PEXELS_KEY: return []
@@ -92,7 +97,6 @@ def scrape():
         except: bg_article = article.top_image
 
     pex = get_pexels_images(article.title, count=3)
-    # Fallback robusto: si falta alguna de pexels, rellenar con la del artículo o placeholder
     ph = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1080"
     img_a = bg_article or (pex[0] if len(pex)>0 else ph)
     img_b = pex[0] if len(pex)>0 and pex[0]!=img_a else (pex[1] if len(pex)>1 else img_a)
@@ -108,5 +112,5 @@ def scrape():
     })
 
 if __name__ == '__main__':
-    print("🚀 SERVIDOR V14 LISTO: http://localhost:5000")
-    app.run(debug=True, port=5000)
+    # Esto permite a Gunicorn encontrar la app
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
