@@ -1,0 +1,26 @@
+{
+  "name": "Cyber",
+  "id": "theme-cyber",
+  "cssVariables": {
+    "--brand": "#00fff9",
+    "--bg-main": "#05010d",
+    "--bg-panel": "#0a0514",
+    "--border": "#2a0d3f",
+    "--text": "#e0cfff",
+    "--text-dim": "#7a5a9b"
+  },
+  "fontConfig": {
+    "cardBodyFont": "'Quantico', monospace",
+    "headlineFont": "'Quantico', monospace",
+    "fontWeight": "400"
+  },
+  "overlays": {
+    "black": "linear-gradient(to bottom, rgba(0,255,249,0.1), rgba(5,1,13,0.9))",
+    "white": "linear-gradient(to bottom, rgba(0,255,249,0.1), rgba(255,255,255,0.8))"
+  },
+  "defaultLayouts": {
+    "A": "layout-standard",
+    "B": "layout-bold",
+    "C": "layout-centered"
+  }
+}
