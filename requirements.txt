@@ -1,4 +1,4 @@
-flask
+streamlit
 pillow
 requests
 newspaper3k
