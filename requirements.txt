@@ -1,0 +1,7 @@
+flask
+pillow
+requests
+newspaper3k
+openai
+python-dotenv
+lxml_html_clean
