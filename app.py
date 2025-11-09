@@ -1,5 +1,6 @@
 import os
 import json
+import time # Para el timestamp del caché
 import requests
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
@@ -18,6 +19,10 @@ if OPENAI_API_KEY:
         print("✅ IA (OpenAI): Activa")
     except: print("⚠️ ERROR: Falta librería 'openai'.")
 
+# Caché en memoria: {url: {'data': data, 'timestamp': time.time()}}
+SCRAPE_CACHE = {}
+CACHE_DURATION = 86400 # 24 horas
+
 @app.route('/')
 def home(): return app.send_static_file('index.html')
 
@@ -30,41 +35,42 @@ def get_pexels_images(query, count=3):
         return [p['src']['large2x'] for p in r.json().get('photos', [])] if r.status_code == 200 else []
     except: return []
 
+# Actualizado: Pide 1 caption común + 3 variantes de título/subtítulo
 def get_ai_data(title, text, source):
     if not OPENAI_CLIENT: return None
+    # ACTUALIZADO: Hardcoded a GPT-4o siempre
+    print(f"🧠 IA pensando (GPT-4o) para: {title[:20]}...")
+
     try:
-        print(f"🧠 IA pensando (versión larga) para: {title[:20]}...")
-        # PROMPT ACTUALIZADO: PIDIENDO MÁS LONGITUD Y DETALLE
+        # Prompt actualizado con Variante C más agresiva
         prompt = f"""
-        ROLE: Elite Social Media Editor. TASK: 3 in-depth, high-engagement Instagram captions.
+        ROLE: Elite Social Media Editor.
         SOURCE: "{title}" ({source}). SUMMARY: "{text[:2500]}"
         
-        RULES: 
-        - NO LABELS/BRACKETS (e.g., no [Hook]). 
-        - NO EMOJIS.
-        - MAKE IT LONG: Use multiple sentences per section to add depth.
-        - END WITH "Source: {source}"
+        TASK 1: Create ONE in-depth, high-engagement Instagram caption (common for all posts).
+        - NO LABELS/BRACKETS. NO EMOJIS.
+        - STRUCTURE: Hook (1 shocking sentence) -> Detailed Body (2-3 comprehensive sentences with context) -> Impact Analysis (2 sentences on why it matters) -> Engagement Question -> "Source: {source}"
 
-        REQUIRED STRUCTURE (Invisible, just follow the flow):
-        1. Hook (1 powerful, shocking sentence)
-        2. Detailed Body (2-3 comprehensive sentences explaining EXACTLY what happened with context)
-        3. Impact Analysis (2 sentences on why this matters heavily right now)
-        4. Engagement (1 thought-provoking question)
-        5. Source Attribution
+        TASK 2: Create 3 DISTINCT Title/Subtitle pairs matching these exact styles:
+        - VARIANT A (News Style): Objective, factual, urgent, professional.
+        - VARIANT B (Infotainment): Curious, clever, slightly casual, "did you know?" vibe.
+        - VARIANT C (Clickbait/Controversial): HIGHLY POLARIZING, shocking, exaggerated, borderline sensationalist. Must trigger immediate curiosity or outrage.
+        
+        CONSTRAINTS: Titles max 8 words. Subtitles max 10 words.
 
         OUTPUT JSON: {{
-            "variant_a": {{ 
-                "title": "MAX 5 WORDS", 
-                "subtitle": "MAX 12 WORDS", 
-                "caption": "Start with a compelling hook that grabs attention immediately.\nFollow up with a detailed summary of the event, ensuring you cover the who, what, and where in at least two or three solid sentences to provide full context.\nExplain the deeper significance of this news and its potential future impact on the industry or society. This analysis should be thoughtful and add value beyond just facts.\nAsk a specific, open-ended question that will encourage followers to debate in the comments?\nSource: {source}" 
-            }},
-            "variant_b": {{ "title": "...", "subtitle": "...", "caption": "..." }},
-            "variant_c": {{ "title": "...", "subtitle": "...", "caption": "..." }}
+            "common_caption": "Full caption text here...",
+            "variants": {{
+                "A": {{ "title": "NEWS TITLE", "subtitle": "Factual summary." }},
+                "B": {{ "title": "INFOTAINMENT TITLE", "subtitle": "Curious hook." }},
+                "C": {{ "title": "CLICKBAIT TITLE", "subtitle": "Shocking statement!" }}
+            }}
         }}
         """
         r = OPENAI_CLIENT.chat.completions.create(
-             model="gpt-3.5-turbo-1106", response_format={"type": "json_object"},
-             messages=[{"role": "system", "content": "JSON only. Write lengthy, detailed captions."}, {"role": "user", "content": prompt}], temperature=0.7
+             model="gpt-4o", # Hardcoded
+             response_format={"type": "json_object"},
+             messages=[{"role": "system", "content": "JSON only."}, {"role": "user", "content": prompt}], temperature=0.7
         )
         return json.loads(r.choices[0].message.content)
     except Exception as e: print(f"❌ AI Error: {e}"); return None
@@ -72,17 +78,32 @@ def get_ai_data(title, text, source):
 @app.route('/api/scrape', methods=['POST'])
 def scrape():
     url = request.json.get('url')
+    # Ya no necesitamos model_pref
     if not url: return jsonify({"error": "URL missing"}), 400
+
+    now = time.time()
+    # Revisa el caché
+    if url in SCRAPE_CACHE and now - SCRAPE_CACHE[url]['timestamp'] < CACHE_DURATION:
+        print(f"⚡ Sirviendo desde caché: {url[:30]}...")
+        return jsonify(SCRAPE_CACHE[url]['data'])
+
     try:
         a = Article(url); a.download(); a.parse()
         src = a.source_url.replace("https://","").replace("www.","").split("/")[0].split(".")[0].upper()
         imgs = get_pexels_images(a.title) or ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080"]
         while len(imgs)<3: imgs.append(imgs[0])
-        return jsonify({
+
+        # Obtiene el nuevo objeto de contenido de la IA
+        ai_content_data = get_ai_data(a.title, a.text, src)
+
+        data = {
             "source": src, "images": {"a": a.top_image or imgs[0], "b": imgs[0], "c": imgs[1]},
-            "ai_variants": get_ai_data(a.title, a.text, src),
+            "ai_content": ai_content_data, # Objeto único con 'common_caption' y 'variants'
             "original": {"title": a.title[:50].upper(), "subtitle": a.text[:100]+"..."}
-        })
+        }
+        # Guarda en caché
+        SCRAPE_CACHE[url] = {'data': data, 'timestamp': now}
+        return jsonify(data)
     except Exception as e: return jsonify({"error": str(e)}), 400
 
 if __name__ == '__main__': app.run(host='0.0.0.0', port=5000, debug=True)
