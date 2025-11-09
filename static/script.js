@@ -1,181 +1,195 @@
+// --- CONFIGURACIÓN DE TEMAS Y LAYOUTS ---
 const THEMES = {
-    "default": { overlay: "rgba(0,0,0,0.6)" },
-    "theme-cyber": { overlay: "rgba(20, 0, 50, 0.7)" },
-    "theme-elegant": { overlay: "rgba(0,0,0,0.4)" }
+    "default": { overlay: "rgba(0,0,0,0.5)" },
+    "theme-cyber": { overlay: "linear-gradient(to bottom, rgba(0,255,249,0.1), rgba(5,1,13,0.9))" },
+    "theme-elegant": { overlay: "rgba(0,0,0,0.3)" }
 };
 
+// Recuperado: Lista dinámica de layouts para no perder flexibilidad
 const LAYOUTS = [
-    { id: 'layout-standard', name: 'Standard' },
-    { id: 'layout-centered', name: 'Centered' },
-    { id: 'layout-bold', name: 'Bold Top' }
+    { id: 'layout-standard', name: 'Standard (Bottom Left)' },
+    { id: 'layout-centered', name: 'Centered (Middle)' },
+    { id: 'layout-bold', name: 'Bold (Top Left)' }
 ];
 
 const App = {
+    // Estado centralizado de la aplicación
     state: {
         active: 'A',
         theme: 'default',
         data: {
-            A: { title: 'READY', subtitle: 'Paste URL to start...', bg: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1080', tag: 'NEWS', layout: 'layout-standard', caption: '' },
-            B: { title: 'READY', subtitle: 'Paste URL to start...', bg: 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1080', tag: 'FEATURE', layout: 'layout-centered', caption: '' },
-            C: { title: 'READY', subtitle: 'Paste URL to start...', bg: 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1080', tag: 'VIRAL', layout: 'layout-bold', caption: '' }
+            A: { title: 'READY', subtitle: 'Paste an article URL to begin...', bg: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1080', tag: 'NEWS', layout: 'layout-standard', caption: '' },
+            B: { title: 'SET', subtitle: 'Choose your preferred variant...', bg: 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1080', tag: 'FEATURE', layout: 'layout-centered', caption: '' },
+            C: { title: 'GO', subtitle: 'Customize text and export HD.', bg: 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1080', tag: 'VIRAL', layout: 'layout-bold', caption: '' }
         }
     },
 
+    // Inicialización principal
     init() {
         this.cacheDOM();
-        this.initUI();
+        this.initUI(); // Recuperado: Generación de UI dinámica
         this.bindEvents();
-        this.render();
-        setTimeout(() => this.fitCards(), 200);
-        window.addEventListener('resize', () => this.fitCards());
+        this.renderAll();
         lucide.createIcons();
+        this.fitStage();
+        // Asegurar re-renderizado cuando carguen las fuentes
+        document.fonts.ready.then(() => { this.renderAll(); this.fitStage(); });
+        window.addEventListener('resize', () => this.fitStage());
     },
 
+    // Cacheo de referencias al DOM para mejorar rendimiento
     cacheDOM() {
         const $ = (id) => document.getElementById(id);
         this.els = {
-            urlIn: $('urlInput'), scrapeBtn: $('scrapeBtn'), editor: $('editorPanel'), dlBtn: $('dlBtn'),
-            titleIn: $('titleInput'), subIn: $('subInput'), layoutSel: $('layoutSelector'), themeSel: $('themeSelector'),
-            imgUrl: $('imgUrlInput'), imgFile: $('imgFileInput'), imgThumb: $('activeThumb'), captionView: $('captionPreview'),
-            copyBtn: $('copyCaptionBtn'), btnA: $('btnVarA'), btnB: $('btnVarB'), btnC: $('btnVarC'),
-            mockA: $('mockA'), mockB: $('mockB'), mockC: $('mockC')
+            url: $('urlInput'), scrape: $('scrapeBtn'), editor: $('editorPanel'), dl: $('dlBtn'),
+            ti: $('titleInput'), sub: $('subInput'), lay: $('layoutSelector'), theme: $('themeSelector'),
+            iUrl: $('imgUrlInput'), iFile: $('imgFileInput'), cap: $('captionPreview'), cpy: $('copyBtn')
         };
     },
 
+    // Recuperado: Generación dinámica de opciones de layout
     initUI() {
+        this.els.lay.innerHTML = ''; // Limpiar por si acaso
         LAYOUTS.forEach(l => {
             const o = document.createElement('option');
             o.value = l.id;
             o.innerText = l.name;
-            this.els.layoutSel.appendChild(o);
+            this.els.lay.appendChild(o);
         });
     },
 
+    // Asignación de eventos a controles
     bindEvents() {
-        this.els.scrapeBtn.onclick = () => this.scrape();
-        ['A', 'B', 'C'].forEach(v => {
-            if (this.els[`btn${v}`]) this.els[`btn${v}`].onclick = () => this.switchVar(v);
-        });
-        this.els.themeSel.onchange = (e) => {
-            this.state.theme = e.target.value;
-            document.body.className = e.target.value === 'default' ? '' : e.target.value;
-            this.render();
-        };
-        // Inputs del editor
-        this.els.titleIn.oninput = (e) => { this.state.data[this.state.active].title = e.target.value; this.render(this.state.active); };
-        this.els.subIn.oninput = (e) => { this.state.data[this.state.active].subtitle = e.target.value; this.render(this.state.active); };
-        this.els.layoutSel.onchange = (e) => { this.state.data[this.state.active].layout = e.target.value; this.render(this.state.active); };
+        this.els.scrape.onclick = () => this.scrape();
+        ['A', 'B', 'C'].forEach(v => document.getElementById(`btnVar${v}`).onclick = () => this.switchVar(v));
         
-        // Imagen de fondo
-        this.els.imgUrl.oninput = (e) => { 
-            this.state.data[this.state.active].bg = e.target.value; 
-            this.render(this.state.active); 
-            this.updateThumb(); 
+        this.els.theme.onchange = (e) => {
+            this.state.theme = e.target.value;
+            document.body.className = (e.target.value === 'default' ? '' : e.target.value);
+            this.renderAll();
         };
-        this.els.imgFile.onchange = (e) => {
+        
+        // "Live Binding": actualiza el estado y renderiza al teclear
+        const up = () => this.renderCard(this.state.active);
+        this.els.ti.oninput = (e) => { this.state.data[this.state.active].title = e.target.value; up(); };
+        this.els.sub.oninput = (e) => { this.state.data[this.state.active].subtitle = e.target.value; up(); };
+        this.els.lay.onchange = (e) => { this.state.data[this.state.active].layout = e.target.value; up(); };
+        this.els.iUrl.oninput = (e) => { this.state.data[this.state.active].bg = e.target.value; up(); };
+        
+        // Manejo de subida de imagen local
+        this.els.iFile.onchange = (e) => {
             if (e.target.files?.[0]) {
                 const r = new FileReader();
                 r.onload = (ev) => {
                     this.state.data[this.state.active].bg = ev.target.result;
-                    this.render(this.state.active);
-                    this.updateThumb();
+                    up();
+                    this.els.iUrl.value = "(Local Image Loaded)";
                 };
                 r.readAsDataURL(e.target.files[0]);
             }
         };
 
-        // Botones de acción
-        this.els.dlBtn.onclick = () => this.download(this.state.active);
-        this.els.copyBtn.onclick = () => {
+        this.els.dl.onclick = () => this.downloadHD();
+        this.els.cpy.onclick = () => {
             navigator.clipboard.writeText(this.state.data[this.state.active].caption);
-            const og = this.els.copyBtn.innerText;
-            this.els.copyBtn.innerText = 'COPIED!';
-            setTimeout(() => this.els.copyBtn.innerText = og, 2000);
+            const og = this.els.cpy.innerText;
+            this.els.cpy.innerText = 'COPIED!';
+            setTimeout(() => this.els.cpy.innerText = og, 2000);
         };
     },
 
+    // Cambio de variante activa (A/B/C)
     switchVar(v) {
         this.state.active = v;
         ['A', 'B', 'C'].forEach(x => {
-            if (this.els[`btn${x}`]) this.els[`btn${x}`].classList.toggle('active', x === v);
-            if (this.els[`mock${x}`]) this.els[`mock${x}`].classList.toggle('inactive', x !== v);
+            document.getElementById(`btnVar${x}`).classList.toggle('active', x === v);
+            document.getElementById(`mock${x}`).classList.toggle('inactive', x !== v);
         });
+        // Cargar datos en los inputs
         const d = this.state.data[v];
-        this.els.titleIn.value = d.title;
-        this.els.subIn.value = d.subtitle;
-        this.els.layoutSel.value = d.layout;
-        this.els.captionView.innerText = d.caption || 'Generate content to see caption.';
-        this.updateThumb();
+        this.els.ti.value = d.title;
+        this.els.sub.value = d.subtitle;
+        this.els.lay.value = d.layout;
+        this.els.cap.innerText = d.caption || 'Waiting for content generation...';
+        if (!d.bg.startsWith('data:')) this.els.iUrl.value = d.bg;
+        this.fitStage();
     },
 
-    updateThumb() {
-        const bg = this.state.data[this.state.active].bg;
-        this.els.imgThumb.src = bg;
-        // Si es data URI (archivo local), mostrar texto genérico en el input para no saturarlo
-        if (!bg.startsWith('data:')) {
-             this.els.imgUrl.value = bg;
-        } else {
-             this.els.imgUrl.value = '(Local Image Loaded)';
+    // Renderizado de una tarjeta específica
+    renderCard(v, targetId = `card${v}`) {
+        const c = document.getElementById(targetId);
+        if (!c) return;
+        const d = this.state.data[v];
+        const th = THEMES[this.state.theme] || THEMES.default;
+
+        // Aplicar datos al DOM
+        c.querySelector('.card-bg').src = d.bg;
+        c.querySelector('.card-overlay').style.background = th.overlay;
+        c.querySelector('.card-content').className = `card-content ${d.layout}`;
+        c.querySelector('.c-pill').textContent = d.tag;
+        
+        const t = c.querySelector('.c-title');
+        const s = c.querySelector('.c-subtitle');
+        t.innerText = d.title;
+        s.innerText = d.subtitle;
+        
+        // Auto-fit solo si no es el renderizado HD (que tiene el suyo propio al descargar)
+        if (!targetId.startsWith('hd-')) {
+            this.autoFit(t, 120, 60, 650);
+            this.autoFit(s, 56, 30, 400);
         }
     },
 
-    render(target = null) {
-        const theme = THEMES[this.state.theme] || THEMES.default;
-        (target ? [target] : ['A', 'B', 'C']).forEach(v => {
-            const c = document.getElementById(`card${v}`);
-            if (!c) return;
-            const d = this.state.data[v];
-            
-            c.querySelector('.card-bg').src = d.bg;
-            c.querySelector('.card-overlay').style.background = theme.overlay;
-            c.querySelector('.card-content').className = `card-content ${d.layout}`;
-            c.querySelector('.c-pill').textContent = d.tag;
-            
-            const t = c.querySelector('.c-title');
-            t.innerText = d.title;
-            this.autoSize(t, 110, 60); // Ajuste dinámico de fuente para vista previa
-            
-            c.querySelector('.c-subtitle').innerText = d.subtitle;
-        });
-    },
+    renderAll() { ['A', 'B', 'C'].forEach(v => this.renderCard(v)); },
 
-    autoSize(el, max, min) {
+    // Ajuste automático de tamaño de texto
+    autoFit(el, max, min, hMax) {
         let fs = max;
         el.style.fontSize = fs + 'px';
-        // Reducir fuente si excede altura razonable en vista previa
-        while (el.scrollHeight > 600 && fs > min) {
-            fs -= 5;
+        while (el.scrollHeight > hMax && fs > min) {
+            fs -= 2;
             el.style.fontSize = fs + 'px';
         }
     },
 
+    // Ajuste de escala para la previsualización en pantalla
+    fitStage() {
+        ['A','B','C'].forEach(v => {
+            const w = document.getElementById(`mount${v}`);
+            const c = document.getElementById(`card${v}`);
+            if (w && c) {
+                // Usamos el wrapper para calcular la escala necesaria para 1080x1350
+                const scale = Math.min(w.clientWidth / 1080, w.clientHeight / 1350);
+                c.style.transform = `scale(${scale})`;
+            }
+        });
+    },
+
+    // Lógica de Scraping + IA
     async scrape() {
-        const url = this.els.urlIn.value.trim();
-        if (!url) return alert('Please enter a valid URL');
+        const url = this.els.url.value.trim();
+        if (!url) return;
         
-        const btn = this.els.scrapeBtn;
-        const og = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
+        this.els.scrape.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
         lucide.createIcons();
 
         try {
             const res = await fetch('/api/scrape', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url})
             });
             const d = await res.json();
             if (d.error) throw new Error(d.error);
-
-            // Asignar imágenes y tags iniciales
+            
+            // Actualizar estado con datos nuevos
             this.state.data.A.bg = d.images.a;
             this.state.data.A.tag = d.source || 'NEWS';
             this.state.data.B.bg = d.images.b;
             this.state.data.C.bg = d.images.c;
 
-            // Asignar textos de IA si existen
             if (d.ai_variants) {
-                ['A', 'B', 'C'].forEach(v => {
+                ['A','B','C'].forEach(v => {
                     const vr = d.ai_variants[`variant_${v.toLowerCase()}`];
                     if (vr) {
                         this.state.data[v].title = vr.title.toUpperCase();
@@ -183,88 +197,64 @@ const App = {
                         this.state.data[v].caption = vr.caption;
                     }
                 });
-            } else {
-                // Fallback manual si falla la IA
-                const t = d.original.title.substring(0, 50).toUpperCase();
-                const s = d.original.subtitle.substring(0, 100);
-                ['A', 'B', 'C'].forEach(v => {
-                    this.state.data[v].title = t;
-                    this.state.data[v].subtitle = s;
-                    this.state.data[v].caption = '[Manual mode: AI failed to generate captions]';
-                });
             }
-
+            
             this.els.editor.classList.remove('hidden');
             this.switchVar('A');
-            this.render();
+            this.renderAll();
 
         } catch (e) {
             alert('Error: ' + e.message);
         } finally {
-            btn.innerHTML = og;
+            this.els.scrape.innerHTML = '<i data-lucide="sparkles"></i>';
             lucide.createIcons();
         }
     },
 
-    fitCards() {
-        ['mountA', 'mountB', 'mountC'].forEach((id, i) => {
-            const m = document.getElementById(id);
-            if (!m) return;
-            // Calcular escala para que quepa en el contenedor
-            const scale = Math.min(m.clientWidth / 1080, m.clientHeight / 1350);
-            document.getElementById(['cardA', 'cardB', 'cardC'][i]).style.transform = `scale(${scale})`;
-        });
-    },
-
-    async download(v) {
-        const btn = this.els.dlBtn;
-        const ogText = btn.innerHTML;
-        btn.innerHTML = 'RENDERING HD...';
+    // Descarga en HD usando el escenario oculto
+    async downloadHD() {
+        const btn = this.els.dl;
+        const og = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> RENDERING...';
         btn.disabled = true;
-
-        const d = this.state.data[this.state.active];
+        lucide.createIcons();
 
         try {
-            const res = await fetch('/api/render', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    title: d.title,
-                    subtitle: d.subtitle,
-                    tag: d.tag,
-                    bg_url: d.bg,
-                    layout: d.layout || 'layout-standard'
-                })
-            });
-
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || 'Server rendering failed');
-            }
-
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `Sentient_V17_${d.tag}.png`;
-            document.body.appendChild(a);
-            a.click();
+            // 1. Preparar escenario HD
+            this.renderCard(this.state.active, 'hd-render-card');
+            const hd = document.getElementById('hd-render-card');
+            this.autoFit(hd.querySelector('.c-title'), 140, 70, 700); // Reflow específico para HD
             
-            setTimeout(() => {
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            }, 100);
+            // 2. Esperar a que las imágenes estén listas
+            await new Promise(resolve => {
+                const img = hd.querySelector('.card-bg');
+                if (img.complete && img.naturalHeight !== 0) resolve();
+                else { img.onload = resolve; img.onerror = resolve; }
+                setTimeout(resolve, 2000); // Timeout de seguridad
+            });
+            
+            // 3. Pequeña pausa para asegurar renderizado de fuentes
+            await new Promise(r => setTimeout(r, 500));
+
+            // 4. Capturar
+            const dataUrl = await htmlToImage.toPng(hd, { quality: 1.0, pixelRatio: 1 });
+            
+            // 5. Descargar
+            const a = document.createElement('a');
+            a.download = `Sentient_${this.state.data[this.state.active].tag}_HD.png`;
+            a.href = dataUrl;
+            a.click();
 
         } catch (e) {
             console.error(e);
-            alert('Error downloading: ' + e.message);
+            alert('Export failed. Please try again.');
         } finally {
-            btn.innerHTML = ogText;
+            btn.innerHTML = og;
             btn.disabled = false;
+            lucide.createIcons();
         }
     }
 };
 
-// Iniciar aplicación
+// Iniciar la aplicación
 App.init();

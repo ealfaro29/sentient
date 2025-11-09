@@ -3,123 +3,87 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Sentient V17 — Clean Captions</title>
+  <title>Sentient V21 — Complete</title>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
   <style>
-    :root {
-        --brand: #CCFF00; --bg-main: #000000; --bg-panel: #111113; --border: #262626;
-        --text: #e4e4e7; --text-dim: #71717a; --font: 'Inter', sans-serif;
-        --radius-md: 12px; --radius-lg: 30px;
-    }
-    body.theme-cyber { --brand: #00fff9; --bg-main: #0a0015; --bg-panel: #120824; --border: #361f58; --text: #e0ccff; --font: 'Courier New', monospace; }
-    body.theme-elegant { --brand: #e8d5c4; --bg-main: #1c1b1b; --bg-panel: #262525; --border: #444444; --text: #d4d4d4; --font: 'Times New Roman', serif; }
-
+    :root { --brand: #CCFF00; --bg-main: #09090b; --bg-panel: #111113; --border: #262626; --text: #e4e4e7; --text-dim: #71717a; --font: 'Inter', sans-serif; --radius-md: 12px; }
+    body.theme-cyber { --brand: #00fff9; --bg-main: #05010d; --bg-panel: #0a0514; }
+    body.theme-elegant { --brand: #e8d5c4; --bg-main: #1a1919; --bg-panel: #242323; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg-main); color: var(--text); font-family: var(--font); height: 100vh; display: flex; overflow: hidden; transition: background 0.3s, color 0.3s; }
-    input, textarea, button, select { font-family: inherit; color: inherit; }
-    ::placeholder { color: var(--text-dim); opacity: 0.5; }
-
+    body { background: var(--bg-main); color: var(--text); font-family: var(--font); height: 100vh; display: flex; overflow: hidden; }
     .app-container { display: flex; width: 100vw; height: 100vh; }
-    .sidebar { width: 450px; min-width: 320px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
-    .main-stage { flex: 1; background: var(--bg-main); display: flex; align-items: center; justify-content: center; position: relative; padding: 40px; overflow-x: auto; }
-    .main-stage::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at center, var(--bg-panel) 0%, var(--bg-main) 70%); opacity: 0.3; pointer-events: none; }
-
-    .header { height: 60px; padding: 0 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .logo { color: var(--brand); font-weight: 900; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; letter-spacing: -0.5px; }
+    .sidebar { width: 400px; min-width: 350px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; flex-shrink: 0; }
+    .main-stage { flex: 1; background: var(--bg-main); display: flex; align-items: center; justify-content: center; padding: 20px; overflow: hidden; }
+    .stage-grid { display: flex; gap: 25px; width: 100%; height: 100%; align-items: center; justify-content: center; }
+    .mockup { max-height: 95%; width: auto; min-width: 320px; background: #000; border: 1px solid var(--border); border-radius: 30px; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6); display: flex; flex-direction: column; }
+    .mockup.inactive { opacity: 0.5; transform: scale(0.92); filter: grayscale(80%); }
+    .insta-header { height: 54px; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; background: #000; }
+    .insta-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); padding: 2px; margin-right: 10px; }
+    .insta-avatar div { width: 100%; height: 100%; background: #000; border-radius: 50%; }
+    .insta-user { font-size: 0.85rem; font-weight: 600; color: #fff; flex: 1; }
+    .insta-footer { padding: 12px 15px; background: #000; flex-shrink: 0; }
+    .insta-actions { display: flex; gap: 15px; margin-bottom: 12px; }
+    .insta-icon { color: #fff; stroke-width: 1.5px; width: 24px; height: 24px; }
+    .canvas-wrapper { aspect-ratio: 4/5; width: auto; height: auto; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; background: #111; }
+    .render-target { width: 1080px; height: 1350px; position: absolute; flex-shrink: 0; background: var(--bg-main); transform-origin: center center; will-change: transform; }
+    .header { height: 60px; padding: 0 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .logo { color: var(--brand); font-weight: 900; letter-spacing: -0.5px; display: flex; gap:8px; align-items: center; font-size: 1.1rem; }
     .scroll-area { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 32px; }
-    .scroll-area::-webkit-scrollbar { width: 0px; }
-
-    .control-group { display: flex; flex-direction: column; gap: 16px; }
-    .label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; display: block; }
-    .label-row { display: flex; justify-content: space-between; align-items: center; }
-    .copy-btn { color: var(--brand); cursor: pointer; font-size: 0.65rem; font-weight: 900; letter-spacing: 1px; }
-    .copy-btn:hover { text-decoration: underline; }
-
-    .input-field { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
-    .input-field:focus { border-color: var(--brand); }
-    textarea.input-field { resize: none; min-height: 80px; }
-    #captionPreview { font-size: 0.8rem; line-height: 1.5; color: var(--text); white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
-
-    .btn { cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; transition: all 0.2s; }
-    .btn:active { transform: scale(0.98); }
-    .btn-primary { background: var(--brand); color: #000; height: 50px; border-radius: var(--radius-md); font-size: 0.9rem; }
-    .btn-icon { width: 50px; height: 50px; background: var(--brand); color: #000; border-radius: var(--radius-md); flex-shrink: 0; }
-
+    .label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 10px; display: block; }
+    .input-field { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 12px 16px; border-radius: var(--radius-md); outline: none; font-size: 0.9rem; transition: 0.2s; font-family: inherit; color: inherit; }
+    .input-field:focus { border-color: var(--brand); background: rgba(0,0,0,0.5); }
+    .btn { cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; border-radius: var(--radius-md); transition: 0.2s; font-size: 0.9rem; font-family: inherit; color: inherit; }
+    .btn-primary { background: var(--brand); color: var(--bg-main); height: 48px; width: 100%; font-weight: 900; }
+    .btn:hover { opacity: 0.9; } .btn:active { transform: scale(0.98); }
     .segmented-control { display: flex; background: rgba(0,0,0,0.3); padding: 4px; border-radius: var(--radius-md); border: 1px solid var(--border); }
-    .segment-btn { flex: 1; padding: 8px; font-size: 0.75rem; color: var(--text-dim); background: transparent; border-radius: 8px; }
-    .segment-btn.active { background: var(--bg-panel); color: var(--brand); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-
-    .image-uploader { display: flex; align-items: center; gap: 12px; padding: 8px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: var(--radius-md); }
-    .thumb-preview { width: 64px; height: 64px; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
-    .thumb-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .thumb-preview:hover::after { content: '↻'; position: absolute; inset: 0; background: rgba(0,0,0,0.6); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-
-    .stage-grid { display: flex; gap: 30px; width: 100%; max-width: 1400px; justify-content: center; padding: 0 40px; }
-    .mockup { flex: 1; min-width: 300px; max-width: 400px; background: #000; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5); transition: all 0.3s; }
-    .mockup.inactive { opacity: 0.3; transform: scale(0.95); filter: grayscale(100%); }
-    .mockup-header { height: 50px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); gap: 10px; }
-    .avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--brand); }
-    .username { font-weight: 600; font-size: 0.8rem; opacity: 0.8; }
-
-    .canvas-wrapper { position: relative; width: 100%; aspect-ratio: 4/5; background: var(--bg-panel); overflow: hidden; }
-    .render-target { position: absolute; top: 0; left: 0; width: 1080px; height: 1350px; background-color: var(--bg-main); transform-origin: top left; }
+    .segment-btn { flex: 1; padding: 10px; font-size: 0.8rem; color: var(--text-dim); background: transparent; border-radius: 8px; }
+    .segment-btn.active { background: var(--bg-panel); color: var(--brand); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     .card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .card-overlay { position: absolute; inset: 0; transition: background 0.3s; }
-    .card-content { position: absolute; inset: 0; padding: 70px; display: flex; flex-direction: column; z-index: 2; }
-
-    .c-pill { align-self: flex-start; padding: 12px 40px; background: var(--brand); color: #000; font-size: 32px; font-weight: 900; border-radius: 100px; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .c-title { font-size: 110px; font-weight: 900; line-height: 0.9; color: var(--brand); margin-bottom: 30px; text-shadow: 0 5px 30px rgba(0,0,0,0.5); }
-    .c-subtitle { font-size: 48px; font-weight: 500; line-height: 1.2; color: #ffffff; text-shadow: 0 2px 20px rgba(0,0,0,0.8); }
-
-    .hidden { display: none !important; } .flex-row { display: flex; gap: 10px; } .flex-1 { flex: 1; }
-    .layout-standard { justify-content: flex-end; align-items: flex-start; text-align: left; }
-    .layout-centered { justify-content: center; align-items: center; text-align: center; } .layout-centered .c-pill { align-self: center; }
-    .layout-bold { justify-content: flex-start; padding-top: 150px; }
+    .card-content { position: absolute; inset: 0; padding: 80px; display: flex; flex-direction: column; z-index: 2; }
+    .c-pill { align-self: flex-start; padding: 16px 48px; background: var(--brand); color: var(--bg-main); font-size: 36px; font-weight: 900; border-radius: 100px; margin-bottom: 50px; letter-spacing: -1px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
+    .c-title { font-size: 120px; font-weight: 800; line-height: 0.95; color: var(--brand); margin-bottom: 40px; letter-spacing: -3px; }
+    .c-subtitle { font-size: 56px; font-weight: 500; line-height: 1.15; color: #fff; letter-spacing: -1px; opacity: 0.9; }
+    .layout-standard { justify-content: flex-end; text-align: left; }
+    .layout-centered { justify-content: center; align-items: center; text-align: center; }
+    .layout-bold { justify-content: flex-start; padding-top: 160px; }
+    .hidden { display: none !important; } .flex-row { display: flex; gap: 12px; }
   </style>
 </head>
 <body>
     <div class="app-container">
         <aside class="sidebar">
             <header class="header">
-                <div class="logo"><i data-lucide="layers"></i> SENTIENT V17</div>
-                <select id="themeSelector" class="input-field" style="width: auto; padding: 4px 12px; font-size: 0.8rem;">
-                    <option value="default">Default</option><option value="theme-cyber">Cyberpunk</option><option value="theme-elegant">Elegant</option>
-                </select>
+                <div class="logo"><i data-lucide="zap"></i> SENTIENT V21</div>
+                <select id="themeSelector" class="input-field" style="width: auto; padding: 6px 12px; font-size: 0.8rem;"><option value="default">Default</option><option value="theme-cyber">Cyber</option><option value="theme-elegant">Elegant</option></select>
             </header>
             <div class="scroll-area">
-                <div class="control-group"><span class="label">AI Auto-Import</span><div class="flex-row"><input id="urlInput" type="url" class="input-field" placeholder="Paste article URL..." /><button id="scrapeBtn" class="btn btn-icon"><i data-lucide="sparkles"></i></button></div></div>
-                <div id="editorPanel" class="control-group hidden">
+                <div><span class="label">SOURCE URL</span><div class="flex-row"><input id="urlInput" type="url" class="input-field" placeholder="Paste article URL..." /><button id="scrapeBtn" class="btn" style="width:60px; background:var(--brand); color:var(--bg-main);"><i data-lucide="sparkles"></i></button></div></div>
+                <div id="editorPanel" class="hidden" style="display: flex; flex-direction: column; gap: 28px;">
                     <hr style="border-color: var(--border); opacity: 0.3;">
-                    <span class="label">Editing Variant</span>
-                    <div class="segmented-control">
-                        <button id="btnVarA" class="btn segment-btn active">A (News)</button>
-                        <button id="btnVarB" class="btn segment-btn">B (Feature)</button>
-                        <button id="btnVarC" class="btn segment-btn">C (Viral)</button>
-                    </div>
-                    <span class="label" style="margin-top: 16px;">Layout Style</span><select id="layoutSelector" class="input-field"></select>
-                    <span class="label" style="margin-top: 16px;">Background Image</span>
-                    <div class="image-uploader">
-                        <div class="thumb-preview" onclick="document.getElementById('imgFileInput').click()"><img id="activeThumb" src="" /></div>
-                        <input id="imgUrlInput" type="text" class="input-field" placeholder="Paste image URL..." />
-                        <input type="file" id="imgFileInput" hidden accept="image/*" />
-                    </div>
-                    <span class="label" style="margin-top: 16px;">Typography</span><textarea id="titleInput" class="input-field" placeholder="HEADLINE"></textarea><textarea id="subInput" class="input-field" placeholder="Subtitle..." style="min-height: 60px;"></textarea>
-                    
-                    <div class="label-row" style="margin-top: 16px;"><span class="label" style="margin-bottom:0;">Caption</span><span id="copyCaptionBtn" class="copy-btn">COPY</span></div>
-                    <div id="captionPreview" class="input-field">Generate to see caption...</div>
-
-                    <button id="dlBtn" class="btn btn-primary" style="margin-top: 24px;"><i data-lucide="download"></i> DOWNLOAD HD</button>
+                    <div><span class="label">VARIANT</span><div class="segmented-control"><button id="btnVarA" class="btn segment-btn active">News (A)</button><button id="btnVarB" class="btn segment-btn">Feature (B)</button><button id="btnVarC" class="btn segment-btn">Viral (C)</button></div></div>
+                    <div><span class="label">LAYOUT</span><select id="layoutSelector" class="input-field"></select></div>
+                    <div><span class="label">BACKGROUND</span><input id="imgUrlInput" class="input-field" placeholder="Image URL..." style="margin-bottom:8px;" /><button onclick="document.getElementById('imgFileInput').click()" class="btn" style="width:100%; background:rgba(255,255,255,0.05); color:var(--text-dim); font-size:0.8rem;"><i data-lucide="upload"></i> Upload Local</button><input type="file" id="imgFileInput" hidden accept="image/*" /></div>
+                    <div><span class="label">TEXT</span><textarea id="titleInput" class="input-field" placeholder="HEADLINE" style="font-weight:800; height:100px; font-size:1.1rem; margin-bottom:10px;"></textarea><textarea id="subInput" class="input-field" placeholder="Subtitle..." style="height:120px;"></textarea></div>
+                    <div><div class="flex-row" style="justify-content: space-between; margin-bottom:10px;"><span class="label" style="margin:0;">CAPTION</span><button id="copyBtn" class="btn" style="height:24px; padding:0 12px; font-size:0.7rem; background:var(--brand); color:var(--bg-main);">COPY</button></div><div id="captionPreview" class="input-field" style="max-height:200px; overflow-y:auto; font-size:0.85rem; line-height:1.6; white-space: pre-wrap; color:var(--text-dim);"></div></div>
+                    <button id="dlBtn" class="btn btn-primary"><i data-lucide="download"></i> EXPORT CLEAN HD</button>
                 </div>
             </div>
         </aside>
         <main class="main-stage">
             <div class="stage-grid">
-                <div id="mockA" class="mockup"><div class="mockup-header"><div class="avatar"></div><span class="username">sentient_news</span></div><div class="canvas-wrapper" id="mountA"><div id="cardA" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-standard"><div class="c-pill">NEWS</div><h1 class="c-title">READY</h1><h2 class="c-subtitle">Waiting...</h2></div></div></div></div>
-                <div id="mockB" class="mockup inactive"><div class="mockup-header"><div class="avatar"></div><span class="username">sentient_feature</span></div><div class="canvas-wrapper" id="mountB"><div id="cardB" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-centered"><div class="c-pill">FEATURE</div><h1 class="c-title">READY</h1><h2 class="c-subtitle">Waiting...</h2></div></div></div></div>
-                <div id="mockC" class="mockup inactive"><div class="mockup-header"><div class="avatar" style="background: #ff0055;"></div><span class="username">sentient_viral</span></div><div class="canvas-wrapper" id="mountC"><div id="cardC" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-bold"><div class="c-pill" style="background:#ff0055; color:white;">MUST SEE</div><h1 class="c-title" style="color:#ff0055;">READY</h1><h2 class="c-subtitle">Waiting...</h2></div></div></div></div>
+                <div id="mockA" class="mockup"><div class="insta-header"><div class="insta-avatar"><div></div></div><span class="insta-user">sentient_news</span><i data-lucide="more-horizontal" class="insta-icon" style="margin-left:auto;"></i></div><div class="canvas-wrapper" id="mountA"><div id="cardA" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-standard"><div class="c-pill">NEWS</div><h1 class="c-title">READY</h1><h2 class="c-subtitle">Waiting...</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">8,432 likes</div></div></div>
+                <div id="mockB" class="mockup inactive"><div class="insta-header"><div class="insta-avatar"><div></div></div><span class="insta-user">sentient_stories</span><i data-lucide="more-horizontal" class="insta-icon" style="margin-left:auto;"></i></div><div class="canvas-wrapper" id="mountB"><div id="cardB" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-centered"><div class="c-pill">FEATURE</div><h1 class="c-title">READY</h1><h2 class="c-subtitle">Waiting...</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">12,901 likes</div></div></div>
+                <div id="mockC" class="mockup inactive"><div class="insta-header"><div class="insta-avatar" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div><span class="insta-user">sentient_viral</span><i data-lucide="more-horizontal" class="insta-icon" style="margin-left:auto;"></i></div><div class="canvas-wrapper" id="mountC"><div id="cardC" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-bold"><div class="c-pill">VIRAL</div><h1 class="c-title">READY</h1><h2 class="c-subtitle">Waiting...</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon" fill="#e31b23" color="#e31b23"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">45,200 likes</div></div></div>
             </div>
         </main>
+    </div>
+    <div id="hd-stage-container" style="position:fixed; top:0; left:0; z-index:-9999; opacity:0; pointer-events:none;">
+        <div id="hd-render-card" class="render-target" style="position:relative !important; transform: none !important;">
+             <img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div>
+             <div class="card-content"><div class="c-pill"></div><h1 class="c-title"></h1><h2 class="c-subtitle"></h2></div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
