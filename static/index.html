@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Sentient V15 — Captions</title>
+  <title>Sentient V17 — Clean Captions</title>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
   <style>
@@ -39,6 +39,7 @@
     .input-field { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
     .input-field:focus { border-color: var(--brand); }
     textarea.input-field { resize: none; min-height: 80px; }
+    #captionPreview { font-size: 0.8rem; line-height: 1.5; color: var(--text); white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
 
     .btn { cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; transition: all 0.2s; }
     .btn:active { transform: scale(0.98); }
@@ -81,7 +82,7 @@
     <div class="app-container">
         <aside class="sidebar">
             <header class="header">
-                <div class="logo"><i data-lucide="layers"></i> SENTIENT V15</div>
+                <div class="logo"><i data-lucide="layers"></i> SENTIENT V17</div>
                 <select id="themeSelector" class="input-field" style="width: auto; padding: 4px 12px; font-size: 0.8rem;">
                     <option value="default">Default</option><option value="theme-cyber">Cyberpunk</option><option value="theme-elegant">Elegant</option>
                 </select>
@@ -103,15 +104,10 @@
                         <input id="imgUrlInput" type="text" class="input-field" placeholder="Paste image URL..." />
                         <input type="file" id="imgFileInput" hidden accept="image/*" />
                     </div>
-                    <span class="label" style="margin-top: 16px;">Typography</span>
-                    <textarea id="titleInput" class="input-field" placeholder="HEADLINE"></textarea>
-                    <textarea id="subInput" class="input-field" placeholder="Subtitle..." style="min-height: 60px;"></textarea>
+                    <span class="label" style="margin-top: 16px;">Typography</span><textarea id="titleInput" class="input-field" placeholder="HEADLINE"></textarea><textarea id="subInput" class="input-field" placeholder="Subtitle..." style="min-height: 60px;"></textarea>
                     
-                    <div class="label-row" style="margin-top: 16px;">
-                        <span class="label" style="margin-bottom:0;">Caption</span>
-                        <span id="copyCaptionBtn" class="copy-btn">COPY</span>
-                    </div>
-                    <div id="captionPreview" class="input-field" style="font-size: 0.8rem; max-height: 150px; overflow-y: auto; white-space: pre-wrap; color: var(--text-dim);">Generate to see caption...</div>
+                    <div class="label-row" style="margin-top: 16px;"><span class="label" style="margin-bottom:0;">Caption</span><span id="copyCaptionBtn" class="copy-btn">COPY</span></div>
+                    <div id="captionPreview" class="input-field">Generate to see caption...</div>
 
                     <button id="dlBtn" class="btn btn-primary" style="margin-top: 24px;"><i data-lucide="download"></i> DOWNLOAD HD</button>
                 </div>

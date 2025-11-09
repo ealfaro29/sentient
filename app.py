@@ -1,8 +1,6 @@
 import os
 import json
-import base64
-from io import BytesIO
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from newspaper import Article
 import requests
@@ -38,7 +36,6 @@ def home():
 def get_pexels_images(query, count=3):
     if not PEXELS_KEY: return []
     try:
-        # Limpiamos la query para tener mejores resultados
         clean_query = query.split(':')[0].split('|')[0][:50]
         print(f"🔎 Pexels buscando [{count}]: '{clean_query}'...")
         headers = {'Authorization': PEXELS_KEY}
@@ -54,48 +51,48 @@ def get_pexels_images(query, count=3):
         print(f"⚠️ Pexels Error: {e}")
     return []
 
+def clean_caption(raw_caption):
+    """Limpia el caption crudo de la IA para eliminar instrucciones y formatear."""
+    clean_lines = []
+    try:
+        for line in raw_caption.strip().split('\n'):
+            line = line.strip()
+            if not line: continue
+            # Detectar líneas de instrucción entre corchetes
+            if line.startswith('[') and ']' in line:
+                # Solo queremos conservar la fuente
+                if line.lower().startswith('[source'):
+                    clean_lines.append(line.strip('[]'))
+                # Ignoramos [HOOK], [IMPACT], etc.
+                continue
+            clean_lines.append(line)
+        return "\n\n".join(clean_lines)
+    except:
+        return raw_caption
+
 def get_ai_data(title, text, source_name):
-    """
-    Función de IA actualizada con el prompt V16 (formato estricto de caption).
-    """
     if not OPENAI_CLIENT: return None
     try:
-        print(f"🧠 IA Generando con prompt V16 para: {title[:20]}...")
-
-        # --- INICIO DEL PROMPT PERSONALIZADO V16 ---
+        print(f"🧠 IA Generando V17 para: {title[:20]}...")
         prompt = f"""
-        ACT AS AN EXPERT SOCIAL MEDIA EDITOR following EXTREMELY STRICT rules.
-        SOURCE ARTICLE TITLE: "{title}"
-        SOURCE ARTICLE TEXT: "{text[:1500]}"
+        ACT AS AN EXPERT SOCIAL MEDIA EDITOR.
+        SOURCE ARTICLE: "{title}"
+        SUMMARY: "{text[:1500]}"
         SOURCE NAME: "{source_name}"
 
         TASK: Create 3 distinct post variants (A, B, C).
-        
-        For EACH of the 3 variants, you MUST generate:
-        1. "title": MAX 6 WORDS. Punchy and optimized for the visual card.
-        2. "subtitle": MAX 12 WORDS. Engaging summary for the visual card.
-        3. "caption": A full caption that STRICTLY follows the format and rules below.
+        For EACH variant, generate:
+        1. "title": MAX 6 WORDS. Punchy.
+        2. "subtitle": MAX 12 WORDS. Engaging.
+        3. "caption": STRICTLY follow this format with brackets:
+           [HOOK - curiosity driven, under 8 words]
+           [SET THE SCENE - factual, 2-3 sentences]
+           [ADD DEPTH - context/why it matters, 2-3 sentences]
+           [IMPACT - 1 sentence on why it matters to users]
+           [QUESTION - engaging question]
+           [Source: {source_name}]
 
-        --- CAPTION FORMAT AND RULES (MANDATORY) ---
-        The caption MUST be in this exact multi-line format, including the brackets:
-        [HOOK – short, bold, curiosity-driven, under 8 words.]
-        [SET THE SCENE – explain what happened in 2–3 short sentences using plain, factual language. Answer: who did what, what was launched, or what changed.]
-        [ADD DEPTH – 2–3 sentences that explain how it works, why it matters, or what’s new or different about it. Include numbers, examples, or context if possible. Avoid hype and adjectives.]
-        [IMPACT – 1 short sentence explaining why this update matters to everyday users or the tech world.]
-        [QUESTION – 1 engaging question that invites readers to think or comment.]
-        [Source: {source_name}]
-
-        Style Rules (MANDATORY):
-        - Use clear, direct language and an active voice.
-        - Vary sentence rhythm between short and medium.
-        - Address the reader with "you" or "your."
-        - Use commas and periods only (NO semicolons, NO em dashes).
-        - NEVER use hashtags or markdown in the caption text itself (except if you want to add a block at the very end, but the prompt didn't specify it).
-        - Avoid filler, vague claims, or clichés.
-        - BAN these words: innovative, disruptive, cutting-edge, holistic, optimize, empower, seamless, paradigm shift, scalable, next-generation, robust, and similar.
-        - NO "group of three" phrases (e.g., “faster, smarter, better”).
-        - The caption MUST end with one question and the "Source:" line.
-        ---
+        STYLE RULES: Clear language, active voice, address reader as "you", NO hashtags in main text, NO clichés (innovative, disruptive).
 
         OUTPUT RAW JSON ONLY:
         {{
@@ -104,15 +101,20 @@ def get_ai_data(title, text, source_name):
             "variant_c": {{ "title": "...", "subtitle": "...", "caption": "..." }}
         }}
         """
-        # --- FIN DEL PROMPT PERSONALIZADO ---
-
         resp = OPENAI_CLIENT.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.7 # Temperatura más baja para que siga las reglas estrictas
+            temperature=0.7
         )
-        return json.loads(resp.choices[0].message.content)
+        raw_data = json.loads(resp.choices[0].message.content)
+        
+        # Limpiar captions antes de enviarlos
+        for v in ['variant_a', 'variant_b', 'variant_c']:
+            if v in raw_data and 'caption' in raw_data[v]:
+                raw_data[v]['caption'] = clean_caption(raw_data[v]['caption'])
+                
+        return raw_data
     except Exception as e:
         print(f"AI Error: {e}")
         return None
@@ -130,38 +132,20 @@ def scrape():
 
     if not article.title: return jsonify({"error": "Failed to parse"}), 400
 
-    # 1. Intentar obtener imagen original
-    bg_article = None
-    if article.top_image:
-        try:
-            # Intentamos descargarla nosotros para evitar bloqueos CORS en el navegador
-            r = requests.get(article.top_image, timeout=4)
-            if r.status_code == 200:
-                bg_article = f"data:{r.headers.get('Content-Type','image/jpeg')};base64," + base64.b64encode(r.content).decode('utf-8')
-            else:
-                bg_article = article.top_image
-        except:
-            bg_article = article.top_image
-
-    # 2. Obtener imágenes de Pexels
+    # Imágenes
+    bg_article = article.top_image
     pex = get_pexels_images(article.title, count=3)
     
-    # 3. Asignar imágenes a variantes (con fallback inteligente)
-    # Placeholder por si todo falla
+    # Fallbacks
     ph = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1080"
-    
     img_a = bg_article or (pex[0] if len(pex)>0 else ph)
     img_b = pex[0] if len(pex)>0 and pex[0]!=img_a else (pex[1] if len(pex)>1 else img_a)
-    # Si tenemos suficientes de Pexels, usamos una diferente para C, sino repetimos B o A
     img_c = pex[1] if len(pex)>1 and pex[1]!=img_b else (pex[2] if len(pex)>2 else img_b)
 
-    # 4. Obtener nombre de la fuente para el caption
-    try:
-        source_name = article.source_url.replace("https://","").replace("http://","").replace("www.","").split("/")[0]
-    except:
-        source_name = "Unknown Source"
-
-    # 5. Llamar a la IA con el prompt V16
+    # Fuente e IA
+    try: source_name = article.source_url.replace("https://","").replace("www.","").split("/")[0]
+    except: source_name = "Unknown"
+    
     ai = get_ai_data(article.title, article.text, source_name)
 
     return jsonify({
@@ -172,6 +156,5 @@ def scrape():
     })
 
 if __name__ == '__main__':
-    print("🚀 SERVIDOR V16 LISTO: http://localhost:5000")
-    # '0.0.0.0' es necesario para que Render exponga el puerto correctamente
+    print("🚀 SERVIDOR V17 LISTO: http://localhost:5000")
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
