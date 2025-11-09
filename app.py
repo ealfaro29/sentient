@@ -16,32 +16,41 @@ if api_key:
         from openai import OpenAI
         OPENAI_CLIENT = OpenAI(api_key=api_key)
         print("✅ IA (OpenAI): Activa")
-    except: print("⚠️ ERROR: Falta librería 'openai'")
+    except:
+        print("⚠️ ERROR: Falta librería 'openai'")
 
 PEXELS_KEY = os.getenv("PEXELS_API_KEY")
-if PEXELS_KEY: print("✅ IMÁGENES (Pexels): Activo")
-else: print("⚠️ AVISO: Falta PEXELS_API_KEY en .env")
+if PEXELS_KEY:
+    print("✅ IMÁGENES (Pexels): Activo")
+else:
+    print("⚠️ AVISO: Falta PEXELS_API_KEY en .env")
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 @app.errorhandler(Exception)
-def handle_error(e): return jsonify({"error": str(e)}), 500
+def handle_error(e):
+    return jsonify({"error": str(e)}), 500
 
 @app.route('/')
 def home():
-    # Sirve el index.html desde la carpeta 'static'
     return app.send_static_file('index.html')
 
 def get_pexels_images(query, count=3):
     if not PEXELS_KEY: return []
     try:
         clean_query = query.split(':')[0].split('|')[0][:50]
+        print(f"🔎 Pexels buscando [{count}]: '{clean_query}'...")
         headers = {'Authorization': PEXELS_KEY}
-        r = requests.get(f'https://api.pexels.com/v1/search?query={clean_query}&per_page={count}&orientation=portrait', headers=headers, timeout=5)
+        r = requests.get(
+            f'https://api.pexels.com/v1/search?query={clean_query}&per_page={count}&orientation=portrait',
+            headers=headers, timeout=5
+        )
         if r.status_code == 200:
             data = r.json()
-            if data.get('photos'): return [p['src']['large2x'] for p in data['photos']]
-    except: pass
+            if data.get('photos'):
+                return [p['src']['large2x'] for p in data['photos']]
+    except Exception as e:
+        print(f"⚠️ Pexels Error: {e}")
     return []
 
 def get_ai_data(title, text):
@@ -51,35 +60,42 @@ def get_ai_data(title, text):
         ACT AS AN INSTAGRAM EXPERT.
         SOURCE: "{title}"
         SUMMARY: "{text[:600]}"
-        TASK: Create 3 IG post variants (A, B, C).
-        CONSTRAINTS: Titles MAX 6 words. Subtitles MAX 12 words.
+        
+        TASK: Create 3 IG post variants (A, B, C) with CAPTIONS.
+        CONSTRAINTS: 
+        - Titles: MAX 6 WORDS. Punchy.
+        - Subtitles: MAX 12 WORDS. Engaging summary.
+        - Captions: Ready-to-post text with emojis and 5-10 relevant hashtags.
+
         STYLES:
-        - A: Punchy/News style.
-        - B: Engaging/Feature style.
-        - C: VIRAL CLICKBAIT style (provocative, curiosity gap).
+        - A (News): Informative, direct caption.
+        - B (Feature): Storytelling caption, engaging question.
+        - C (Viral): Short, provocative caption, viral hashtags.
 
         OUTPUT RAW JSON:
         {{
-            "variant_a": {{ "title": "...", "subtitle": "..." }},
-            "variant_b": {{ "title": "...", "subtitle": "..." }},
-            "variant_c": {{ "title": "...", "subtitle": "..." }}
+            "variant_a": {{ "title": "...", "subtitle": "...", "caption": "Full caption A here..." }},
+            "variant_b": {{ "title": "...", "subtitle": "...", "caption": "Full caption B here..." }},
+            "variant_c": {{ "title": "...", "subtitle": "...", "caption": "Full caption C here..." }}
         }}
         """
         resp = OPENAI_CLIENT.chat.completions.create(
             model="gpt-3.5-turbo-1106",
             response_format={"type": "json_object"},
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.9
+            temperature=0.85
         )
         return json.loads(resp.choices[0].message.content)
-    except: return None
+    except Exception as e:
+        print(f"AI Error: {e}")
+        return None
 
 @app.route('/api/scrape', methods=['POST'])
 def scrape():
     url = request.json.get('url')
     if not url: return jsonify({"error": "URL missing"}), 400
-    print(f"📰 Procesando: {url}")
     
+    print(f"📰 Procesando: {url}")
     try:
         article = Article(url, request_timeout=15)
         article.download(); article.parse()
@@ -112,5 +128,5 @@ def scrape():
     })
 
 if __name__ == '__main__':
-    # Esto permite a Gunicorn encontrar la app
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    print("🚀 SERVIDOR V15 LISTO: http://localhost:5000")
+    app.run(debug=True, port=5000)
