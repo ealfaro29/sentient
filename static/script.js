@@ -26,9 +26,10 @@ const App = {
         theme: {}, 
         themes: {}, 
         data: {
-            A: { title: 'READY', subtitle: 'Paste an article URL...', bg: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1080', tag: 'NEWS', layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black' },
-            B: { title: 'SET', subtitle: 'Choose variant...', bg: 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=1080', tag: 'INFO', layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black' },
-            C: { title: 'GO', subtitle: 'Customize & export.', bg: 'https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1080', tag: 'CLICKBAIT', layout: 'layout-bold', caption: '', blur: 0, contrast: 100, overlayColor: 'black' }
+            // Placeholder images removed by setting bg: ''
+            A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS', layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black' },
+            B: { title: 'SET', subtitle: 'Choose variant...', bg: '', tag: 'INFO', layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black' },
+            C: { title: 'GO', subtitle: 'Customize & export.', bg: '', tag: 'BREAKING', layout: 'layout-bold', caption: '', blur: 0, contrast: 100, overlayColor: 'black' }
         }
     },
 
@@ -158,9 +159,10 @@ const App = {
         ['A','B','C'].forEach((v, i) => {
             this.state.data[v].title = `HEADLINE ${v}`; 
             this.state.data[v].subtitle = `Write your subtitle here for variant ${v}...`;
-            this.state.data[v].tag = ['NEWS', 'STORY', 'UPDATE'][i]; 
+            this.state.data[v].tag = ['NEWS', 'STORY', 'BREAKING'][i]; // Updated tag list for custom mode
             this.state.data[v].caption = 'Write your caption here...';
             this.state.data[v].layout = this.state.theme.defaultLayouts[v];
+            this.state.data[v].bg = ''; // Ensure no default image in custom mode
         });
         this.els.editor.classList.remove('hidden'); 
         this.switchVar('A'); 
@@ -203,12 +205,19 @@ const App = {
 
         // Image Handling (Proxy vs Data URL)
         const imgEl = c.querySelector('.card-bg');
-        if (d.bg.startsWith('data:')) {
-            imgEl.src = d.bg;
+        
+        // CRITICAL: Only set src if a background is present, otherwise keep it blank/transparent
+        if (d.bg && d.bg.length > 0) {
+            if (d.bg.startsWith('data:')) {
+                imgEl.src = d.bg;
+            } else {
+                // Use proxy to avoid CORS issues on standard images
+                imgEl.src = `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
+            }
         } else {
-            // Use proxy to avoid CORS issues on standard images
-            imgEl.src = `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
+            imgEl.src = ''; // Explicitly blank the image source if no URL is provided
         }
+
 
         imgEl.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%)`;
         c.querySelector('.card-overlay').style.background = d.overlayColor === 'white' ? ovs.white : ovs.black;
@@ -278,6 +287,11 @@ const App = {
             
             // Apply AI content if available, else fallback to scraping data
             if (d.ai_content && d.ai_content.variants) {
+                // Update tags based on AI content if available, ensuring C defaults to BREAKING if not provided
+                this.state.data.A.tag = 'NEWS';
+                this.state.data.B.tag = 'STORY';
+                this.state.data.C.tag = 'BREAKING'; 
+
                 ['A','B','C'].forEach(v => this.state.data[v].caption = d.ai_content.common_caption);
                 this.state.data.A.title = d.ai_content.variants.A.title.toUpperCase(); 
                 this.state.data.A.subtitle = d.ai_content.variants.A.subtitle;
@@ -313,7 +327,6 @@ const App = {
 
     async showFallback(failedUrl) {
         this.els.fbModal.style.display = 'flex';
-        // Mensaje inicial mientras busca
         this.els.fbMsg.innerHTML = 'Scraping failed. Analyzing URL to find similar sources...';
         this.els.fbList.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-dim);"><i data-lucide="loader-2" class="spin" style="width:32px; height:32px; opacity:0.5;"></i></div>';
         lucide.createIcons();
@@ -326,24 +339,23 @@ const App = {
             });
             const data = await res.json();
 
-            // Actualizar siempre el botón de Google con la mejor query encontrada (específica o amplia)
+            // Always update the manual google button with the inferred query
             const safeQuery = encodeURIComponent(data.query || 'latest news');
             this.els.fbGoogle.href = `https://www.google.com/search?q=${safeQuery}`;
 
             if (!data.results || data.results.length === 0) {
-                this.els.fbMsg.innerHTML = `Couldn't find direct alternatives for <b>"${data.query || 'this topic'}"</b>. Try the Google button below.`;
-                this.els.fbList.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.6; font-style:italic;">No matches found via DuckDuckGo.</div>';
+                this.els.fbMsg.innerHTML = `Couldn't find direct alternatives for <b>"${data.query}"</b>. Try the Google button below.`;
+                this.els.fbList.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.6; font-style:italic;">No matches found.</div>';
                 return;
             }
 
-            // Mostrar qué query tuvo éxito finalmente
             this.els.fbMsg.innerHTML = `Source blocked. Here are similar articles for: <b style="color:var(--brand)">"${data.query}"</b>`;
-            this.els.fbList.innerHTML = ''; // Limpiar loader
+            this.els.fbList.innerHTML = ''; // Clear loader
 
-            // Renderizar resultados combinados
             data.results.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'fallback-item';
+                // Inline styles for simplicity, can be moved to CSS
                 item.style.cssText = 'padding:12px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s ease;';
                 item.innerHTML = `
                     <div style="font-weight:700; color:var(--text); font-size:0.95rem; margin-bottom:4px; line-height:1.3;">${r.title}</div>
@@ -351,14 +363,16 @@ const App = {
                     <div style="color:var(--brand); font-size:0.7rem; margin-top:6px; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.url}</div>
                 `;
                 
+                // Hover effects
                 item.onmouseover = () => { item.style.borderColor = 'var(--brand)'; item.style.background = 'rgba(255,255,255,0.05)'; };
                 item.onmouseout = () => { item.style.borderColor = 'var(--border)'; item.style.background = 'rgba(0,0,0,0.3)'; };
                 
+                // Click action
                 item.onclick = () => {
                     this.els.url.value = r.url;
                     this.els.fbModal.style.display = 'none';
                     toast(`Retrying with new source...`);
-                    this.scrape(); // Auto-reintento con la nueva URL
+                    this.scrape(); // Auto-retry with new URL
                 };
                 this.els.fbList.appendChild(item);
             });
@@ -384,29 +398,38 @@ const App = {
             const hd = document.getElementById('hd-render-card');
             const hdImg = hd.querySelector('.card-bg');
             
+            // Ensure crossOrigin is set for html-to-image to work with external images
             hdImg.crossOrigin = "anonymous"; 
             const currentBg = this.state.data[this.state.active].bg;
             if (!currentBg.startsWith('data:')) {
                  hdImg.src = `/api/proxy_image?url=${encodeURIComponent(currentBg)}`;
             }
             
-            // Upscale text for HD resolution
+            // Upscale text for HD resolution (since autoFit optimized for preview size)
             this.autoFit(hd.querySelector('.c-title'), 140, 70, 700); 
             this.autoFit(hd.querySelector('.c-subtitle'), 56, 30, 400);
             
+            // Wait for image to lock in
             await new Promise((resolve, reject) => {
-                if (hdImg.complete && hdImg.naturalHeight !== 0) resolve();
+                if (!currentBg || currentBg.length === 0) { // If no background, resolve immediately
+                    resolve();
+                } else if (hdImg.complete && hdImg.naturalHeight !== 0) {
+                    resolve();
+                }
                 else { 
                     hdImg.onload = resolve; 
-                    hdImg.onerror = () => resolve(); 
+                    hdImg.onerror = () => resolve(); // Proceed even if image fails (will be black)
                 }
-                setTimeout(resolve, 5000); 
+                setTimeout(resolve, 5000); // Max wait 5s
             });
             
+            // Slight delay for font rendering stability
             await new Promise(r => setTimeout(r, 500));
             
+            // Generate PNG
             const dataUrl = await htmlToImage.toPng(hd, { quality: 1.0, pixelRatio: 1, cacheBust: true });
             
+            // Trigger download
             const a = document.createElement('a');
             a.download = `Sentient_${this.state.data[this.state.active].tag}_${Date.now()}.png`;
             a.href = dataUrl;

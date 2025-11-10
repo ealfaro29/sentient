@@ -18,11 +18,9 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# Asegúrate de que estas claves existan en tu archivo .env
+# Claves de Google
 GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
 GOOGLE_SEARCH_CX = os.getenv("GOOGLE_SEARCH_CX")
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 OPENAI_CLIENT = None
 if OPENAI_API_KEY:
@@ -39,15 +37,48 @@ CACHE_DURATION = 86400
 @app.route('/')
 def home(): return app.send_static_file('index.html')
 
+def clean_pexels_query(query):
+    """Limpia y simplifica la consulta para la API de Pexels."""
+    # Lista heurística de palabras comunes a ignorar para búsquedas de imágenes
+    stop_words = set(['the', 'a', 'an', 'is', 'are', 'was', 'were', 'by', 'of', 'in', 'on', 'at', 'for', 'with', 'and', 'but', 'or', 'so', 'if', 'it', 'to', 'from', 'about', 'as', 'that', 'this', 'told', 'says'])
+    
+    # 1. Limpieza básica
+    clean_query = re.sub(r'[^\w\s]', '', query).lower() # Eliminar puntuación y minúsculas
+    
+    # 2. Eliminar stop words
+    words = clean_query.split()
+    filtered_words = [word for word in words if word not in stop_words]
+    
+    # 3. Limitar a las primeras 5 palabras más significativas
+    final_query = " ".join(filtered_words[:5])
+    
+    return final_query
+
 def get_pexels_images(query, count=3):
     if not PEXELS_API_KEY: return []
+    
+    # Usar la nueva función de limpieza antes de buscar
+    search_query = clean_pexels_query(query)
+    
+    if not search_query: 
+        print("⚠️ Pexels: Query vacía después de la limpieza.")
+        return []
+        
+    print(f"🖼️ Pexels buscando: '{search_query}'")
+    
     try:
         headers = {'Authorization': PEXELS_API_KEY}
-        clean_query = query.replace(":", "").replace("|", "").strip()[:100]
-        url = f'https://api.pexels.com/v1/search?query={clean_query}&per_page={count}&orientation=portrait'
+        url = f'https://api.pexels.com/v1/search?query={quote_plus(search_query)}&per_page={count}&orientation=portrait'
         r = requests.get(url, headers=headers, timeout=5)
-        return [p['src']['large2x'] for p in r.json().get('photos', [])] if r.status_code == 200 else []
-    except: return []
+        
+        if r.status_code == 200:
+            return [p['src']['large2x'] for p in r.json().get('photos', [])]
+        else:
+            print(f"⚠️ Pexels: Error HTTP {r.status_code}")
+            return []
+    except Exception as e:
+        print(f"⚠️ Pexels: Error de conexión: {e}")
+        return []
 
 def get_ai_data(title, text, source):
     if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
@@ -107,7 +138,7 @@ def perform_google_search(query, max_results=5):
     """Realiza la búsqueda utilizando la Google Custom Search API."""
     if not GOOGLE_SEARCH_API_KEY or not GOOGLE_SEARCH_CX:
         print("⚠️ ERROR: Faltan claves de Google Search. Usando DuckDuckGo de emergencia.")
-        # Fallback a DuckDuckGo si faltan claves de Google
+        # Fallback a DuckDuckGo si faltan claves de Google (Esto debería ser revisado)
         return perform_ddg_search_fallback(query, max_results)
 
     try:
@@ -121,7 +152,15 @@ def perform_google_search(query, max_results=5):
         }
         
         r = requests.get(url, params=params, timeout=8)
-        data = r.json()
+        
+        # CRÍTICO: Verificar si la respuesta es JSON antes de parsear
+        if r.headers.get('Content-Type', '').startswith('application/json'):
+             data = r.json()
+        else:
+             # Si no es JSON, probablemente es HTML de error (como el que causó 'Unexpected token <')
+             print(f"❌ Google API: Recibida respuesta no JSON. Status: {r.status_code}")
+             return perform_ddg_search_fallback(query, max_results)
+
 
         results = []
         if 'items' in data:
@@ -134,12 +173,13 @@ def perform_google_search(query, max_results=5):
         
         return results
     except Exception as e:
-        print(f"⚠️ Google Search API Error: {e}")
+        print(f"⚠️ Google Search API Error (Excepción): {e}")
         # En caso de error de la API de Google, se puede intentar DuckDuckGo como último recurso
         return perform_ddg_search_fallback(query, max_results)
 
 def perform_ddg_search_fallback(query, max_results=5):
     """Helper para realizar la búsqueda en DuckDuckGo HTML (Usado como fallback de emergencia)."""
+    # Esta función está desaconsejada debido a fallos recurrentes, solo es un plan B.
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
@@ -184,20 +224,17 @@ def search_alternatives():
     if len(keywords.split()) < 3:
         query = f"{domain} news"
         print(f"🔍 Consulta Genérica: '{query}'")
-        # Usamos Google Search aquí
         return jsonify({'query': query, 'results': perform_google_search(query)})
 
     # 2. Intento Temático (Keywords + Año) - Consulta más amplia
     query1 = f"{keywords} {year}".strip()
     print(f"🔍 Intento 1 (Temático): '{query1}'")
-    # Usamos Google Search aquí
     results = perform_google_search(query1, max_results=6)
 
     # 3. Si tenemos pocos resultados, reintentamos con Dominio + Keywords (más específica)
     if len(results) < 3:
         query2 = f"{domain} {keywords} {year}".strip()
         print(f"🔄 Intento 2 (Específico): '{query2}'")
-        # Usamos Google Search aquí
         results2 = perform_google_search(query2, max_results=6)
         
         # Combinar resultados sin duplicados
