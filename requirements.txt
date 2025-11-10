@@ -2,7 +2,7 @@ flask
 gunicorn
 requests
 newspaper3k
-openai>=1.0.0  <-- ASEGURA VERSIÓN 1.0+
+openai
 python-dotenv
 lxml_html_clean
 pillow
