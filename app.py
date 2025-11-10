@@ -43,20 +43,24 @@ def get_pexels_images(query, count=3):
 
 def get_ai_data(title, text, source):
     if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
-        print("❌ Error: Faltan credenciales OpenAI")
-        return None
+        return None, "Faltan credenciales OpenAI"
     print(f"🧠 IA pensando para: {title[:30]}...")
     try:
+        # Ejecución con polling automático
         run = OPENAI_CLIENT.beta.threads.create_and_run_poll(
             assistant_id=OPENAI_ASSISTANT_ID,
-            thread={"messages": [{"role": "user", "content": f"TITLE: {title}\nSOURCE: {source}\nTEXT: {text[:3000]}"}]}
+            thread={"messages": [{"role": "user", "content": f"TITLE: {title}\nSOURCE: {source}\nTEXT: {text[:3000]}"}]},
+            poll_interval_ms=2000,
+            timeout=40 # Timeout explícito para evitar colgar el servidor demasiado tiempo
         )
         if run.status == 'completed':
             msgs = OPENAI_CLIENT.beta.threads.messages.list(thread_id=run.thread_id)
-            return json.loads(msgs.data[0].content[0].text.value)
+            return json.loads(msgs.data[0].content[0].text.value), None
+        else:
+            return None, f"Estado IA no completado: {run.status}"
     except Exception as e:
         print(f"❌ Error IA: {e}")
-        return None
+        return None, str(e)
 
 @app.route('/api/proxy_image')
 def proxy_image():
@@ -86,26 +90,37 @@ def scrape():
         return jsonify(SCRAPE_CACHE[url]['data'])
 
     try:
-        print(f"📥 Descargando (Modo Nuclear): {url[:50]}...")
-        # 1. Descarga manual robusta
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        print(f"📥 Descargando (Modo Nuclear Mejorado): {url[:50]}...")
+        # 1. Cabeceras "Anti-Bot" mejoradas para evitar 503 externos
+        nuclear_headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Referer': 'https://www.google.com/'
+            'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+            'Referer': 'https://www.google.com/',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'cross-site',
+            'DNT': '1'
         }
-        response = requests.get(url, headers=headers, timeout=15, verify=True)
-        if response.status_code != 200: raise Exception(f"Error HTTP {response.status_code}")
+        # verify=False ayuda si hay problemas raros de SSL, úsalo con precaución.
+        response = requests.get(url, headers=nuclear_headers, timeout=15, verify=True)
+        
+        if response.status_code != 200:
+            raise Exception(f"El sitio devolvió error HTTP {response.status_code}")
 
         # 2. Inyección forzada en Newspaper
         article = Article(url)
         article.set_html(response.text)
-        article.download_state = ArticleDownloadState.SUCCESS # FIX CRÍTICO
+        article.download_state = ArticleDownloadState.SUCCESS
         article.parse()
 
         src = article.source_url.replace("https://","").replace("http://","").replace("www.","").split("/")[0].split(".")[0].upper()
-        ai_data = get_ai_data(article.title, article.text, src)
         
+        # 3. Obtener datos de IA con manejo de errores
+        ai_data, ai_error = get_ai_data(article.title, article.text, src)
+        
+        # Fallback si la IA falla
         img_q = ai_data.get('image_keywords', article.title) if ai_data else article.title
         imgs = get_pexels_images(img_q) or ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080"]
         while len(imgs)<3: imgs.append(imgs[0])
@@ -114,12 +129,14 @@ def scrape():
             "source": src,
             "images": {"a": article.top_image or imgs[0], "b": imgs[0], "c": imgs[1]},
             "ai_content": ai_data,
+            "ai_error": ai_error, # Debug para el frontend
             "original": {"title": article.title[:50].upper(), "subtitle": article.text[:100]+"..."}
         }
         SCRAPE_CACHE[url] = {'data': data, 'timestamp': now}
         return jsonify(data)
     except Exception as e:
-        print(f"🔥 Error Scrape: {e}")
+        print(f"🔥 Error Scrape CRÍTICO: {e}")
+        # Devolver 500 solo si es un error real del servidor, si es del sitio objetivo intentamos informar
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__': app.run(host='0.0.0.0', port=5000, debug=True)
