@@ -54,7 +54,10 @@ const App = {
             custom: $('customBtn'), sidebar: $('mainSidebar'), mobToggle: $('mobileToggle'),
             blur: $('blurRange'), contrast: $('contrastRange'), loadingBar: $('loadingBar'),
             // Fallback Modal Elements
-            fbModal: $('fallbackModal'), fbList: $('fallbackList'), fbMsg: $('fallbackMsg'), fbGoogle: $('googleFallbackBtn')
+            fbModal: $('fallbackModal'), fbList: $('fallbackList'), fbMsg: $('fallbackMsg'), fbGoogle: $('googleFallbackBtn'),
+            // NUEVOS IDS AGREGADOS EN HTML
+            subGroup: $('subtitle-control-group'),
+            capGroup: $('caption-control-group')
         };
     },
 
@@ -65,8 +68,8 @@ const App = {
     
     async loadThemes() {
         try {
-            // In a real scenario, you might fetch a manifest first. Hardcoded for simplicity here.
-            const themesToLoad = ['sentient.json', 'cyber.json', 'elegant.json'];
+            // MODIFICACIÓN: Agregando 'chatgptricks.json'
+            const themesToLoad = ['sentient.json', 'cyber.json', 'elegant.json', 'chatgptricks.json'];
             const responses = await Promise.all(themesToLoad.map(f => fetch(f)));
             const themesData = await Promise.all(responses.map(res => { 
                 if (!res.ok) throw new Error(`Failed to load theme: ${res.url}`); 
@@ -102,7 +105,20 @@ const App = {
         root.style.setProperty('--font-headline-weight', t.fontConfig.fontWeight);
         
         // Reset layouts to theme defaults
+        // NOTA: Para chatgptricks, las 3 variantes usarán el mismo layout fijo
         ['A', 'B', 'C'].forEach(v => this.state.data[v].layout = t.defaultLayouts[v]);
+
+        // LÓGICA DE CONTROL DE INTERFAZ PARA CHATGPTRICKS
+        const isChatGPTricks = tid === 'chatgptricks';
+        
+        if (this.els.subGroup) {
+            this.els.subGroup.style.display = isChatGPTricks ? 'none' : 'block';
+            if (isChatGPTricks) this.els.sub.value = ''; // Limpiar el campo
+        }
+        
+        // Nota: El campo de TAG no tiene un input visible en el HTML, se controla con la data.
+
+        // El caption se deja visible, pero el valor se gestiona en switchVar/scrape
         
         // Refresh UI
         if (this.els.editor.classList.contains('hidden')) this.renderAll(); 
@@ -120,7 +136,13 @@ const App = {
         // Live Rendering Triggers
         const up = () => this.renderCard(this.state.active);
         this.els.ti.oninput = (e) => { this.state.data[this.state.active].title = e.target.value; up(); };
-        this.els.sub.oninput = (e) => { this.state.data[this.state.active].subtitle = e.target.value; up(); };
+        // El input del subtítulo solo debe afectar si NO es chatgptricks
+        this.els.sub.oninput = (e) => { 
+            if (this.state.theme.id !== 'chatgptricks') {
+                this.state.data[this.state.active].subtitle = e.target.value; 
+                up(); 
+            }
+        };
         this.els.lay.onchange = (e) => { this.state.data[this.state.active].layout = e.target.value; up(); };
         this.els.iUrl.oninput = (e) => { this.state.data[this.state.active].bg = e.target.value; up(); };
         this.els.blur.oninput = (e) => { this.state.data[this.state.active].blur = e.target.value; up(); };
@@ -150,7 +172,9 @@ const App = {
 
         this.els.dl.onclick = () => this.downloadHD();
         this.els.cpy.onclick = () => { 
-            navigator.clipboard.writeText(this.state.data[this.state.active].caption); 
+            // Usa el valor real del caption en la data, no el texto hardcodeado en el DOM
+            const captionToCopy = (this.state.theme.id === 'chatgptricks') ? "read de caption" : this.state.data[this.state.active].caption;
+            navigator.clipboard.writeText(captionToCopy); 
             toast('Caption copied to clipboard!'); 
         };
     },
@@ -158,9 +182,11 @@ const App = {
     enableCustomMode() {
         ['A','B','C'].forEach((v, i) => {
             this.state.data[v].title = `HEADLINE ${v}`; 
-            this.state.data[v].subtitle = `Write your subtitle here for variant ${v}...`;
-            this.state.data[v].tag = ['NEWS', 'STORY', 'BREAKING'][i]; // Updated tag list for custom mode
-            this.state.data[v].caption = 'Write your caption here...';
+            // MODIFICACIÓN: Si es chatgptricks, usar texto vacío
+            const isChatGPTricks = this.state.theme.id === 'chatgptricks';
+            this.state.data[v].subtitle = isChatGPTricks ? '' : `Write your subtitle here for variant ${v}...`;
+            this.state.data[v].tag = isChatGPTricks ? '' : ['NEWS', 'STORY', 'BREAKING'][i]; 
+            this.state.data[v].caption = isChatGPTricks ? "read de caption" : 'Write your caption here...';
             this.state.data[v].layout = this.state.theme.defaultLayouts[v];
             this.state.data[v].bg = ''; // Ensure no default image in custom mode
         });
@@ -182,7 +208,12 @@ const App = {
         this.els.ti.value = d.title; 
         this.els.sub.value = d.subtitle; 
         this.els.lay.value = d.layout; 
-        this.els.cap.innerText = d.caption || 'Waiting for AI...';
+        
+        // MODIFICACIÓN: Usar caption hardcodeado para chatgptricks
+        const isChatGPTricks = this.state.theme.id === 'chatgptricks';
+        const displayedCaption = isChatGPTricks ? "read de caption" : (d.caption || 'Waiting for AI...');
+        this.els.cap.innerText = displayedCaption;
+        
         this.els.blur.value = d.blur; 
         this.els.contrast.value = d.contrast;
         
@@ -230,7 +261,8 @@ const App = {
         s.innerText = d.subtitle;
 
         // Dynamic text color based on overlay
-        t.style.color = d.overlayColor === 'white' ? '#000' : 'var(--brand)';
+        // MODIFICACIÓN: Color del título siempre blanco en chatgptricks (como en la imagen)
+        t.style.color = (d.layout === 'layout-chatgptricks') ? '#FFFFFF' : (d.overlayColor === 'white' ? '#000' : 'var(--brand)');
         s.style.color = d.overlayColor === 'white' ? '#333' : '#fff';
         
         // Auto-fit text (only for preview cards, not HD render)
@@ -285,6 +317,8 @@ const App = {
             this.state.data.B.bg = d.images.b; this.state.data.B.tag = 'STORY';
             this.state.data.C.bg = d.images.c; this.state.data.C.tag = 'UPDATE';
             
+            const isChatGPTricks = this.state.theme.id === 'chatgptricks'; // Verificar tema aquí
+
             // Apply AI content if available, else fallback to scraping data
             if (d.ai_content && d.ai_content.variants) {
                 // Update tags based on AI content if available, ensuring C defaults to BREAKING if not provided
@@ -292,18 +326,32 @@ const App = {
                 this.state.data.B.tag = 'STORY';
                 this.state.data.C.tag = 'BREAKING'; 
 
-                ['A','B','C'].forEach(v => this.state.data[v].caption = d.ai_content.common_caption);
-                this.state.data.A.title = d.ai_content.variants.A.title.toUpperCase(); 
-                this.state.data.A.subtitle = d.ai_content.variants.A.subtitle;
-                this.state.data.B.title = d.ai_content.variants.B.title.toUpperCase(); 
-                this.state.data.B.subtitle = d.ai_content.variants.B.subtitle;
-                this.state.data.C.title = d.ai_content.variants.C.title.toUpperCase(); 
-                this.state.data.C.subtitle = d.ai_content.variants.C.subtitle;
+                ['A','B','C'].forEach(v => {
+                    // Sobrescribir datos si el tema es chatgptricks
+                    if (isChatGPTricks) {
+                        this.state.data[v].subtitle = ''; // No subtitulo
+                        this.state.data[v].tag = '';      // No tag
+                        this.state.data[v].caption = "read de caption"; // Caption hardcodeado
+                    } else {
+                        // Lógica normal
+                        this.state.data[v].caption = d.ai_content.common_caption;
+                        this.state.data[v].subtitle = d.ai_content.variants[v].subtitle;
+                    }
+                    this.state.data[v].title = d.ai_content.variants[v].title.toUpperCase(); 
+                });
+                
             } else {
                 toast('AI generation failed. Using raw text.', 'error');
                 ['A','B','C'].forEach(v => { 
                     this.state.data[v].title = d.original.title; 
-                    this.state.data[v].subtitle = d.original.subtitle; 
+                    // Sobreescribir datos de fallback si el tema es chatgptricks
+                    if (isChatGPTricks) {
+                         this.state.data[v].subtitle = ''; 
+                         this.state.data[v].tag = '';
+                         this.state.data[v].caption = "read de caption";
+                    } else {
+                         this.state.data[v].subtitle = d.original.subtitle; 
+                    }
                 });
             }
             
@@ -406,7 +454,10 @@ const App = {
             }
             
             // Upscale text for HD resolution (since autoFit optimized for preview size)
-            this.autoFit(hd.querySelector('.c-title'), 140, 70, 700); 
+            // MODIFICACIÓN: Aumentar el tamaño máximo del título para HD en chatgptricks
+            const isChatGPTricks = this.state.data[this.state.active].layout === 'layout-chatgptricks';
+            
+            this.autoFit(hd.querySelector('.c-title'), isChatGPTricks ? 180 : 140, isChatGPTricks ? 80 : 70, 700); 
             this.autoFit(hd.querySelector('.c-subtitle'), 56, 30, 400);
             
             // Wait for image to lock in
@@ -431,7 +482,8 @@ const App = {
             
             // Trigger download
             const a = document.createElement('a');
-            a.download = `Sentient_${this.state.data[this.state.active].tag}_${Date.now()}.png`;
+            const tag = isChatGPTricks ? 'TRICKS' : this.state.data[this.state.active].tag;
+            a.download = `Sentient_${tag}_${Date.now()}.png`;
             a.href = dataUrl;
             a.click();
             toast('HD Export started!');

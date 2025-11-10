@@ -56,6 +56,11 @@
     .layout-standard { justify-content: flex-end; text-align: left; }
     .layout-centered { justify-content: center; align-items: center; text-align: center; }
     .layout-bold { justify-content: flex-start; padding-top: 160px; }
+    /* NUEVO LAYOUT CHATGPTRICKS: Título grande arriba, sin subtítulo ni tag */
+    .layout-chatgptricks { justify-content: flex-start; align-items: flex-start; text-align: left; padding-top: 80px; }
+    .layout-chatgptricks .c-title { font-size: 140px; line-height: 0.9; margin-bottom: 0; color: #FFFFFF; }
+    .layout-chatgptricks .c-subtitle { display: none !important; }
+    .layout-chatgptricks .c-pill { display: none !important; }
     .hidden { display: none !important; } .flex-row { display: flex; gap: 12px; }
     .slider-control { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: var(--text-dim); }
     .slider-control input { flex: 1; accent-color: var(--brand); }
@@ -94,8 +99,22 @@
                          <button onclick="document.getElementById('imgFileInput').click()" class="btn" style="width:100%; background:rgba(255,255,255,0.05); color:var(--text-dim); font-size:0.8rem;"><i data-lucide="upload"></i> Upload Local</button>
                          <input type="file" id="imgFileInput" hidden accept="image/*" />
                     </div>
-                    <div><span class="label">TEXT</span><textarea id="titleInput" class="input-field" placeholder="HEADLINE" style="font-weight:800; height:80px; font-size:1.1rem; margin-bottom:10px;"></textarea><textarea id="subInput" class="input-field" placeholder="Subtitle..." style="height:100px;"></textarea></div>
-                    <div><div class="flex-row" style="justify-content: space-between; margin-bottom:10px;"><span class="label" style="margin:0;">CAPTION (COMMON)</span><button id="copyBtn" class="btn" style="height:24px; padding:0 12px; font-size:0.7rem; background:var(--brand); color:var(--bg-main);">COPY</button></div><div id="captionPreview" class="input-field" style="max-height:150px; overflow-y:auto; font-size:0.85rem; line-height:1.6; white-space: pre-wrap; color:var(--text-dim);"></div></div>
+                    <div>
+                        <span class="label">TEXT</span>
+                        <textarea id="titleInput" class="input-field" placeholder="HEADLINE" style="font-weight:800; height:80px; font-size:1.1rem; margin-bottom:10px;"></textarea>
+                        <div id="subtitle-control-group">
+                            <textarea id="subInput" class="input-field" placeholder="Subtitle..." style="height:100px;"></textarea>
+                        </div>
+                    </div>
+                    <div>
+                        <div id="caption-control-group">
+                            <div class="flex-row" style="justify-content: space-between; margin-bottom:10px;">
+                                <span class="label" style="margin:0;">CAPTION (COMMON)</span>
+                                <button id="copyBtn" class="btn" style="height:24px; padding:0 12px; font-size:0.7rem; background:var(--brand); color:var(--bg-main);">COPY</button>
+                            </div>
+                            <div id="captionPreview" class="input-field" style="max-height:150px; overflow-y:auto; font-size:0.85rem; line-height:1.6; white-space: pre-wrap; color:var(--text-dim);"></div>
+                        </div>
+                    </div>
                     <button id="dlBtn" class="btn btn-primary" style="margin-bottom: 50px;"><i data-lucide="download"></i> EXPORT CLEAN HD</button>
                 </div>
             </div>

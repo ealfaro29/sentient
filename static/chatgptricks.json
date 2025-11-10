@@ -1,0 +1,26 @@
+{
+  "name": "ChatGPTricks",
+  "id": "chatgptricks",
+  "cssVariables": {
+    "--brand": "#00FFFF",
+    "--bg-main": "#09090b",
+    "--bg-panel": "#111113",
+    "--border": "#262626",
+    "--text": "#e4e4e7",
+    "--text-dim": "#71717a"
+  },
+  "fontConfig": {
+    "cardBodyFont": "'Inter', sans-serif",
+    "headlineFont": "'Inter', sans-serif",
+    "fontWeight": "900"
+  },
+  "overlays": {
+    "black": "rgba(0,0,0,0.8)",
+    "white": "rgba(255,255,255,0.3)"
+  },
+  "defaultLayouts": {
+    "A": "layout-chatgptricks",
+    "B": "layout-chatgptricks",
+    "C": "layout-chatgptricks"
+  }
+}
