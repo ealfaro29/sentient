@@ -8,35 +8,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-  
-  <!-- Las fuentes de las tarjetas (temas) se siguen importando -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Inter:wght@400;500;700;800;900&family=Major+Mono+Display&family=Playfair+Display:wght@400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  
   <style>
-    :root { 
-      --radius-md: 12px; 
-      
-      /* Variables dinámicas para las TARJETAS (cargadas desde JSON) */
-      --font-headline: 'Inter', sans-serif;
-      --font-headline-weight: 800;
-      --font-card-body: 'Inter', sans-serif;
-    }
-    
+    :root { --radius-md: 12px; --font-headline: 'Inter', sans-serif; --font-headline-weight: 800; --font-card-body: 'Inter', sans-serif; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    /* ACTUALIZADO: La fuente de la UI (body) está "hardcoded" a Arial.
-      Los colores siguen siendo dinámicos (var(--bg-main), var(--text), etc.)
-    */
-    body { 
-      background: var(--bg-main); 
-      color: var(--text); 
-      font-family: Arial, sans-serif; /* <-- UI FONT FIJA */
-      height: 100vh; 
-      display: flex; 
-      overflow: hidden; 
-    }
+    body { background: var(--bg-main); color: var(--text); font-family: Arial, sans-serif; height: 100vh; display: flex; overflow: hidden; }
     .app-container { display: flex; width: 100vw; height: 100vh; position: relative; }
     .loading-bar { position: fixed; top: 0; left: 0; right: 0; height: 4px; background: var(--bg-panel); z-index: 9999; overflow: hidden; display: none; }
     .loading-bar::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 100%; background: var(--brand); animation: loading-indeterminate 1.5s infinite linear; transform: translateX(-100%); }
@@ -73,30 +51,8 @@
     .card-overlay { position: absolute; inset: 0; transition: background 0.3s; }
     .card-content { position: absolute; inset: 0; padding: 80px; display: flex; flex-direction: column; z-index: 2; }
     .c-pill { align-self: flex-start; padding: 16px 48px; background: var(--brand); color: var(--bg-main); font-size: 36px; font-weight: 900; border-radius: 100px; margin-bottom: 50px; letter-spacing: -1px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
-    
-    .c-title { 
-      font-size: 120px; 
-      /* ACTUALIZADO: Fuente del Título de la Tarjeta (dinámico) */
-      font-family: var(--font-headline);
-      font-weight: var(--font-headline-weight);
-      line-height: 0.95; 
-      color: var(--brand); 
-      margin-bottom: 40px; 
-      letter-spacing: -3px; 
-      transition: color 0.3s; 
-    }
-    
-    .c-subtitle { 
-      font-size: 56px; 
-      font-weight: 500; 
-      line-height: 1.15; 
-      color: #fff; 
-      letter-spacing: -1px; 
-      opacity: 0.9; 
-      transition: color 0.3s;
-      /* ACTUALIZADO: Fuente del Subtítulo de la Tarjeta (dinámico) */
-      font-family: var(--font-card-body);
-    }
+    .c-title { font-size: 120px; font-family: var(--font-headline); font-weight: var(--font-headline-weight); line-height: 0.95; color: var(--brand); margin-bottom: 40px; letter-spacing: -3px; transition: color 0.3s; }
+    .c-subtitle { font-size: 56px; font-weight: 500; line-height: 1.15; color: #fff; letter-spacing: -1px; opacity: 0.9; transition: color 0.3s; font-family: var(--font-card-body); }
     .layout-standard { justify-content: flex-end; text-align: left; }
     .layout-centered { justify-content: center; align-items: center; text-align: center; }
     .layout-bold { justify-content: flex-start; padding-top: 160px; }
@@ -112,9 +68,7 @@
         <aside class="sidebar" id="mainSidebar">
             <header class="header">
                 <div class="logo"><i data-lucide="zap"></i> SENTIENT V0.0.9</div>
-                <select id="themeSelector" class="input-field" style="width: auto; padding: 6px 12px; font-size: 0.8rem;">
-                    <!-- Opciones se cargarán desde JS -->
-                </select>
+                <select id="themeSelector" class="input-field" style="width: auto; padding: 6px 12px; font-size: 0.8rem;"></select>
             </header>
             <div class="scroll-area">
                 <div>
@@ -160,6 +114,26 @@
              <div class="card-content"><div class="c-pill"></div><h1 class="c-title"></h1><h2 class="c-subtitle"></h2></div>
         </div>
     </div>
+
+    <div id="fallbackModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(8px);">
+        <div style="background:var(--bg-panel); width:90%; max-width:500px; border-radius:16px; border:1px solid var(--border); box-shadow:0 50px 100px -20px rgba(0,0,0,0.6); overflow:hidden; display:flex; flex-direction:column; max-height:80vh;">
+            <div style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2);">
+                <h3 style="color:var(--brand); font-family:var(--font-headline); font-weight:800; font-size:1.1rem; display:flex; align-items:center; gap:8px;"><i data-lucide="search"></i> ALTERNATIVE SOURCES</h3>
+                <button onclick="document.getElementById('fallbackModal').style.display='none'" style="background:none; border:none; color:var(--text-dim); cursor:pointer; padding:4px;"><i data-lucide="x"></i></button>
+            </div>
+            <div style="padding:20px; overflow-y:auto; flex:1;">
+                <p id="fallbackMsg" style="color:var(--text-dim); font-size:0.9rem; margin-bottom:15px; line-height:1.5;">Analyzing link...</p>
+                <div id="fallbackList" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+            <div style="padding:16px 20px; border-top:1px solid var(--border); background:rgba(0,0,0,0.2); display:flex; gap:10px; align-items:center;">
+                <span style="font-size:0.8rem; color:var(--text-dim);">Still not finding it?</span>
+                <a id="googleFallbackBtn" href="#" target="_blank" class="btn" style="margin-left:auto; background:var(--text); color:var(--bg-main); font-size:0.85rem; padding:8px 16px; text-decoration:none; display:flex; align-items:center; gap:6px;">
+                    <i data-lucide="external-link" style="width:16px;"></i> Open Google Search
+                </a>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
