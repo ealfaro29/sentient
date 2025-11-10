@@ -48,82 +48,38 @@ const App = {
         LAYOUTS.forEach(l => { const o = document.createElement('option'); o.value = l.id; o.innerText = l.name; this.els.lay.appendChild(o); }); 
     },
     
-    // --- NUEVAS FUNCIONES DE TEMA ---
-
     async loadThemes() {
         const themeFiles = ['sentient.json', 'cyber.json', 'elegant.json'];
         try {
-            const responses = await Promise.all(
-                themeFiles.map(file => fetch(`${file}`)) // Ruta corregida (sin 'static/')
-            );
-            
-            const themesData = await Promise.all(
-                responses.map(res => {
-                    if (!res.ok) {
-                        throw new Error(`Failed to fetch ${res.url}: ${res.statusText}`);
-                    }
-                    return res.json();
-                })
-            );
-
+            const responses = await Promise.all(themeFiles.map(file => fetch(`${file}`)));
+            const themesData = await Promise.all(responses.map(res => { if (!res.ok) throw new Error(`Failed to fetch ${res.url}`); return res.json(); }));
             this.els.theme.innerHTML = ''; 
             themesData.forEach(theme => {
                 this.state.themes[theme.id] = theme; 
-                const option = document.createElement('option');
-                option.value = theme.id;
-                option.innerText = theme.name;
-                this.els.theme.appendChild(option);
+                const option = document.createElement('option'); option.value = theme.id; option.innerText = theme.name; this.els.theme.appendChild(option);
             });
-
             this.applyTheme(themesData[0].id);
-        } catch (err) {
-            console.error("Failed to load themes:", err);
-            toast(err.message, "error");
-        }
+        } catch (err) { console.error("Failed to load themes:", err); toast(err.message, "error"); }
     },
 
     applyTheme(themeId) {
-        const theme = this.state.themes[themeId];
-        if (!theme) return;
-
-        this.state.theme = theme; 
-        document.body.className = theme.id; 
-
-        // 1. Aplicar variables CSS (Colores de UI)
+        const theme = this.state.themes[themeId]; if (!theme) return;
+        this.state.theme = theme; document.body.className = theme.id; 
         const root = document.documentElement;
-        for (const [key, value] of Object.entries(theme.cssVariables)) {
-            root.style.setProperty(key, value);
-        }
-
-        // 2. Aplicar fuentes (SOLO a las tarjetas)
-        // ACTUALIZADO: Ya no se establece '--font-body'
+        for (const [key, value] of Object.entries(theme.cssVariables)) { root.style.setProperty(key, value); }
         root.style.setProperty('--font-card-body', theme.fontConfig.cardBodyFont);
         root.style.setProperty('--font-headline', theme.fontConfig.headlineFont);
         root.style.setProperty('--font-headline-weight', theme.fontConfig.fontWeight);
-        
-        // 3. Aplicar layouts por defecto
-        ['A', 'B', 'C'].forEach(v => {
-            this.state.data[v].layout = theme.defaultLayouts[v];
-        });
-
-        // 4. Actualizar la UI
-        if (this.els.editor.classList.contains('hidden')) {
-            this.renderAll();
-        } else {
-            this.switchVar(this.state.active);
-        }
+        ['A', 'B', 'C'].forEach(v => { this.state.data[v].layout = theme.defaultLayouts[v]; });
+        if (this.els.editor.classList.contains('hidden')) { this.renderAll(); } else { this.switchVar(this.state.active); }
     },
-    
-    // --- FIN NUEVAS FUNCIONES DE TEMA ---
 
     bindEvents() {
         this.els.scrape.onclick = () => this.scrape();
         this.els.custom.onclick = () => this.enableCustomMode();
         this.els.mobToggle.onclick = () => this.els.sidebar.classList.toggle('open');
         ['A', 'B', 'C'].forEach(v => document.getElementById(`btnVar${v}`).onclick = () => this.switchVar(v));
-        
         this.els.theme.onchange = (e) => this.applyTheme(e.target.value);
-        
         const up = () => this.renderCard(this.state.active);
         this.els.ti.oninput = (e) => { this.state.data[this.state.active].title = e.target.value; up(); };
         this.els.sub.oninput = (e) => { this.state.data[this.state.active].subtitle = e.target.value; up(); };
@@ -136,8 +92,7 @@ const App = {
                 if (e.target.classList.contains('active')) return;
                 document.querySelectorAll('.overlay-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
-                this.state.data[this.state.active].overlayColor = e.target.dataset.overlay;
-                up();
+                this.state.data[this.state.active].overlayColor = e.target.dataset.overlay; up();
             }
         });
         this.els.iFile.onchange = (e) => {
@@ -166,8 +121,7 @@ const App = {
         this.state.active = v;
         ['A', 'B', 'C'].forEach(x => { document.getElementById(`btnVar${x}`).classList.toggle('active', x === v); document.getElementById(`mock${x}`).classList.toggle('inactive', x !== v); });
         const d = this.state.data[v];
-        this.els.ti.value = d.title; this.els.sub.value = d.subtitle; 
-        this.els.lay.value = d.layout; 
+        this.els.ti.value = d.title; this.els.sub.value = d.subtitle; this.els.lay.value = d.layout; 
         this.els.cap.innerText = d.caption || 'Waiting...';
         this.els.blur.value = d.blur; this.els.contrast.value = d.contrast;
         document.querySelectorAll('.overlay-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.overlay === d.overlayColor));
@@ -180,7 +134,16 @@ const App = {
         const d = this.state.data[v];
         const overlays = (this.state.theme && this.state.theme.overlays) ? this.state.theme.overlays : { black: 'rgba(0,0,0,0.5)', white: 'rgba(255,255,255,0.3)' }; 
         const bgImg = c.querySelector('.card-bg');
-        bgImg.src = d.bg; bgImg.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%)`;
+        
+        // --- UPDATE: USAR PROXY SI NO ES LOCAL ---
+        if (d.bg.startsWith('data:')) {
+            bgImg.src = d.bg;
+        } else {
+            bgImg.src = `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
+        }
+        // ----------------------------------------
+        
+        bgImg.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%)`;
         c.querySelector('.card-overlay').style.background = d.overlayColor === 'white' ? overlays.white : overlays.black;
         c.querySelector('.card-content').className = `card-content ${d.layout}`;
         c.querySelector('.c-pill').textContent = d.tag;
@@ -204,11 +167,9 @@ const App = {
             this.state.data.A.bg = d.images.a; this.state.data.A.tag = 'NEWS';
             this.state.data.B.bg = d.images.b; this.state.data.B.tag = 'INFO';
             this.state.data.C.bg = d.images.c; this.state.data.C.tag = 'CLICKBAIT';
-
             this.state.data.A.layout = this.state.theme.defaultLayouts.A;
             this.state.data.B.layout = this.state.theme.defaultLayouts.B;
             this.state.data.C.layout = this.state.theme.defaultLayouts.C;
-
             if (d.ai_content && d.ai_content.variants) {
                 ['A','B','C'].forEach(v => this.state.data[v].caption = d.ai_content.common_caption);
                 this.state.data.A.title = d.ai_content.variants.A.title.toUpperCase(); this.state.data.A.subtitle = d.ai_content.variants.A.subtitle;
@@ -231,9 +192,18 @@ const App = {
             this.renderCard(this.state.active, 'hd-render-card');
             const hd = document.getElementById('hd-render-card');
             const d = this.state.data[this.state.active];
-            hd.querySelector('.card-bg').style.filter = `blur(${d.blur}px) contrast(${d.contrast}%)`;
+            
+            // Para la exportación HD, también necesitamos asegurar que la imagen cargue (usando proxy si es necesario)
+            const hdImg = hd.querySelector('.card-bg');
+             if (!d.bg.startsWith('data:')) {
+                 hdImg.crossOrigin = "anonymous"; // Importante para html-to-image
+                 hdImg.src = `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
+             } else {
+                 hdImg.src = d.bg;
+             }
+
             this.autoFit(hd.querySelector('.c-title'), 140, 70, 700); this.autoFit(hd.querySelector('.c-subtitle'), 56, 30, 400);
-            await new Promise(r => { const img = hd.querySelector('.card-bg'); if (img.complete && img.naturalHeight !== 0) r(); else { img.onload = r; img.onerror = r; } setTimeout(r, 2000); });
+            await new Promise(r => { if (hdImg.complete && hdImg.naturalHeight !== 0) r(); else { hdImg.onload = r; hdImg.onerror = r; } setTimeout(r, 3000); });
             await new Promise(r => setTimeout(r, 500));
             const dataUrl = await htmlToImage.toPng(hd, { quality: 1.0, pixelRatio: 1 });
             const a = document.createElement('a'); a.download = `Sentient_${this.state.data[this.state.active].tag}_HD.png`; a.href = dataUrl; a.click(); toast('Export started!');

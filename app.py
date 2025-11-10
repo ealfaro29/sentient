@@ -2,9 +2,10 @@ import os
 import json
 import time
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response, stream_with_context
 from dotenv import load_dotenv
-from newspaper import Article
+from newspaper import Article, Config
+from newspaper.article import ArticleDownloadState
 
 # Cargar variables de entorno
 load_dotenv()
@@ -24,151 +25,101 @@ if OPENAI_API_KEY:
     except Exception as e:
         print(f"⚠️ ERROR: No se pudo iniciar el cliente OpenAI: {e}")
 
-# Caché simple en memoria
 SCRAPE_CACHE = {}
-CACHE_DURATION = 86400 # 24 horas
+CACHE_DURATION = 86400
 
 @app.route('/')
-def home():
-    return app.send_static_file('index.html')
+def home(): return app.send_static_file('index.html')
 
 def get_pexels_images(query, count=3):
-    """Busca imágenes en Pexels basadas en un query."""
     if not PEXELS_API_KEY: return []
     try:
         headers = {'Authorization': PEXELS_API_KEY}
-        # Limpieza básica del query para URL
         clean_query = query.replace(":", "").replace("|", "").strip()[:100]
-        print(f"🔎 Buscando en Pexels: '{clean_query}'")
-        
         url = f'https://api.pexels.com/v1/search?query={clean_query}&per_page={count}&orientation=portrait'
-        response = requests.get(url, headers=headers, timeout=5)
-        
-        if response.status_code == 200:
-            photos = response.json().get('photos', [])
-            return [p['src']['large2x'] for p in photos]
-        else:
-            print(f"⚠️ Pexels Error {response.status_code}: {response.text}")
-            return []
-    except Exception as e:
-        print(f"⚠️ Pexels Exception: {e}")
-        return []
+        r = requests.get(url, headers=headers, timeout=5)
+        return [p['src']['large2x'] for p in r.json().get('photos', [])] if r.status_code == 200 else []
+    except: return []
 
 def get_ai_data(title, text, source):
-    """
-    Interactúa con el OpenAI Assistant pre-configurado para generar los textos.
-    """
     if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
-        print("❌ Error: Faltan credenciales de OpenAI (KEY o ASSISTANT_ID)")
+        print("❌ Error: Faltan credenciales OpenAI")
         return None
-
-    print(f"🧠 IA pensando (Assistant) para: {title[:30]}...")
-    start_time = time.time()
-
+    print(f"🧠 IA pensando para: {title[:30]}...")
     try:
-        # 1. Crear un Hilo (Thread) y añadir el mensaje del usuario directamente
-        # Usamos el sdk helper 'create_and_poll' para simplificar el proceso de espera
         run = OPENAI_CLIENT.beta.threads.create_and_run_poll(
             assistant_id=OPENAI_ASSISTANT_ID,
-            thread={
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": f"TITLE: {title}\nSOURCE: {source}\nTEXT: {text[:3000]}"
-                    }
-                ]
-            }
+            thread={"messages": [{"role": "user", "content": f"TITLE: {title}\nSOURCE: {source}\nTEXT: {text[:3000]}"}]}
         )
-
-        # 2. Verificar si la ejecución terminó correctamente
         if run.status == 'completed':
-            # 3. Obtener los mensajes del hilo
-            messages = OPENAI_CLIENT.beta.threads.messages.list(
-                thread_id=run.thread_id
-            )
-            
-            # El último mensaje suele ser el primero en la lista (orden inverso cronológico)
-            last_message = messages.data[0]
-            if last_message.role == 'assistant':
-                response_text = last_message.content[0].text.value
-                print(f"✅ IA terminó en {time.time() - start_time:.2f}s")
-                return json.loads(response_text)
-        else:
-            print(f"❌ La ejecución del Assistant falló. Estado: {run.status}")
-            # Si falló, intentar ver por qué (opcional, útil para debug)
-            if run.last_error:
-                print(f"   Error details: {run.last_error}")
-            return None
-
+            msgs = OPENAI_CLIENT.beta.threads.messages.list(thread_id=run.thread_id)
+            return json.loads(msgs.data[0].content[0].text.value)
     except Exception as e:
-        print(f"❌ Error crítico en get_ai_data: {e}")
+        print(f"❌ Error IA: {e}")
         return None
+
+@app.route('/api/proxy_image')
+def proxy_image():
+    """Proxy para evitar problemas de Hotlink Protection (CORS/403 en imágenes)"""
+    url = request.args.get('url')
+    if not url: return "URL missing", 400
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.google.com/'
+        }
+        req = requests.get(url, headers=headers, stream=True, timeout=10, verify=False)
+        return Response(stream_with_context(req.iter_content(chunk_size=1024)), 
+                        content_type=req.headers.get('content-type', 'image/jpeg'))
+    except Exception as e:
+        print(f"⚠️ Error proxy imagen: {e}")
+        return "Image blocked", 404
 
 @app.route('/api/scrape', methods=['POST'])
 def scrape():
-    data = request.get_json()
-    url = data.get('url')
-    if not url:
-        return jsonify({"error": "URL is required"}), 400
+    url = request.json.get('url')
+    if not url: return jsonify({"error": "URL missing"}), 400
 
-    # Verificar caché
     now = time.time()
     if url in SCRAPE_CACHE and now - SCRAPE_CACHE[url]['timestamp'] < CACHE_DURATION:
-        print(f"⚡ Sirviendo desde caché: {url[:30]}...")
+        print(f"⚡ Caché: {url[:30]}...")
         return jsonify(SCRAPE_CACHE[url]['data'])
 
     try:
-        print(f"📥 Descargando artículo: {url[:50]}...")
+        print(f"📥 Descargando (Modo Nuclear): {url[:50]}...")
+        # 1. Descarga manual robusta
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Referer': 'https://www.google.com/'
+        }
+        response = requests.get(url, headers=headers, timeout=15, verify=True)
+        if response.status_code != 200: raise Exception(f"Error HTTP {response.status_code}")
+
+        # 2. Inyección forzada en Newspaper
         article = Article(url)
-        article.download()
+        article.set_html(response.text)
+        article.download_state = ArticleDownloadState.SUCCESS # FIX CRÍTICO
         article.parse()
 
-        # Extraer fuente limpia
-        source_name = article.source_url.replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
-        source_name = source_name.split(".")[0].upper()
-
-        # 1. Obtener datos de la IA (Assistant)
-        ai_content = get_ai_data(article.title, article.text, source_name)
-
-        # 2. Determinar qué query usar para Pexels
-        image_query = article.title # Fallback inicial
-        if ai_content and ai_content.get('image_keywords'):
-            # Usar las keywords que generó el Assistant
-            image_query = ai_content['image_keywords']
+        src = article.source_url.replace("https://","").replace("http://","").replace("www.","").split("/")[0].split(".")[0].upper()
+        ai_data = get_ai_data(article.title, article.text, src)
         
-        # 3. Buscar imágenes
-        images = get_pexels_images(image_query)
-        # Fallback si Pexels falla o no devuelve nada
-        fallback_image = article.top_image or "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080"
-        if not images:
-            images = [fallback_image, fallback_image, fallback_image]
-        # Asegurar que siempre haya al menos 3 imágenes
-        while len(images) < 3:
-            images.append(images[0])
+        img_q = ai_data.get('image_keywords', article.title) if ai_data else article.title
+        imgs = get_pexels_images(img_q) or ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080"]
+        while len(imgs)<3: imgs.append(imgs[0])
 
-        # Construir respuesta final
-        response_data = {
-            "source": source_name,
-            "images": {
-                "a": article.top_image or images[0], # Preferir imagen original del artículo para variante A si existe
-                "b": images[0],
-                "c": images[1] if len(images) > 1 else images[0]
-            },
-            "ai_content": ai_content,
-            "original": {
-                "title": article.title[:60].upper(),
-                "subtitle": article.text[:100] + "..."
-            }
+        data = {
+            "source": src,
+            "images": {"a": article.top_image or imgs[0], "b": imgs[0], "c": imgs[1]},
+            "ai_content": ai_data,
+            "original": {"title": article.title[:50].upper(), "subtitle": article.text[:100]+"..."}
         }
-
-        # Guardar en caché
-        SCRAPE_CACHE[url] = {'data': response_data, 'timestamp': now}
-        return jsonify(response_data)
-
+        SCRAPE_CACHE[url] = {'data': data, 'timestamp': now}
+        return jsonify(data)
     except Exception as e:
-        print(f"🔥 Error procesando URL: {e}")
+        print(f"🔥 Error Scrape: {e}")
         return jsonify({"error": str(e)}), 500
 
-if __name__ == '__main__':
-    # Escuchar en 0.0.0.0 para acceso externo si es necesario
-    app.run(host='0.0.0.0', port=5000, debug=True)
+if __name__ == '__main__': app.run(host='0.0.0.0', port=5000, debug=True)
