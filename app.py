@@ -6,118 +6,169 @@ from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from newspaper import Article
 
+# Cargar variables de entorno
 load_dotenv()
 app = Flask(__name__, static_url_path='', static_folder='static')
 
+# Configuración de claves API
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
+
 OPENAI_CLIENT = None
 if OPENAI_API_KEY:
     try:
         from openai import OpenAI
         OPENAI_CLIENT = OpenAI(api_key=OPENAI_API_KEY)
-        print("✅ IA (OpenAI): Activa")
-    except: print("⚠️ ERROR: Falta librería 'openai'.")
+        print("✅ IA (OpenAI): Cliente activo")
+    except Exception as e:
+        print(f"⚠️ ERROR: No se pudo iniciar el cliente OpenAI: {e}")
 
+# Caché simple en memoria
 SCRAPE_CACHE = {}
-CACHE_DURATION = 86400
+CACHE_DURATION = 86400 # 24 horas
 
 @app.route('/')
-def home(): return app.send_static_file('index.html')
+def home():
+    return app.send_static_file('index.html')
 
 def get_pexels_images(query, count=3):
+    """Busca imágenes en Pexels basadas en un query."""
     if not PEXELS_API_KEY: return []
     try:
-        h = {'Authorization': PEXELS_API_KEY}
-        # ACTUALIZADO: Acepta queries más complejos (ej. "data, server, technology")
-        # Simplemente limpia y corta el query
-        q = query.replace(":", "").replace("|", "")[:80]
-        r = requests.get(f'https://api.pexels.com/v1/search?query={q}&per_page={count}&orientation=portrait', headers=h, timeout=3)
-        return [p['src']['large2x'] for p in r.json().get('photos', [])] if r.status_code == 200 else []
-    except: return []
+        headers = {'Authorization': PEXELS_API_KEY}
+        # Limpieza básica del query para URL
+        clean_query = query.replace(":", "").replace("|", "").strip()[:100]
+        print(f"🔎 Buscando en Pexels: '{clean_query}'")
+        
+        url = f'https://api.pexels.com/v1/search?query={clean_query}&per_page={count}&orientation=portrait'
+        response = requests.get(url, headers=headers, timeout=5)
+        
+        if response.status_code == 200:
+            photos = response.json().get('photos', [])
+            return [p['src']['large2x'] for p in photos]
+        else:
+            print(f"⚠️ Pexels Error {response.status_code}: {response.text}")
+            return []
+    except Exception as e:
+        print(f"⚠️ Pexels Exception: {e}")
+        return []
 
 def get_ai_data(title, text, source):
-    if not OPENAI_CLIENT: return None
-    print(f"🧠 IA pensando (GPT-4o) para: {title[:20]}...")
+    """
+    Interactúa con el OpenAI Assistant pre-configurado para generar los textos.
+    """
+    if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
+        print("❌ Error: Faltan credenciales de OpenAI (KEY o ASSISTANT_ID)")
+        return None
+
+    print(f"🧠 IA pensando (Assistant) para: {title[:30]}...")
+    start_time = time.time()
 
     try:
-        # ACTUALIZADO: Añadida TASK 3 para keywords de Pexels
-        prompt = f"""
-        ROLE: Elite Social Media Editor.
-        SOURCE: "{title}" ({source}). SUMMARY: "{text[:2500]}"
-        
-        TASK 1: Create ONE in-depth, high-engagement Instagram caption (common for all posts).
-        - NO LABELS/BRACKETS. NO EMOJIS.
-        - STRUCTURE: Hook (1 shocking sentence) -> Detailed Body (2-3 comprehensive sentences) -> Impact Analysis (2 sentences) -> Engagement Question -> "Source: {source}"
-
-        TASK 2: Create 3 DISTINCT Title/Subtitle pairs matching these exact styles:
-        - VARIANT A (News Style): Objective, factual, urgent.
-        - VARIANT B (Infotainment): Curious, clever, slightly casual.
-        - VARIANT C (Clickbait/Controversial): HIGHLY POLARIZING, shocking, exaggerated, sensationalist.
-        
-        CONSTRAINTS: Titles max 8 words. Subtitles max 10 words.
-
-        TASK 3: Provide 3-4 visual, Pexels-friendly search keywords.
-        - Keywords MUST be concrete and photographic (e.g., "stock market", "computer", "protest", "city skyline", "lab research").
-        - Avoid abstract concepts (e.g., "economy", "sadness").
-        - Format as a single string: "keyword1, keyword2, keyword3"
-
-        OUTPUT JSON: {{
-            "common_caption": "Full caption text here...",
-            "variants": {{
-                "A": {{ "title": "NEWS TITLE", "subtitle": "Factual summary." }},
-                "B": {{ "title": "INFOTAINMENT TITLE", "subtitle": "Curious hook." }},
-                "C": {{ "title": "CLICKBAIT TITLE", "subtitle": "Shocking statement!" }}
-            }},
-            "image_keywords": "keyword1, keyword2, keyword3"
-        }}
-        """
-        r = OPENAI_CLIENT.chat.completions.create(
-             model="gpt-4o",
-             response_format={"type": "json_object"},
-             messages=[{"role": "system", "content": "JSON only."}, {"role": "user", "content": prompt}], temperature=0.7
+        # 1. Crear un Hilo (Thread) y añadir el mensaje del usuario directamente
+        # Usamos el sdk helper 'create_and_poll' para simplificar el proceso de espera
+        run = OPENAI_CLIENT.beta.threads.create_and_run_poll(
+            assistant_id=OPENAI_ASSISTANT_ID,
+            thread={
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f"TITLE: {title}\nSOURCE: {source}\nTEXT: {text[:3000]}"
+                    }
+                ]
+            }
         )
-        return json.loads(r.choices[0].message.content)
-    except Exception as e: print(f"❌ AI Error: {e}"); return None
+
+        # 2. Verificar si la ejecución terminó correctamente
+        if run.status == 'completed':
+            # 3. Obtener los mensajes del hilo
+            messages = OPENAI_CLIENT.beta.threads.messages.list(
+                thread_id=run.thread_id
+            )
+            
+            # El último mensaje suele ser el primero en la lista (orden inverso cronológico)
+            last_message = messages.data[0]
+            if last_message.role == 'assistant':
+                response_text = last_message.content[0].text.value
+                print(f"✅ IA terminó en {time.time() - start_time:.2f}s")
+                return json.loads(response_text)
+        else:
+            print(f"❌ La ejecución del Assistant falló. Estado: {run.status}")
+            # Si falló, intentar ver por qué (opcional, útil para debug)
+            if run.last_error:
+                print(f"   Error details: {run.last_error}")
+            return None
+
+    except Exception as e:
+        print(f"❌ Error crítico en get_ai_data: {e}")
+        return None
 
 @app.route('/api/scrape', methods=['POST'])
 def scrape():
-    url = request.json.get('url')
-    if not url: return jsonify({"error": "URL missing"}), 400
+    data = request.get_json()
+    url = data.get('url')
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
 
+    # Verificar caché
     now = time.time()
     if url in SCRAPE_CACHE and now - SCRAPE_CACHE[url]['timestamp'] < CACHE_DURATION:
         print(f"⚡ Sirviendo desde caché: {url[:30]}...")
         return jsonify(SCRAPE_CACHE[url]['data'])
 
     try:
-        a = Article(url); a.download(); a.parse()
-        src = a.source_url.replace("https://","").replace("www.","").split("/")[0].split(".")[0].upper()
+        print(f"📥 Descargando artículo: {url[:50]}...")
+        article = Article(url)
+        article.download()
+        article.parse()
 
-        # --- ACTUALIZADO: Orden invertido ---
-        # 1. Llamar a la IA primero para obtener texto Y keywords
-        ai_content_data = get_ai_data(a.title, a.text, src)
+        # Extraer fuente limpia
+        source_name = article.source_url.replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
+        source_name = source_name.split(".")[0].upper()
 
-        # 2. Determinar el query para Pexels
-        image_query = a.title # Fallback
-        if ai_content_data and ai_content_data.get('image_keywords'):
-            image_query = ai_content_data['image_keywords']
-            print(f"📸 Usando keywords de IA para Pexels: {image_query}")
-        else:
-            print(f"⚠️  IA no proveyó keywords. Usando título: {a.title[:50]}")
+        # 1. Obtener datos de la IA (Assistant)
+        ai_content = get_ai_data(article.title, article.text, source_name)
 
-        # 3. Llamar a Pexels con el mejor query disponible
-        imgs = get_pexels_images(image_query) or ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080"]
-        while len(imgs)<3: imgs.append(imgs[0])
-        # --- Fin de la actualización ---
+        # 2. Determinar qué query usar para Pexels
+        image_query = article.title # Fallback inicial
+        if ai_content and ai_content.get('image_keywords'):
+            # Usar las keywords que generó el Assistant
+            image_query = ai_content['image_keywords']
+        
+        # 3. Buscar imágenes
+        images = get_pexels_images(image_query)
+        # Fallback si Pexels falla o no devuelve nada
+        fallback_image = article.top_image or "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080"
+        if not images:
+            images = [fallback_image, fallback_image, fallback_image]
+        # Asegurar que siempre haya al menos 3 imágenes
+        while len(images) < 3:
+            images.append(images[0])
 
-        data = {
-            "source": src, "images": {"a": a.top_image or imgs[0], "b": imgs[0], "c": imgs[1]},
-            "ai_content": ai_content_data,
-            "original": {"title": a.title[:50].upper(), "subtitle": a.text[:100]+"..."}
+        # Construir respuesta final
+        response_data = {
+            "source": source_name,
+            "images": {
+                "a": article.top_image or images[0], # Preferir imagen original del artículo para variante A si existe
+                "b": images[0],
+                "c": images[1] if len(images) > 1 else images[0]
+            },
+            "ai_content": ai_content,
+            "original": {
+                "title": article.title[:60].upper(),
+                "subtitle": article.text[:100] + "..."
+            }
         }
-        SCRAPE_CACHE[url] = {'data': data, 'timestamp': now}
-        return jsonify(data)
-    except Exception as e: return jsonify({"error": str(e)}), 400
 
-if __name__ == '__main__': app.run(host='0.0.0.0', port=5000, debug=True)
+        # Guardar en caché
+        SCRAPE_CACHE[url] = {'data': response_data, 'timestamp': now}
+        return jsonify(response_data)
+
+    except Exception as e:
+        print(f"🔥 Error procesando URL: {e}")
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    # Escuchar en 0.0.0.0 para acceso externo si es necesario
+    app.run(host='0.0.0.0', port=5000, debug=True)
