@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Sentient V0.1.0 Assistant</title>
+  <title>Sentient V0.2.0 UI</title>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
@@ -12,7 +12,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Inter:wght@400;500;700;800;900&family=Major+Mono+Display&family=Playfair+Display:wght@400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
-    :root { --radius-md: 12px; --font-headline: 'Inter', sans-serif; --font-headline-weight: 800; --font-card-body: 'Inter', sans-serif; }
+    :root { 
+        --radius-md: 12px; 
+        --font-headline: 'Inter', sans-serif; 
+        --font-headline-weight: 800; 
+        --font-card-body: 'Inter', sans-serif;
+        /* NEON MOCKUP COLORS */
+        --neon-color: #ccff00;
+        --bg-color: #000000;
+        /* Reducción significativa de tamaño base */
+        --element-height: 20px; 
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: var(--bg-main); color: var(--text); font-family: Arial, sans-serif; height: 100vh; display: flex; overflow: hidden; }
     .app-container { display: flex; width: 100vw; height: 100vh; position: relative; }
@@ -20,7 +30,7 @@
     .loading-bar::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 100%; background: var(--brand); animation: loading-indeterminate 1.5s infinite linear; transform: translateX(-100%); }
     @keyframes loading-indeterminate { 0% { transform: translateX(-100%); } 50% { transform: translateX(0%); } 100% { transform: translateX(100%); } }
     .sidebar { width: 400px; min-width: 350px; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 20; flex-shrink: 0; transition: transform 0.3s ease; }
-    .main-stage { flex: 1; background: var(--bg-main); display: flex; align-items: center; justify-content: center; padding: 20px; overflow: hidden; position: relative; }
+    .main-stage { flex: 1; background: var(--bg-main); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow: hidden; position: relative; }
     .stage-grid { display: flex; gap: 25px; width: 100%; height: 100%; align-items: center; justify-content: center; transition: all 0.3s ease; }
     
     .mockup { 
@@ -30,7 +40,8 @@
         min-width: 320px; 
         background: #000; 
         border: none;
-        border-radius: 30px; 
+        /* CAMBIO APLICADO: Reducido de 30px a 20px */
+        border-radius: 20px; 
         overflow: hidden; 
         transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
         box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
@@ -57,8 +68,8 @@
     [contenteditable="true"]:focus {
         outline: 3px solid var(--brand);
         outline-offset: 6px;
+        border-radius: 4px; /* Ajuste para consistencia */
         background: rgba(0, 0, 0, 0.2); 
-        border-radius: 6px;
         caret-color: var(--brand); 
         padding: 2px 5px; 
     }
@@ -67,39 +78,6 @@
         opacity: 0.5;
         font-style: italic;
     }
-    
-    /* ESTILOS DE LA MODAL DE OPCIONES DE TARJETA */
-    #cardOptionsModal {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 380px;
-        max-height: 90%;
-        background: var(--bg-panel);
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        z-index: 50;
-        display: flex;
-        flex-direction: column;
-        transform: translateX(calc(100% + 20px));
-        transition: transform 0.3s ease-out;
-    }
-    #cardOptionsModal.open {
-        transform: translateX(0);
-    }
-    #cardOptionsModal .scroll-area {
-        padding: 20px;
-        gap: 20px;
-    }
-    .card-options-header {
-        padding: 15px 20px;
-        font-weight: 700;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
 
     @media (max-width: 1024px) { 
         .sidebar { position: absolute; height: 100%; transform: translateX(-100%); box-shadow: 10px 0 30px rgba(0,0,0,0.5); } 
@@ -107,21 +85,20 @@
         .stage-grid { flex-direction: column; overflow-y: auto; padding: 50px 0; gap: 40px; } 
         .mockup { min-height: 600px; width: 100%; max-width: 450px; } 
         .mobile-toggle { display: flex !important; } 
-        #cardOptionsModal { 
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, calc(-50% + 100vh)); 
-            width: 90%; 
-            max-width: 450px; 
-            transition: transform 0.4s ease-out;
+        #activeControls { 
+            position: relative !important; 
+            width: 100% !important; 
+            max-width: 450px !important; 
+            margin-top: 20px; 
+            padding: 10px !important; 
+            left: 0 !important; /* Reset positioning for mobile */
+            transform: none !important; /* Reset positioning for mobile */
         }
-        #cardOptionsModal.open {
-            transform: translate(-50%, -50%);
-        }
+        .main-stage { overflow-y: auto; }
     }
+    
     .mobile-toggle { display: none; position: absolute; top: 20px; left: 20px; z-index: 30; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px; color: var(--brand); cursor: pointer; }
-    .insta-header { height: 54px; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; background: #000; }
+    .insta-header { height: 54px; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0; background: #000; } 
     .insta-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); padding: 2px; margin-right: 10px; }
     .insta-avatar div { width: 100%; height: 100%; background: #000; border-radius: 50%; }
     .insta-user { font-size: 0.85rem; font-weight: 600; color: #fff; flex: 1; }
@@ -139,9 +116,6 @@
     .btn { cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; border-radius: var(--radius-md); transition: 0.2s; font-size: 0.9rem; font-family: inherit; color: inherit; }
     .btn-primary { background: var(--brand); color: var(--bg-main); height: 48px; width: 100%; font-weight: 900; }
     .btn:hover { opacity: 0.9; } .btn:active { transform: scale(0.98); }
-    .segmented-control { display: flex; background: rgba(0,0,0,0.3); padding: 4px; border-radius: var(--radius-md); border: 1px solid var(--border); }
-    .segment-btn { flex: 1; padding: 10px; font-size: 0.8rem; color: var(--text-dim); background: transparent; border-radius: 8px; }
-    .segment-btn.active { background: var(--bg-panel); color: var(--brand); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     .card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s ease; }
     .card-overlay { position: absolute; inset: 0; transition: background 0.3s; }
     .card-content { position: absolute; inset: 0; padding: 80px; display: flex; flex-direction: column; z-index: 2; }
@@ -165,9 +139,167 @@
     .layout-chatgptricks .c-title { font-size: 140px; line-height: 0.9; margin-bottom: 0; color: #FFFFFF; }
     .layout-chatgptricks .c-subtitle { display: none !important; }
     .layout-chatgptricks .c-pill { display: none !important; }
-    .hidden { display: none !important; } .flex-row { display: flex; gap: 12px; }
-    .slider-control { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: var(--text-dim); }
-    .slider-control input { flex: 1; accent-color: var(--brand); }
+    .hidden { display: none !important; } 
+    
+    /* --- INICIO ESTILOS MODIFICADOS (INVISIBLE Y MÍNIMO) --- */
+
+    #activeControls {
+        /* Contenedor flotante, ahora invisible */
+        position: absolute;
+        top: 0; 
+        left: 0; 
+        z-index: 100; 
+        background-color: transparent; 
+        padding: 6px; 
+        border-radius: 0; 
+        border: none; 
+        box-shadow: none; 
+        display: flex;
+        flex-direction: column;
+        gap: 6px; 
+        font-family: sans-serif;
+        font-weight: bold;
+    }
+    .row {
+        display: flex;
+        gap: 6px; 
+        align-items: center;
+    }
+
+    /* Estilos base para los elementos de color neon */
+    .neon-box {
+        background-color: var(--neon-color);
+        height: var(--element-height); /* 20px */
+        /* CAMBIO APLICADO: Reducido de 4px a 3px */
+        border-radius: 3px; 
+        display: flex;
+        align-items: center;
+        padding: 0 4px 0 6px; 
+        box-sizing: border-box;
+        color: black;
+        user-select: none;
+        flex: 1;
+    }
+
+    /* --- 1. & 3. Selectores (Layout / Overlay) --- */
+    .selector {
+        cursor: pointer;
+        min-width: 100px; 
+        justify-content: space-between;
+        transition: opacity 0.2s;
+        font-family: var(--font-headline);
+    }
+    .selector:active {
+        opacity: 0.8;
+    }
+    .selector-label {
+        font-size: 10px; /* Reducción significativa */
+        letter-spacing: 0.5px;
+        font-weight: 900;
+    }
+    .value-badge {
+        background-color: black;
+        color: var(--neon-color);
+        width: 15px; 
+        height: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        /* CAMBIO APLICADO: Reducido de 4px a 3px */
+        border-radius: 3px;
+        font-size: 10px; 
+        margin-left: 4px;
+    }
+
+    /* --- 2. Text Input --- */
+    .url-input-container {
+        padding: 0 4px; 
+        gap: 4px;
+    }
+    .url-input {
+        flex: 1; 
+        width: 100%;
+        height: 16px; 
+        background-color: black;
+        border: none;
+        /* CAMBIO APLICADO: Reducido de 4px a 3px */
+        border-radius: 3px;
+        color: var(--neon-color);
+        font-family: 'Share Tech Mono', monospace;
+        padding: 0 5px;
+        font-size: 9px; 
+        outline: none;
+    }
+    .url-input::placeholder {
+        color: var(--neon-color);
+        opacity: 0.7;
+    }
+
+    /* --- 4. & 5. Sliders --- */
+    .slider-box {
+        padding: 0 4px 0 6px; 
+        gap: 3px; 
+    }
+    .slider-icon {
+        width: 12px; 
+        height: 12px;
+        fill: black; 
+        flex-shrink: 0;
+    }
+
+    /* Personalización profunda del input range para que sea vea como el mockup */
+    input[type=range] {
+        -webkit-appearance: none; 
+        width: 100%;
+        background: transparent;
+    }
+    input[type=range]:focus {
+        outline: none;
+    }
+    /* El riel (track) del slider */
+    input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 1px; 
+        cursor: pointer;
+        background: black;
+        /* CAMBIO APLICADO: Reducido de 1px a 0.5px */
+        border-radius: 0.5px;
+    }
+    /* El manejador (thumb) del slider */
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        border: 1px solid black; 
+        height: 12px; 
+        width: 5px; 
+        /* CAMBIO APLICADO: Reducido de 2px a 1px */
+        border-radius: 1px;
+        background: var(--neon-color); 
+        cursor: pointer;
+        margin-top: -6px; 
+    }
+    
+    /* Botón de carga local (Fila 3) */
+    .neon-upload-icon-btn { /* REEMPLAZA A .neon-upload-btn-row3 */
+        width: 20px; 
+        height: 20px; 
+        background: black;
+        color: var(--neon-color);
+        /* CAMBIO APLICADO: Reducido de 4px a 3px */
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .neon-upload-icon-btn i {
+        width: 10px; 
+        height: 10px;
+        stroke: var(--neon-color); 
+        stroke-width: 3;
+    }
+
+    /* --- FIN ESTILOS MODIFICADOS --- */
   </style>
 </head>
 <body>
@@ -176,7 +308,7 @@
         <button id="mobileToggle" class="mobile-toggle"><i data-lucide="menu"></i></button>
         <aside class="sidebar" id="mainSidebar">
             <header class="header">
-                <div class="logo"><i data-lucide="zap"></i> SENTIENT V0.1.0</div>
+                <div class="logo"><i data-lucide="zap"></i> SENTIENT V0.2.0</div>
                 <select id="themeSelector" class="input-field" style="width: auto; padding: 6px 12px; font-size: 0.8rem;"></select>
             </header>
             <div class="scroll-area">
@@ -217,37 +349,51 @@
         </aside>
         <main class="main-stage" onclick="if(window.innerWidth<=1024) document.getElementById('mainSidebar').classList.remove('open')">
             
-            <div id="cardOptionsModal" class="hidden">
-                <div class="card-options-header">
-                    <span id="cardOptionsTitle">OPTIONS FOR VARIANT A</span>
-                    <button onclick="App.closeCardOptions()" class="btn" style="height:30px; padding:0 10px; background:rgba(255,255,255,0.1); color:var(--text-dim);"><i data-lucide="x" style="width:16px;"></i></button>
-                </div>
-                <div class="scroll-area">
-                    <div>
-                        <span class="label">LAYOUT</span>
-                        <select id="layoutSelector" class="input-field" style="margin-bottom:12px;"></select>
-                    </div>
-
-                    <div>
-                        <span class="label">IMAGE & EFFECTS</span>
-                        <div style="display:flex; flex-direction:column; gap:15px; background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; border:1px solid var(--border);">
-                            <div class="slider-control"><i data-lucide="droplet"></i><input type="range" id="blurRange" min="0" max="20" value="0" step="1"></div>
-                            <div class="slider-control"><i data-lucide="sun"></i><input type="range" id="contrastRange" min="50" max="150" value="100" step="5"></div>
-                            <div class="segmented-control"><button data-overlay="black" class="btn segment-btn active overlay-btn">Black Overlay</button><button data-overlay="white" class="btn segment-btn overlay-btn">White Overlay</button></div>
-                         </div>
-                         <input id="imgUrlInput" class="input-field" placeholder="Image URL..." style="margin-top:12px; margin-bottom:8px;" />
-                         <button id="imgFileBtn" onclick="document.getElementById('imgFileInput').click()" class="btn" style="width:100%; background:rgba(255,255,255,0.05); color:var(--text-dim); font-size:0.8rem;"><i data-lucide="upload"></i> Upload Local</button>
-                         <input type="file" id="imgFileInput" hidden accept="image/*" />
-                    </div>
-                </div>
-            </div>
-
             <div class="stage-grid">
-                <div id="mockA" class="mockup active-stage" onclick="App.switchVar('A')"><div class="insta-header"><div class="insta-avatar"><div></div></div><span class="insta-user">sentient</span><i data-lucide="more-horizontal" class="insta-icon card-options-btn" onclick="event.stopPropagation(); App.openCardOptions('A');"></i></div><div class="canvas-wrapper" id="mountA"><div id="cardA" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-standard"><div class="c-pill">NEWS</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">READY</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Paste an article URL...</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">8,432 likes</div></div></div>
-                <div id="mockB" class="mockup" onclick="App.switchVar('B')"><div class="insta-header"><div class="insta-avatar"><div></div></div><span class="insta-user">sentient</span><i data-lucide="more-horizontal" class="insta-icon card-options-btn" onclick="event.stopPropagation(); App.openCardOptions('B');"></i></div><div class="canvas-wrapper" id="mountB"><div id="cardB" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-centered"><div class="c-pill">STORY</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">SET</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Choose variant...</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">12,901 likes</div></div></div>
-                <div id="mockC" class="mockup" onclick="App.switchVar('C')"><div class="insta-header"><div class="insta-avatar" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div><span class="insta-user">sentient</span><i data-lucide="more-horizontal" class="insta-icon card-options-btn" onclick="event.stopPropagation(); App.openCardOptions('C');"></i></div><div class="canvas-wrapper" id="mountC"><div id="cardC" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-bold"><div class="c-pill">BREAKING</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">GO</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Customize & export.</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon" fill="#ffffff" color="#ffffff"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">45,200 likes</div></div></div>
+                <div id="mockA" class="mockup active-stage" onclick="App.switchVar('A')"><div class="insta-header"><div class="insta-avatar"><div></div></div><span class="insta-user">sentient</span><i data-lucide="more-horizontal" class="insta-icon card-options-btn" onclick="event.stopPropagation(); App.switchVar('A');"></i></div><div class="canvas-wrapper" id="mountA"><div id="cardA" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-standard"><div class="c-pill">NEWS</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">READY</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Paste an article URL...</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">8,432 likes</div></div></div>
+                <div id="mockB" class="mockup" onclick="App.switchVar('B')"><div class="insta-header"><div class="insta-avatar"><div></div></div><span class="insta-user">sentient</span><i data-lucide="more-horizontal" class="insta-icon card-options-btn" onclick="event.stopPropagation(); App.switchVar('B');"></i></div><div class="canvas-wrapper" id="mountB"><div id="cardB" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-centered"><div class="c-pill">STORY</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">SET</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Choose variant...</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">12,901 likes</div></div></div>
+                <div id="mockC" class="mockup" onclick="App.switchVar('C')"><div class="insta-header"><div class="insta-avatar" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div><span class="insta-user">sentient</span><i data-lucide="more-horizontal" class="insta-icon card-options-btn" onclick="event.stopPropagation(); App.switchVar('C');"></i></div><div class="canvas-wrapper" id="mountC"><div id="cardC" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-bold"><div class="c-pill">BREAKING</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">GO</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Customize & export.</h2></div></div></div><div class="insta-footer"><div class="insta-actions"><i data-lucide="heart" class="insta-icon" fill="#ffffff" color="#ffffff"></i><i data-lucide="message-circle" class="insta-icon"></i><i data-lucide="send" class="insta-icon"></i><i data-lucide="bookmark" class="insta-icon" style="margin-left:auto;"></i></div><div style="font-weight:600; font-size:0.9rem;">45,200 likes</div></div></div>
             </div>
-        </main>
+
+            <div id="activeControls" class="hidden">
+                <div class="row">
+                    <div class="neon-box selector" id="overlayBtn">
+                        <span class="selector-label">OVERLAY</span>
+                        <div class="value-badge" id="overlayValue">B</div>
+                    </div>
+                    <div class="neon-box selector" id="layoutBtn">
+                        <span class="selector-label">LAYOUT</span>
+                        <div class="value-badge" id="layoutValue">STD</div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="neon-box slider-box">
+                         <svg class="slider-icon" viewBox="0 0 24 24">
+                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                        </svg>
+                        <input type="range" id="blurRange" min="0" max="20" value="0" step="1">
+                    </div>
+                    <div class="neon-box slider-box">
+                         <svg class="slider-icon" viewBox="0 0 24 24">
+                            <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+                        </svg>
+                        <input type="range" id="contrastRange" min="50" max="150" value="100" step="5">
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="neon-box url-input-container"> 
+                        <input type="text" id="imgUrlInput" class="url-input" placeholder="https://www..." />
+                        <div id="imgFileBtn" onclick="document.getElementById('imgFileInput').click()" class="neon-upload-icon-btn">
+                            <i data-lucide="upload"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="file" id="imgFileInput" hidden accept="image/*" />
+            </div>
+            </main>
     </div>
     <div id="hd-stage-container" style="position:fixed; top:0; left:0; z-index:-9999; opacity:0; pointer-events:none;">
         <div id="hd-render-card" class="render-target" style="position:relative !important; transform: none !important;">

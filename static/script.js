@@ -1,7 +1,12 @@
 const LAYOUTS = [
-    { id: 'layout-standard', name: 'Standard (Bottom Left)' },
-    { id: 'layout-centered', name: 'Centered (Middle)' },
-    { id: 'layout-bold', name: 'Bold (Top Left)' }
+    { id: 'layout-standard', name: 'Standard (Bottom Left)', short: 'STD' },
+    { id: 'layout-centered', name: 'Centered (Middle)', short: 'CTR' },
+    { id: 'layout-bold', name: 'Bold (Top Left)', short: 'BLD' }
+];
+
+const OVERLAYS = [
+    { id: 'black', short: 'B' },
+    { id: 'white', short: 'W' }
 ];
 
 const toast = (msg, type = 'info') => {
@@ -41,8 +46,9 @@ const App = {
         this.renderAll(); 
         lucide.createIcons(); 
         this.fitStage();
-        document.fonts.ready.then(() => { this.renderAll(); this.fitStage(); });
-        window.addEventListener('resize', () => this.fitStage());
+        this.positionControls(); 
+        document.fonts.ready.then(() => { this.renderAll(); this.fitStage(); this.positionControls(); });
+        window.addEventListener('resize', () => { this.fitStage(); this.positionControls(); });
     },
 
     async loadInitialPlaceholders() {
@@ -60,34 +66,6 @@ const App = {
         }
     },
     
-    // Nueva función para sincronizar los controles de la modal (solo lectura)
-    syncModalControls(v) {
-        const d = this.state.data[v];
-        
-        // Actualiza el título y los controles de la modal
-        this.els.cardOptionsTitle.textContent = `OPTIONS FOR VARIANT ${v}`;
-        this.els.lay.value = d.layout;
-        this.els.blur.value = d.blur;
-        this.els.contrast.value = d.contrast;
-        this.els.iUrl.value = d.bg.startsWith('data:') ? '(Local Image Loaded)' : d.bg;
-        
-        document.querySelectorAll('#cardOptionsModal .overlay-btn').forEach(btn => 
-            btn.classList.toggle('active', btn.dataset.overlay === d.overlayColor)
-        );
-    },
-
-    openCardOptions(v) {
-        // 1. Asegurar que la tarjeta clickeada esté activa (ACTIVA switchVar)
-        this.switchVar(v); 
-        
-        // 2. Abrir la modal (el contenido se sincroniza en switchVar)
-        this.els.cardOptionsModal.classList.add('open');
-    },
-
-    closeCardOptions() {
-        this.els.cardOptionsModal.classList.remove('open');
-    },
-
     handleFocus(el, type) {
         const v = el.closest('.mockup').id.replace('mock', '');
         const d = this.state.data[v];
@@ -157,21 +135,31 @@ const App = {
         const $ = (id) => document.getElementById(id);
         this.els = {
             url: $('urlInput'), scrape: $('scrapeBtn'), editor: $('editorPanel'), dl: $('dlBtn'),
-            // Removidas las referencias a textareas de sidebar
+            // Textareas 
             ti: $('titleInput'), 
             sub: $('subInput'), 
             
-            lay: $('layoutSelector'), 
-            theme: $('themeSelector'),
+            // NEW CONTROL PANEL ELEMENTS
             iUrl: $('imgUrlInput'), 
             iFile: $('imgFileInput'),
             imgFileBtn: $('imgFileBtn'),
+            blur: $('blurRange'), 
+            contrast: $('contrastRange'), 
+            activeControls: $('activeControls'), 
+            
+            // NEW MOCKUP ELEMENTS
+            layoutBtn: $('layoutBtn'),
+            layoutValue: $('layoutValue'),
+            overlayBtn: $('overlayBtn'),
+            controlRows: document.querySelectorAll('#activeControls .row'), // Capturar filas para cálculo de altura
+            overlayValue: $('overlayValue'),
+            stageGrid: document.querySelector('.stage-grid'), // Capturar stage-grid para la transformación
+            
+            theme: $('themeSelector'),
             cap: $('captionPreview'), 
             cpy: $('copyBtn'),
             sidebar: $('mainSidebar'), 
             mobToggle: $('mobileToggle'),
-            blur: $('blurRange'), 
-            contrast: $('contrastRange'), 
             loadingBar: $('loadingBar'),
             fbModal: $('fallbackModal'), 
             fbList: $('fallbackList'), 
@@ -179,14 +167,11 @@ const App = {
             fbGoogle: $('googleFallbackBtn'),
             subGroup: $('subtitle-control-group'), 
             capGroup: $('caption-control-group'),
-            cardOptionsModal: $('cardOptionsModal'),
-            cardOptionsTitle: $('cardOptionsTitle')
         };
     },
 
     initUI() { 
-        this.els.lay.innerHTML = ''; 
-        LAYOUTS.forEach(l => { const o = document.createElement('option'); o.value = l.id; o.innerText = l.name; this.els.lay.appendChild(o); }); 
+        // No longer needed: this.els.lay.innerHTML = '';
     },
     
     async loadThemes() {
@@ -239,29 +224,54 @@ const App = {
         this.els.scrape.onclick = () => this.scrape();
         this.els.mobToggle.onclick = () => this.els.sidebar.classList.toggle('open');
         
-        // La activación de variante se hace solo con click en el mockup
+        // Clicks on the 'more-horizontal' icon also switch the active variant
+        document.querySelectorAll('.card-options-btn').forEach(btn => 
+            btn.onclick = (e) => { 
+                e.stopPropagation(); 
+                const v = e.target.closest('.mockup').id.replace('mock', '');
+                this.switchVar(v);
+            }
+        );
+
+        // Variant activation from the mockup click
         ['A', 'B', 'C'].forEach(v => document.getElementById(`mock${v}`).onclick = () => this.switchVar(v));
         this.els.theme.onchange = (e) => this.applyTheme(e.target.value);
 
         const up = () => this.renderCard(this.state.active);
         
-        // Sincronización inversa de texto del Sidebar: Eliminada la lógica, ya no es necesaria
+        // --- NEW MOCKUP CONTROL LOGIC ---
         
-        // Controles de la Modal de Opciones (estos son los que el usuario quiere que funcionen):
-        this.els.lay.onchange = (e) => { this.state.data[this.state.active].layout = e.target.value; up(); };
-        this.els.iUrl.oninput = (e) => { this.state.data[this.state.active].bg = e.target.value; up(); };
+        // Layout Cycler
+        this.els.layoutBtn.onclick = () => {
+            const currentLayout = this.state.data[this.state.active].layout;
+            const currentIndex = LAYOUTS.findIndex(l => l.id === currentLayout);
+            const nextIndex = (currentIndex + 1) % LAYOUTS.length;
+            
+            this.state.data[this.state.active].layout = LAYOUTS[nextIndex].id;
+            this.els.layoutValue.textContent = LAYOUTS[nextIndex].short;
+            up();
+        };
+
+        // Overlay Cycler
+        this.els.overlayBtn.onclick = () => {
+            const currentOverlay = this.state.data[this.state.active].overlayColor;
+            const currentIndex = OVERLAYS.findIndex(o => o.id === currentOverlay);
+            const nextIndex = (currentIndex + 1) % OVERLAYS.length;
+            
+            this.state.data[this.state.active].overlayColor = OVERLAYS[nextIndex].id;
+            this.els.overlayValue.textContent = OVERLAYS[nextIndex].short;
+            up();
+        };
+
+        // Sliders and URL Input (standard bindings)
+        this.els.iUrl.oninput = (e) => { 
+            this.state.data[this.state.active].bg = e.target.value; 
+            up(); 
+        };
         this.els.blur.oninput = (e) => { this.state.data[this.state.active].blur = e.target.value; up(); };
         this.els.contrast.oninput = (e) => { this.state.data[this.state.active].contrast = e.target.value; up(); };
 
-        document.querySelectorAll('#cardOptionsModal .overlay-btn').forEach(b => b.onclick = (e) => {
-            if (e.target.classList.contains('active')) return;
-            document.querySelectorAll('#cardOptionsModal .overlay-btn').forEach(btn => btn.classList.remove('active'));
-            e.target.classList.add('active'); 
-            this.state.data[this.state.active].overlayColor = e.target.dataset.overlay; 
-            up();
-        });
-
-        // Local Image Upload (también en la Modal)
+        // Local Image Upload (existing logic)
         this.els.iFile.onchange = (e) => {
             if (e.target.files?.[0]) {
                 const r = new FileReader();
@@ -273,6 +283,7 @@ const App = {
                 r.readAsDataURL(e.target.files[0]);
             }
         };
+        // --- END NEW MOCKUP CONTROL LOGIC ---
 
         this.els.dl.onclick = () => this.downloadHD();
         this.els.cpy.onclick = () => { 
@@ -311,15 +322,14 @@ const App = {
         });
         
         const d = this.state.data[v];
-        // Sincronizar los textareas del sidebar con la tarjeta activa (para edición rápida)
-        // Se mantienen los IDs de los textareas aunque estén ocultos por limpieza de código.
+        // Sync textareas with active card (for quick reference/debugging)
         this.els.ti.value = d.title; 
         this.els.sub.value = d.subtitle; 
         
         const titleEl = document.querySelector(`#card${v} .c-title`);
         const subEl = document.querySelector(`#card${v} .c-subtitle`);
         
-        // Sincronizar contenido si no se está editando
+        // Sync content if not actively editing
         if (document.activeElement !== titleEl) titleEl.textContent = d.title;
         if (document.activeElement !== subEl) subEl.textContent = d.subtitle;
         
@@ -335,16 +345,93 @@ const App = {
         const displayedCaption = isChatGPTricks ? "read de caption" : (d.caption || 'Waiting for AI...');
         this.els.cap.innerText = displayedCaption;
         
-        // --- SINCRONIZACIÓN DE MODAL (FIX DE RECURSIVIDAD Y FUNCIONALIDAD) ---
-        if (this.els.cardOptionsModal.classList.contains('open')) {
-            // FIX: Si la modal está abierta, sincronizar sus controles
-            this.syncModalControls(v); 
+        // --- MOCKUP CONTROL PANEL SYNCHRONIZATION ---
+        const layoutShort = LAYOUTS.find(l => l.id === d.layout)?.short || 'ERR';
+        const overlayShort = OVERLAYS.find(o => o.id === d.overlayColor)?.short || 'ERR';
+
+        this.els.layoutValue.textContent = layoutShort;
+        this.els.overlayValue.textContent = overlayShort;
+        this.els.blur.value = d.blur;
+        this.els.contrast.value = d.contrast;
+        // Sincronizar el input de URL solo si no es una imagen local
+        if (!d.bg.startsWith('data:')) {
+            this.els.iUrl.value = d.bg;
+        } else {
+            this.els.iUrl.value = "(Local Image Loaded)";
         }
+        
+        // Recalculamos la posición vertical y la posición de los controles
+        this.updateVerticalCentering(v); 
+        this.positionControls(v);
         // ----------------------------------------------------
 
         this.fitStage();
     },
+    
+    // --- FUNCIÓN PARA EL CENTRADO VERTICAL DEL CONJUNTO (Stage-grid + Controls) ---
+    updateVerticalCentering(v) {
+        if (this.els.activeControls.classList.contains('hidden') || window.innerWidth <= 1024) {
+            this.els.stageGrid.style.transform = ''; // Reset transform if controls are hidden
+            return;
+        }
+        
+        // Medir la altura sin interferir con la visibilidad final (solo posición)
+        const originalPosition = this.els.activeControls.style.position;
+        const originalLeft = this.els.activeControls.style.left;
 
+        this.els.activeControls.style.position = 'static';
+        this.els.activeControls.style.left = '0';
+        this.els.activeControls.classList.remove('hidden');
+
+        const controlsHeight = this.els.activeControls.offsetHeight;
+        
+        // Restaurar estado de posición, pero mantener la visibilidad para positionControls()
+        this.els.activeControls.style.position = 'absolute';
+        this.els.activeControls.style.left = originalLeft; 
+
+        const separation = 20; 
+        const totalOffset = controlsHeight + separation;
+        const translateY = -(totalOffset / 2);
+        
+        // Aplicar el desplazamiento a stageGrid para centrar el conjunto visualmente
+        this.els.stageGrid.style.transform = `translateY(${translateY}px)`;
+    },
+    // --- FIN FUNCIÓN DE CENTRADO ---
+
+    positionControls(v = this.state.active) {
+        if (this.els.editor.classList.contains('hidden') || window.innerWidth <= 1024) {
+            this.els.activeControls.classList.add('hidden'); 
+            this.els.stageGrid.style.transform = ''; // Asegurar que se centra si los controles se ocultan
+            return;
+        }
+
+        const activeMockup = document.getElementById(`mock${v}`);
+        if (!activeMockup) {
+            this.els.activeControls.classList.add('hidden');
+            return;
+        }
+
+        // Hacemos el panel visible para medir y posicionar
+        this.els.activeControls.classList.remove('hidden'); 
+        
+        const rect = activeMockup.getBoundingClientRect();
+        const mainStageRect = this.els.activeControls.closest('.main-stage').getBoundingClientRect();
+        
+        // 1. Posición vertical (rect.bottom ya incorpora el desplazamiento del centrado)
+        const topPosition = (rect.bottom - mainStageRect.top) + 20; // + 20px separación
+        
+        // 2. Centrar horizontalmente
+        const panelWidth = this.els.activeControls.offsetWidth; 
+        const leftPosition = (rect.left - mainStageRect.left) + (rect.width / 2) - (panelWidth / 2);
+        
+        // Apply the new position
+        this.els.activeControls.style.left = `${leftPosition}px`;
+        this.els.activeControls.style.top = `${topPosition}px`;
+        this.els.activeControls.style.transform = 'none'; 
+        
+        this.updateVerticalCentering(v); // Re-centrar después de posicionar para asegurar que el stage-grid esté compensado
+    },
+    
     renderCard(v, tid = `card${v}`) {
         const c = document.getElementById(tid); if (!c) return;
         const d = this.state.data[v];
@@ -401,7 +488,7 @@ const App = {
             const s = document.querySelector(`#card${v} .c-subtitle`);
             const isChatGPTricks = this.state.theme.id === 'chatgptricks';
             
-            // FIX: Actualizar el textContent de todas las tarjetas inmediatamente
+            // FIX: Actualizar el textContent de todas las tarjetas immediately
             if (t) t.textContent = d.title;
             if (s) s.textContent = d.subtitle;
 
@@ -409,6 +496,8 @@ const App = {
             if (t && !d.isPlaceholder) this.autoFit(t, isChatGPTricks ? 180 : 120, isChatGPTricks ? 80 : 60, 650);
             if (s && !d.isPlaceholder) this.autoFit(s, 56, 30, 400);
         }); 
+        this.updateVerticalCentering(this.state.active); // Re-center on full render
+        this.positionControls(); 
     },
     
     autoFit(el, maxFs, minFs, maxHeight) { 
@@ -570,17 +659,32 @@ const App = {
         this.els.loadingBar.style.display = 'block';
         
         try {
+            const activeCardData = this.state.data[this.state.active]; // Obtener los datos del estado
             this.renderCard(this.state.active, 'hd-render-card');
             const hd = document.getElementById('hd-render-card');
+            
+            // 1. Asegurar que el texto editable esté en el elemento HD (CORRECCIÓN WYSIWYG)
+            hd.querySelector('.c-title').textContent = activeCardData.title;
+            hd.querySelector('.c-subtitle').textContent = activeCardData.subtitle;
+
+            // 2. Sincronizar clases de placeholder para aplicar el estilo correcto antes de renderizar (CORRECCIÓN WYSIWYG)
+            if (activeCardData.isPlaceholder) {
+                hd.querySelector('.c-title').classList.add('is-placeholder');
+                hd.querySelector('.c-subtitle').classList.add('is-placeholder');
+            } else {
+                hd.querySelector('.c-title').classList.remove('is-placeholder');
+                hd.querySelector('.c-subtitle').classList.remove('is-placeholder');
+            }
+
             const hdImg = hd.querySelector('.card-bg');
             
             hdImg.crossOrigin = "anonymous"; 
-            const currentBg = this.state.data[this.state.active].bg;
+            const currentBg = activeCardData.bg;
             if (!currentBg.startsWith('data:')) {
                  hdImg.src = `/api/proxy_image?url=${encodeURIComponent(currentBg)}`;
             }
             
-            const isChatGPTricks = this.state.data[this.state.active].layout === 'layout-chatgptricks';
+            const isChatGPTricks = activeCardData.layout === 'layout-chatgptricks';
             this.autoFit(hd.querySelector('.c-title'), isChatGPTricks ? 180 : 140, isChatGPTricks ? 80 : 70, 700); 
             this.autoFit(hd.querySelector('.c-subtitle'), 56, 30, 400);
             
@@ -602,7 +706,7 @@ const App = {
             const dataUrl = await htmlToImage.toPng(hd, { quality: 1.0, pixelRatio: 1, cacheBust: true });
             
             const a = document.createElement('a');
-            const tag = isChatGPTricks ? 'TRICKS' : this.state.data[this.state.active].tag;
+            const tag = isChatGPTricks ? 'TRICKS' : activeCardData.tag;
             a.download = `Sentient_${tag}_${Date.now()}.png`;
             a.href = dataUrl;
             a.click();

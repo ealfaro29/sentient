@@ -231,9 +231,29 @@ def initial_images():
     ]
     
     # Selecciona 3 imágenes únicas, favoreciendo las de Pexels
-    img_a = images[0] if len(images) >= 1 else fallback_imgs[0]
-    img_b = images[1] if len(images) >= 2 else fallback_imgs[1]
-    img_c = images[2] if len(images) >= 3 else fallback_imgs[2]
+    unique_images = []
+    seen = set()
+    
+    # Add Pexels images first
+    for img in images:
+        if img not in seen:
+            unique_images.append(img)
+            seen.add(img)
+
+    # Add fallbacks until we have 3
+    for img in fallback_imgs:
+        if len(unique_images) >= 3:
+            break
+        if img not in seen:
+            unique_images.append(img)
+            seen.add(img)
+    
+    # Assign the first three or a default
+    default_img = "https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080"
+
+    img_a = unique_images[0] if len(unique_images) >= 1 else default_img
+    img_b = unique_images[1] if len(unique_images) >= 2 else default_img
+    img_c = unique_images[2] if len(unique_images) >= 3 else default_img
     
     return jsonify({
         "A": img_a,
@@ -318,27 +338,44 @@ def scrape():
         
         img_q = ai_data.get('image_keywords', article.title) if ai_data else article.title
         
-        # Obtenemos las imágenes de Pexels (default count=3)
-        pexels_imgs = get_pexels_images(img_q) 
+        # --- REVISED IMAGE SELECTION LOGIC START ---
         
-        # Fallback images (para garantizar 3 URLS únicas si Pexels falla)
+        # 1. Fallback images (for guaranteed options if Pexels or article image fail)
         FALLBACK_PEXELS = [
             "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080",
             "https://images.unsplash.com/photo-1555212697-c20e29b10636?q=80&w=1080",
             "https://images.unsplash.com/photo-1511376770913-2d2f1f510793?q=80&w=1080"
         ]
         
-        # Pexels 1: Imagen 0 de Pexels O Fallback 1
-        pexels_1 = pexels_imgs[0] if len(pexels_imgs) >= 1 else FALLBACK_PEXELS[0]
-        # Pexels 2: Imagen 1 de Pexels O Fallback 2
-        pexels_2 = pexels_imgs[1] if len(pexels_imgs) >= 2 else FALLBACK_PEXELS[1]
+        # 2. Get images from Pexels (request more to increase diversity chances)
+        pexels_imgs = get_pexels_images(img_q, count=5) 
+
+        # 3. Create a prioritized list of all potential images
+        potential_images = []
+        # Priority 1: Article's top image
+        if article.top_image:
+            potential_images.append(article.top_image)
+        # Priority 2: Pexels search results
+        potential_images.extend(pexels_imgs)
+        # Priority 3: Hardcoded fallbacks
+        potential_images.extend(FALLBACK_PEXELS)
         
-        # Asignación final
-        # I_A: Imagen del artículo (prioridad), o Pexels 1 (si no hay imagen de artículo)
-        img_a = article.top_image or pexels_1
-        # I_B y I_C usan Pexels 1 y Pexels 2 (garantizado que son únicos si se usó el fallback)
-        img_b = pexels_1
-        img_c = pexels_2
+        # 4. Filter for unique, non-empty images
+        unique_images = []
+        seen_urls = set()
+        for url in potential_images:
+            if url and url not in seen_urls:
+                unique_images.append(url)
+                seen_urls.add(url)
+
+        # 5. Assign the first three unique images to the variants, defaulting to a basic fallback if < 3
+        default_img = "https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080" # Single default image
+        
+        img_a = unique_images[0] if len(unique_images) >= 1 else default_img
+        img_b = unique_images[1] if len(unique_images) >= 2 else default_img
+        img_c = unique_images[2] if len(unique_images) >= 3 else default_img
+
+        # --- REVISED IMAGE SELECTION LOGIC END ---
 
         data = {
             "source": src,
