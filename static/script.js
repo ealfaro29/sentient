@@ -26,10 +26,9 @@ const App = {
         theme: {}, 
         themes: {}, 
         data: {
-            // Placeholder images removed by setting bg: ''
-            A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS', layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black' },
-            B: { title: 'SET', subtitle: 'Choose variant...', bg: '', tag: 'INFO', layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black' },
-            C: { title: 'GO', subtitle: 'Customize & export.', bg: '', tag: 'BREAKING', layout: 'layout-bold', caption: '', blur: 0, contrast: 100, overlayColor: 'black' }
+            A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS', layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...' },
+            B: { title: 'SET', subtitle: 'Choose variant...', bg: '', tag: 'INFO', layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'SET', defaultSubtitle: 'Choose variant...' },
+            C: { title: 'GO', subtitle: 'Customize & export.', bg: '', tag: 'BREAKING', layout: 'layout-bold', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO', defaultSubtitle: 'Customize & export.' }
         }
     },
 
@@ -38,6 +37,7 @@ const App = {
         this.initUI(); 
         this.bindEvents();
         await this.loadThemes(); 
+        await this.loadInitialPlaceholders(); 
         this.renderAll(); 
         lucide.createIcons(); 
         this.fitStage();
@@ -45,19 +45,142 @@ const App = {
         window.addEventListener('resize', () => this.fitStage());
     },
 
+    async loadInitialPlaceholders() {
+        try {
+            console.log("⏳ Loading initial random placeholders...");
+            const res = await fetch('/api/initial_images');
+            if (!res.ok) throw new Error('Failed to fetch initial images');
+            const data = await res.json();
+            if (data.A) this.state.data.A.bg = data.A;
+            if (data.B) this.state.data.B.bg = data.B;
+            if (data.C) this.state.data.C.bg = data.C;
+            console.log("✅ Initial placeholders loaded.");
+        } catch (e) {
+            console.error("Error loading initial placeholders:", e);
+        }
+    },
+    
+    // Nueva función para sincronizar los controles de la modal (solo lectura)
+    syncModalControls(v) {
+        const d = this.state.data[v];
+        
+        // Actualiza el título y los controles de la modal
+        this.els.cardOptionsTitle.textContent = `OPTIONS FOR VARIANT ${v}`;
+        this.els.lay.value = d.layout;
+        this.els.blur.value = d.blur;
+        this.els.contrast.value = d.contrast;
+        this.els.iUrl.value = d.bg.startsWith('data:') ? '(Local Image Loaded)' : d.bg;
+        
+        document.querySelectorAll('#cardOptionsModal .overlay-btn').forEach(btn => 
+            btn.classList.toggle('active', btn.dataset.overlay === d.overlayColor)
+        );
+    },
+
+    openCardOptions(v) {
+        // 1. Asegurar que la tarjeta clickeada esté activa (ACTIVA switchVar)
+        this.switchVar(v); 
+        
+        // 2. Abrir la modal (el contenido se sincroniza en switchVar)
+        this.els.cardOptionsModal.classList.add('open');
+    },
+
+    closeCardOptions() {
+        this.els.cardOptionsModal.classList.remove('open');
+    },
+
+    handleFocus(el, type) {
+        const v = el.closest('.mockup').id.replace('mock', '');
+        const d = this.state.data[v];
+        
+        if (d.isPlaceholder) {
+            requestAnimationFrame(() => {
+                el.textContent = '';
+                el.classList.remove('is-placeholder');
+                d.isPlaceholder = false;
+            });
+        }
+    },
+
+    handleBlur(el, type) {
+        const v = el.closest('.mockup').id.replace('mock', '');
+        const d = this.state.data[v];
+        const currentText = el.textContent; 
+        const trimmedText = currentText.trim();
+        const isChatGPTricks = this.state.theme.id === 'chatgptricks';
+
+        if (trimmedText === '') {
+            d.isPlaceholder = true;
+            d.title = d.defaultTitle;
+            d.subtitle = d.defaultSubtitle;
+            
+            if (type === 'title') el.textContent = d.defaultTitle;
+            else el.textContent = d.defaultSubtitle;
+            
+            el.classList.add('is-placeholder');
+        } else {
+            d.isPlaceholder = false;
+            
+            // APLICA EL AUTOFIT AL TERMINAR DE EDITAR
+            if (type === 'title') {
+                 this.autoFit(el, isChatGPTricks ? 180 : 120, isChatGPTricks ? 80 : 60, 650);
+            } else {
+                 this.autoFit(el, 56, 30, 400);
+            }
+            // Sincronizar el estado con el contenido final
+            if (type === 'title') d.title = currentText;
+            if (type === 'subtitle') d.subtitle = currentText;
+        }
+    },
+
+    updateTextFromCard(el, type) {
+        const v = el.closest('.mockup').id.replace('mock', '');
+        const newText = el.textContent; 
+        const isChatGPTricks = this.state.theme.id === 'chatgptricks';
+
+        // Bloqueo específico para tema chatgptricks en subtítulo
+        if (type === 'subtitle' && isChatGPTricks) {
+             if (newText.trim() !== this.state.data[v].subtitle) {
+                 el.textContent = this.state.data[v].subtitle; 
+             }
+             return;
+        }
+
+        // SOLO actualizamos el estado.
+        if (type === 'title') {
+            this.state.data[v].title = newText;
+        } else {
+            this.state.data[v].subtitle = newText;
+        }
+    },
+    
     cacheDOM() {
         const $ = (id) => document.getElementById(id);
         this.els = {
             url: $('urlInput'), scrape: $('scrapeBtn'), editor: $('editorPanel'), dl: $('dlBtn'),
-            ti: $('titleInput'), sub: $('subInput'), lay: $('layoutSelector'), theme: $('themeSelector'),
-            iUrl: $('imgUrlInput'), iFile: $('imgFileInput'), cap: $('captionPreview'), cpy: $('copyBtn'),
-            custom: $('customBtn'), sidebar: $('mainSidebar'), mobToggle: $('mobileToggle'),
-            blur: $('blurRange'), contrast: $('contrastRange'), loadingBar: $('loadingBar'),
-            // Fallback Modal Elements
-            fbModal: $('fallbackModal'), fbList: $('fallbackList'), fbMsg: $('fallbackMsg'), fbGoogle: $('googleFallbackBtn'),
-            // NUEVOS IDS AGREGADOS EN HTML
-            subGroup: $('subtitle-control-group'),
-            capGroup: $('caption-control-group')
+            // Removidas las referencias a textareas de sidebar
+            ti: $('titleInput'), 
+            sub: $('subInput'), 
+            
+            lay: $('layoutSelector'), 
+            theme: $('themeSelector'),
+            iUrl: $('imgUrlInput'), 
+            iFile: $('imgFileInput'),
+            imgFileBtn: $('imgFileBtn'),
+            cap: $('captionPreview'), 
+            cpy: $('copyBtn'),
+            sidebar: $('mainSidebar'), 
+            mobToggle: $('mobileToggle'),
+            blur: $('blurRange'), 
+            contrast: $('contrastRange'), 
+            loadingBar: $('loadingBar'),
+            fbModal: $('fallbackModal'), 
+            fbList: $('fallbackList'), 
+            fbMsg: $('fallbackMsg'), 
+            fbGoogle: $('googleFallbackBtn'),
+            subGroup: $('subtitle-control-group'), 
+            capGroup: $('caption-control-group'),
+            cardOptionsModal: $('cardOptionsModal'),
+            cardOptionsTitle: $('cardOptionsTitle')
         };
     },
 
@@ -68,7 +191,6 @@ const App = {
     
     async loadThemes() {
         try {
-            // MODIFICACIÓN: Agregando 'chatgptricks.json'
             const themesToLoad = ['sentient.json', 'cyber.json', 'elegant.json', 'chatgptricks.json'];
             const responses = await Promise.all(themesToLoad.map(f => fetch(f)));
             const themesData = await Promise.all(responses.map(res => { 
@@ -96,68 +218,50 @@ const App = {
         document.body.className = t.id; 
         
         const root = document.documentElement;
-        // Apply generic CSS variables from JSON
         for (const [k, v] of Object.entries(t.cssVariables)) root.style.setProperty(k, v);
         
-        // Apply specific font configs
         root.style.setProperty('--font-card-body', t.fontConfig.cardBodyFont);
         root.style.setProperty('--font-headline', t.fontConfig.headlineFont);
         root.style.setProperty('--font-headline-weight', t.fontConfig.fontWeight);
         
-        // Reset layouts to theme defaults
-        // NOTA: Para chatgptricks, las 3 variantes usarán el mismo layout fijo
         ['A', 'B', 'C'].forEach(v => this.state.data[v].layout = t.defaultLayouts[v]);
 
-        // LÓGICA DE CONTROL DE INTERFAZ PARA CHATGPTRICKS
         const isChatGPTricks = tid === 'chatgptricks';
-        
         if (this.els.subGroup) {
             this.els.subGroup.style.display = isChatGPTricks ? 'none' : 'block';
-            if (isChatGPTricks) this.els.sub.value = ''; // Limpiar el campo
         }
         
-        // Nota: El campo de TAG no tiene un input visible en el HTML, se controla con la data.
-
-        // El caption se deja visible, pero el valor se gestiona en switchVar/scrape
-        
-        // Refresh UI
         if (this.els.editor.classList.contains('hidden')) this.renderAll(); 
         else this.switchVar(this.state.active);
     },
 
     bindEvents() {
         this.els.scrape.onclick = () => this.scrape();
-        this.els.custom.onclick = () => this.enableCustomMode();
         this.els.mobToggle.onclick = () => this.els.sidebar.classList.toggle('open');
         
-        ['A', 'B', 'C'].forEach(v => document.getElementById(`btnVar${v}`).onclick = () => this.switchVar(v));
+        // La activación de variante se hace solo con click en el mockup
+        ['A', 'B', 'C'].forEach(v => document.getElementById(`mock${v}`).onclick = () => this.switchVar(v));
         this.els.theme.onchange = (e) => this.applyTheme(e.target.value);
 
-        // Live Rendering Triggers
         const up = () => this.renderCard(this.state.active);
-        this.els.ti.oninput = (e) => { this.state.data[this.state.active].title = e.target.value; up(); };
-        // El input del subtítulo solo debe afectar si NO es chatgptricks
-        this.els.sub.oninput = (e) => { 
-            if (this.state.theme.id !== 'chatgptricks') {
-                this.state.data[this.state.active].subtitle = e.target.value; 
-                up(); 
-            }
-        };
+        
+        // Sincronización inversa de texto del Sidebar: Eliminada la lógica, ya no es necesaria
+        
+        // Controles de la Modal de Opciones (estos son los que el usuario quiere que funcionen):
         this.els.lay.onchange = (e) => { this.state.data[this.state.active].layout = e.target.value; up(); };
         this.els.iUrl.oninput = (e) => { this.state.data[this.state.active].bg = e.target.value; up(); };
         this.els.blur.oninput = (e) => { this.state.data[this.state.active].blur = e.target.value; up(); };
         this.els.contrast.oninput = (e) => { this.state.data[this.state.active].contrast = e.target.value; up(); };
 
-        // Overlay Toggles
-        document.querySelectorAll('.overlay-btn').forEach(b => b.onclick = (e) => {
+        document.querySelectorAll('#cardOptionsModal .overlay-btn').forEach(b => b.onclick = (e) => {
             if (e.target.classList.contains('active')) return;
-            document.querySelectorAll('.overlay-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#cardOptionsModal .overlay-btn').forEach(btn => btn.classList.remove('active'));
             e.target.classList.add('active'); 
             this.state.data[this.state.active].overlayColor = e.target.dataset.overlay; 
             up();
         });
 
-        // Local Image Upload
+        // Local Image Upload (también en la Modal)
         this.els.iFile.onchange = (e) => {
             if (e.target.files?.[0]) {
                 const r = new FileReader();
@@ -172,7 +276,6 @@ const App = {
 
         this.els.dl.onclick = () => this.downloadHD();
         this.els.cpy.onclick = () => { 
-            // Usa el valor real del caption en la data, no el texto hardcodeado en el DOM
             const captionToCopy = (this.state.theme.id === 'chatgptricks') ? "read de caption" : this.state.data[this.state.active].caption;
             navigator.clipboard.writeText(captionToCopy); 
             toast('Caption copied to clipboard!'); 
@@ -181,14 +284,14 @@ const App = {
 
     enableCustomMode() {
         ['A','B','C'].forEach((v, i) => {
-            this.state.data[v].title = `HEADLINE ${v}`; 
-            // MODIFICACIÓN: Si es chatgptricks, usar texto vacío
             const isChatGPTricks = this.state.theme.id === 'chatgptricks';
-            this.state.data[v].subtitle = isChatGPTricks ? '' : `Write your subtitle here for variant ${v}...`;
+            this.state.data[v].title = this.state.data[v].defaultTitle;
+            this.state.data[v].subtitle = this.state.data[v].defaultSubtitle;
+            this.state.data[v].isPlaceholder = true; 
             this.state.data[v].tag = isChatGPTricks ? '' : ['NEWS', 'STORY', 'BREAKING'][i]; 
             this.state.data[v].caption = isChatGPTricks ? "read de caption" : 'Write your caption here...';
             this.state.data[v].layout = this.state.theme.defaultLayouts[v];
-            this.state.data[v].bg = ''; // Ensure no default image in custom mode
+            this.state.data[v].bg = ''; 
         });
         this.els.editor.classList.remove('hidden'); 
         this.switchVar('A'); 
@@ -200,55 +303,67 @@ const App = {
     switchVar(v) {
         this.state.active = v;
         ['A', 'B', 'C'].forEach(x => { 
-            document.getElementById(`btnVar${x}`).classList.toggle('active', x === v); 
-            document.getElementById(`mock${x}`).classList.toggle('inactive', x !== v); 
+            document.getElementById(`mock${x}`).classList.toggle('active-stage', x === v); 
+            if (x === v) {
+                const mockupEl = document.getElementById(`mock${x}`);
+                if (mockupEl) mockupEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
         });
         
         const d = this.state.data[v];
+        // Sincronizar los textareas del sidebar con la tarjeta activa (para edición rápida)
+        // Se mantienen los IDs de los textareas aunque estén ocultos por limpieza de código.
         this.els.ti.value = d.title; 
         this.els.sub.value = d.subtitle; 
-        this.els.lay.value = d.layout; 
         
-        // MODIFICACIÓN: Usar caption hardcodeado para chatgptricks
+        const titleEl = document.querySelector(`#card${v} .c-title`);
+        const subEl = document.querySelector(`#card${v} .c-subtitle`);
+        
+        // Sincronizar contenido si no se está editando
+        if (document.activeElement !== titleEl) titleEl.textContent = d.title;
+        if (document.activeElement !== subEl) subEl.textContent = d.subtitle;
+        
+        if (d.isPlaceholder) {
+            titleEl.classList.add('is-placeholder');
+            subEl.classList.add('is-placeholder');
+        } else {
+             titleEl.classList.remove('is-placeholder');
+             subEl.classList.remove('is-placeholder');
+        }
+
         const isChatGPTricks = this.state.theme.id === 'chatgptricks';
         const displayedCaption = isChatGPTricks ? "read de caption" : (d.caption || 'Waiting for AI...');
         this.els.cap.innerText = displayedCaption;
         
-        this.els.blur.value = d.blur; 
-        this.els.contrast.value = d.contrast;
-        
-        document.querySelectorAll('.overlay-btn').forEach(btn => 
-            btn.classList.toggle('active', btn.dataset.overlay === d.overlayColor)
-        );
-        
-        if (!d.bg.startsWith('data:')) this.els.iUrl.value = d.bg;
+        // --- SINCRONIZACIÓN DE MODAL (FIX DE RECURSIVIDAD Y FUNCIONALIDAD) ---
+        if (this.els.cardOptionsModal.classList.contains('open')) {
+            // FIX: Si la modal está abierta, sincronizar sus controles
+            this.syncModalControls(v); 
+        }
+        // ----------------------------------------------------
+
         this.fitStage();
     },
 
     renderCard(v, tid = `card${v}`) {
         const c = document.getElementById(tid); if (!c) return;
         const d = this.state.data[v];
+        const isChatGPTricks = this.state.theme.id === 'chatgptricks';
         
-        // Determine overlay colors based on theme or defaults
         const ovs = (this.state.theme && this.state.theme.overlays) 
             ? this.state.theme.overlays 
             : { black: 'rgba(0,0,0,0.5)', white: 'rgba(255,255,255,0.3)' }; 
 
-        // Image Handling (Proxy vs Data URL)
         const imgEl = c.querySelector('.card-bg');
-        
-        // CRITICAL: Only set src if a background is present, otherwise keep it blank/transparent
         if (d.bg && d.bg.length > 0) {
             if (d.bg.startsWith('data:')) {
                 imgEl.src = d.bg;
             } else {
-                // Use proxy to avoid CORS issues on standard images
                 imgEl.src = `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
             }
         } else {
-            imgEl.src = ''; // Explicitly blank the image source if no URL is provided
+            imgEl.src = ''; 
         }
-
 
         imgEl.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%)`;
         c.querySelector('.card-overlay').style.background = d.overlayColor === 'white' ? ovs.white : ovs.black;
@@ -257,22 +372,44 @@ const App = {
         
         const t = c.querySelector('.c-title'); 
         const s = c.querySelector('.c-subtitle');
-        t.innerText = d.title; 
-        s.innerText = d.subtitle;
-
-        // Dynamic text color based on overlay
-        // MODIFICACIÓN: Color del título siempre blanco en chatgptricks (como en la imagen)
+        
+        // Sincronizar classes de placeholder
+        if(d.isPlaceholder) {
+            t.classList.add('is-placeholder');
+            s.classList.add('is-placeholder');
+        } else {
+            t.classList.remove('is-placeholder');
+            s.classList.remove('is-placeholder');
+        }
+        
         t.style.color = (d.layout === 'layout-chatgptricks') ? '#FFFFFF' : (d.overlayColor === 'white' ? '#000' : 'var(--brand)');
         s.style.color = d.overlayColor === 'white' ? '#333' : '#fff';
         
-        // Auto-fit text (only for preview cards, not HD render)
-        if (!tid.startsWith('hd-')) { 
-            this.autoFit(t, 120, 60, 650); 
+        s.setAttribute('contenteditable', isChatGPTricks ? 'false' : 'true');
+
+        if (tid.startsWith('hd-')) { 
+            this.autoFit(t, isChatGPTricks ? 180 : 140, isChatGPTricks ? 80 : 70, 700); 
             this.autoFit(s, 56, 30, 400); 
         }
     },
 
-    renderAll() { ['A', 'B', 'C'].forEach(v => this.renderCard(v)); },
+    renderAll() { 
+        ['A', 'B', 'C'].forEach(v => {
+            this.renderCard(v);
+            const d = this.state.data[v];
+            const t = document.querySelector(`#card${v} .c-title`);
+            const s = document.querySelector(`#card${v} .c-subtitle`);
+            const isChatGPTricks = this.state.theme.id === 'chatgptricks';
+            
+            // FIX: Actualizar el textContent de todas las tarjetas inmediatamente
+            if (t) t.textContent = d.title;
+            if (s) s.textContent = d.subtitle;
+
+            // FIX: Aplicar AutoFit inicial
+            if (t && !d.isPlaceholder) this.autoFit(t, isChatGPTricks ? 180 : 120, isChatGPTricks ? 80 : 60, 650);
+            if (s && !d.isPlaceholder) this.autoFit(s, 56, 30, 400);
+        }); 
+    },
     
     autoFit(el, maxFs, minFs, maxHeight) { 
         let fs = maxFs; 
@@ -312,28 +449,24 @@ const App = {
             const d = await res.json(); 
             if (d.error) throw new Error(d.error);
 
-            // Distribute images and tags
             this.state.data.A.bg = d.images.a; this.state.data.A.tag = 'NEWS';
             this.state.data.B.bg = d.images.b; this.state.data.B.tag = 'STORY';
             this.state.data.C.bg = d.images.c; this.state.data.C.tag = 'UPDATE';
             
-            const isChatGPTricks = this.state.theme.id === 'chatgptricks'; // Verificar tema aquí
+            const isChatGPTricks = this.state.theme.id === 'chatgptricks';
 
-            // Apply AI content if available, else fallback to scraping data
             if (d.ai_content && d.ai_content.variants) {
-                // Update tags based on AI content if available, ensuring C defaults to BREAKING if not provided
                 this.state.data.A.tag = 'NEWS';
                 this.state.data.B.tag = 'STORY';
                 this.state.data.C.tag = 'BREAKING'; 
 
                 ['A','B','C'].forEach(v => {
-                    // Sobrescribir datos si el tema es chatgptricks
+                    this.state.data[v].isPlaceholder = false; 
                     if (isChatGPTricks) {
-                        this.state.data[v].subtitle = ''; // No subtitulo
-                        this.state.data[v].tag = '';      // No tag
-                        this.state.data[v].caption = "read de caption"; // Caption hardcodeado
+                        this.state.data[v].subtitle = ''; 
+                        this.state.data[v].tag = '';      
+                        this.state.data[v].caption = "read de caption"; 
                     } else {
-                        // Lógica normal
                         this.state.data[v].caption = d.ai_content.common_caption;
                         this.state.data[v].subtitle = d.ai_content.variants[v].subtitle;
                     }
@@ -343,8 +476,8 @@ const App = {
             } else {
                 toast('AI generation failed. Using raw text.', 'error');
                 ['A','B','C'].forEach(v => { 
+                    this.state.data[v].isPlaceholder = false; 
                     this.state.data[v].title = d.original.title; 
-                    // Sobreescribir datos de fallback si el tema es chatgptricks
                     if (isChatGPTricks) {
                          this.state.data[v].subtitle = ''; 
                          this.state.data[v].tag = '';
@@ -387,7 +520,6 @@ const App = {
             });
             const data = await res.json();
 
-            // Always update the manual google button with the inferred query
             const safeQuery = encodeURIComponent(data.query || 'latest news');
             this.els.fbGoogle.href = `https://www.google.com/search?q=${safeQuery}`;
 
@@ -398,12 +530,11 @@ const App = {
             }
 
             this.els.fbMsg.innerHTML = `Source blocked. Here are similar articles for: <b style="color:var(--brand)">"${data.query}"</b>`;
-            this.els.fbList.innerHTML = ''; // Clear loader
+            this.els.fbList.innerHTML = ''; 
 
             data.results.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'fallback-item';
-                // Inline styles for simplicity, can be moved to CSS
                 item.style.cssText = 'padding:12px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s ease;';
                 item.innerHTML = `
                     <div style="font-weight:700; color:var(--text); font-size:0.95rem; margin-bottom:4px; line-height:1.3;">${r.title}</div>
@@ -411,16 +542,14 @@ const App = {
                     <div style="color:var(--brand); font-size:0.7rem; margin-top:6px; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.url}</div>
                 `;
                 
-                // Hover effects
                 item.onmouseover = () => { item.style.borderColor = 'var(--brand)'; item.style.background = 'rgba(255,255,255,0.05)'; };
                 item.onmouseout = () => { item.style.borderColor = 'var(--border)'; item.style.background = 'rgba(0,0,0,0.3)'; };
                 
-                // Click action
                 item.onclick = () => {
                     this.els.url.value = r.url;
                     this.els.fbModal.style.display = 'none';
                     toast(`Retrying with new source...`);
-                    this.scrape(); // Auto-retry with new URL
+                    this.scrape(); 
                 };
                 this.els.fbList.appendChild(item);
             });
@@ -441,46 +570,37 @@ const App = {
         this.els.loadingBar.style.display = 'block';
         
         try {
-            // Render active card to invisible HD stage
             this.renderCard(this.state.active, 'hd-render-card');
             const hd = document.getElementById('hd-render-card');
             const hdImg = hd.querySelector('.card-bg');
             
-            // Ensure crossOrigin is set for html-to-image to work with external images
             hdImg.crossOrigin = "anonymous"; 
             const currentBg = this.state.data[this.state.active].bg;
             if (!currentBg.startsWith('data:')) {
                  hdImg.src = `/api/proxy_image?url=${encodeURIComponent(currentBg)}`;
             }
             
-            // Upscale text for HD resolution (since autoFit optimized for preview size)
-            // MODIFICACIÓN: Aumentar el tamaño máximo del título para HD en chatgptricks
             const isChatGPTricks = this.state.data[this.state.active].layout === 'layout-chatgptricks';
-            
             this.autoFit(hd.querySelector('.c-title'), isChatGPTricks ? 180 : 140, isChatGPTricks ? 80 : 70, 700); 
             this.autoFit(hd.querySelector('.c-subtitle'), 56, 30, 400);
             
-            // Wait for image to lock in
             await new Promise((resolve, reject) => {
-                if (!currentBg || currentBg.length === 0) { // If no background, resolve immediately
+                if (!currentBg || currentBg.length === 0) { 
                     resolve();
                 } else if (hdImg.complete && hdImg.naturalHeight !== 0) {
                     resolve();
                 }
                 else { 
                     hdImg.onload = resolve; 
-                    hdImg.onerror = () => resolve(); // Proceed even if image fails (will be black)
+                    hdImg.onerror = () => resolve(); 
                 }
-                setTimeout(resolve, 5000); // Max wait 5s
+                setTimeout(resolve, 5000); 
             });
             
-            // Slight delay for font rendering stability
             await new Promise(r => setTimeout(r, 500));
             
-            // Generate PNG
             const dataUrl = await htmlToImage.toPng(hd, { quality: 1.0, pixelRatio: 1, cacheBust: true });
             
-            // Trigger download
             const a = document.createElement('a');
             const tag = isChatGPTricks ? 'TRICKS' : this.state.data[this.state.active].tag;
             a.download = `Sentient_${tag}_${Date.now()}.png`;

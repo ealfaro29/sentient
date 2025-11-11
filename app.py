@@ -9,6 +9,7 @@ from flask import Flask, request, jsonify, Response, stream_with_context
 from dotenv import load_dotenv
 from newspaper import Article
 from newspaper.article import ArticleDownloadState
+import random
 
 # Cargar variables de entorno
 load_dotenv()
@@ -212,6 +213,33 @@ def perform_ddg_search_fallback(query, max_results=5):
         print(f"⚠️ DDG Search Error: {e}")
         return []
 
+# MODIFICACIÓN DE LÓGICA DE IMÁGENES INICIALES
+@app.route('/api/initial_images', methods=['GET'])
+def initial_images():
+    """
+    Busca imágenes de Pexels para usar como placeholders de inicio con un tema de tecnología/IA.
+    Asegura que las 3 imágenes sean distintas usando fallbacks si Pexels devuelve menos de 3.
+    """
+    # Consulta: tecnología y IA
+    images = get_pexels_images('technology AI', count=5)
+    
+    # Fallback si Pexels falla o no devuelve resultados
+    fallback_imgs = [
+        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080",
+        "https://images.unsplash.com/photo-1555212697-c20e29b10636?q=80&w=1080",
+        "https://images.unsplash.com/photo-1511376770913-2d2f1f510793?q=80&w=1080"
+    ]
+    
+    # Selecciona 3 imágenes únicas, favoreciendo las de Pexels
+    img_a = images[0] if len(images) >= 1 else fallback_imgs[0]
+    img_b = images[1] if len(images) >= 2 else fallback_imgs[1]
+    img_c = images[2] if len(images) >= 3 else fallback_imgs[2]
+    
+    return jsonify({
+        "A": img_a,
+        "B": img_b,
+        "C": img_c
+    })
 
 @app.route('/api/search_alternatives', methods=['POST'])
 def search_alternatives():
@@ -289,12 +317,32 @@ def scrape():
         ai_data, ai_error = get_ai_data(article.title, article.text, src)
         
         img_q = ai_data.get('image_keywords', article.title) if ai_data else article.title
-        imgs = get_pexels_images(img_q) or ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080"]
-        while len(imgs)<3: imgs.append(imgs[0])
+        
+        # Obtenemos las imágenes de Pexels (default count=3)
+        pexels_imgs = get_pexels_images(img_q) 
+        
+        # Fallback images (para garantizar 3 URLS únicas si Pexels falla)
+        FALLBACK_PEXELS = [
+            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080",
+            "https://images.unsplash.com/photo-1555212697-c20e29b10636?q=80&w=1080",
+            "https://images.unsplash.com/photo-1511376770913-2d2f1f510793?q=80&w=1080"
+        ]
+        
+        # Pexels 1: Imagen 0 de Pexels O Fallback 1
+        pexels_1 = pexels_imgs[0] if len(pexels_imgs) >= 1 else FALLBACK_PEXELS[0]
+        # Pexels 2: Imagen 1 de Pexels O Fallback 2
+        pexels_2 = pexels_imgs[1] if len(pexels_imgs) >= 2 else FALLBACK_PEXELS[1]
+        
+        # Asignación final
+        # I_A: Imagen del artículo (prioridad), o Pexels 1 (si no hay imagen de artículo)
+        img_a = article.top_image or pexels_1
+        # I_B y I_C usan Pexels 1 y Pexels 2 (garantizado que son únicos si se usó el fallback)
+        img_b = pexels_1
+        img_c = pexels_2
 
         data = {
             "source": src,
-            "images": {"a": article.top_image or imgs[0], "b": imgs[0], "c": imgs[1]},
+            "images": {"a": img_a, "b": img_b, "c": img_c},
             "ai_content": ai_data,
             "ai_error": ai_error,
             "original": {"title": article.title[:50].upper(), "subtitle": article.text[:100]+"..."}
