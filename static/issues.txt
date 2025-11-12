@@ -1,0 +1,63 @@
+# RESUMEN DE ERRORES Y PASOS PARA LA SOLUCIÓN DEFINITIVA
+
+Aquí se detallan los problemas que hemos enfrentado y los pasos finales para corregir todo el sistema, incluyendo la persistente desaparición de la Card D.
+
+---
+
+### 1. EL PROBLEMA PRINCIPAL: LA CARD D NO APARECE
+
+**Error:** La `Card D` (Caption) no es visible en ningún momento.
+
+**Causa Raíz (Definitiva):**
+El problema es una función en `static/app.js` llamada `setAppState`.
+1.  En `static/style.css`, la regla base `.mockup` establece `opacity: 0` para ocultar todas las tarjetas al inicio.
+2.  Las tarjetas deben tener la clase `.visible-card` para anular esto y aparecer.
+3.  Al cargar la página, `app.js` llama a `setAppState('LANDING')`.
+4.  Esta función tiene un bucle (`CARD_IDS.forEach`) que busca **TODAS** las tarjetas (incluida la 'D') y les **QUITA** la clase `.visible-card` para resetear la vista.
+5.  Esto causa que la Card D (que debería estar siempre visible) se vuelva `opacity: 0` y desaparezca permanentemente.
+
+**Solución (Paso 1):**
+Modificar `static/app.js` para que la función `setAppState` ignore explícitamente la Card D (`v !== 'D'`) al resetear la visibilidad.
+
+---
+
+### 2. OTROS PROBLEMAS (AHORA SOLUCIONADOS)
+
+**Error 2: Fondo Gris (#353535)**
+* **Causa:** `body` sin color de fondo y lienzo de partículas (`utils.js`) con fondo translúcido.
+* **Solución:** Forzar `background-color: #000000 !important;` en el `body` (`style.css`) y usar `p.background(0);` (opaco) en `utils.js`.
+
+**Error 3: Barra de Carga (Progreso/URL) Invisible**
+* **Causa:** `app.js` ocultaba el contenedor `#topControlBar` y nunca lo devolvía.
+* **Solución:** Modificar `setAppState` en `app.js` para añadir `flex` al `#topControlBar` en los estados `LOADING` y `APP`.
+
+**Error 4: Animación de Carga "Atropellada"**
+* **Causa:** La animación en `data-handler.js` movía y redimensionaba la barra de input al mismo tiempo.
+* **Solución:** Reescribir la animación en `data-handler.js` para que la píldora aparezca *en el lugar* del input, se transforme, y *solo después* de cargar flote suavemente (`1.2s`) hacia arriba.
+
+**Error 5: Barra de Edición Prematura**
+* **Causa:** `app.js` mostraba la barra de edición (`#activeControls`) tan pronto como empezaba el estado `APP`, antes de que las tarjetas aparecieran.
+* **Solución:** Mover la lógica de visualización (`.classList.add('is-visible')`) a `data-handler.js`, *después* del bucle que anima las tarjetas.
+
+**Error 6: Foco de Tarjetas "Dramático" y Card D Fija**
+* **Causa:** CSS muy agresivo para `.inactive` y lógica de JS que trataba a la Card D como a las demás.
+* **Solución:** Suavizar el CSS en `style.css` y modificar `ui-manager.js` (`switchVar` y `bindEvents`) para que la Card D sea fija y nunca se desactive.
+
+**Error 7: Pantalla de Bypass**
+* **Causa:** No implementada.
+* **Solución:** Añadir el HTML/CSS/JS para la pantalla de bypass en `index.html` y `style.css`.
+
+---
+
+### PASOS A SEGUIR (CÓDIGOS COMPLETOS)
+
+Para implementar **TODAS** las correcciones (Bypass, Fondo Negro, Animación Suave y la solución definitiva de la Card D), reemplace el contenido completo de los siguientes 6 archivos.
+
+*(Nota: Los códigos completos proporcionados en la respuesta anterior ya contienen todas estas correcciones implementadas.)*
+
+1.  **`static/index.html`** (Añade la pantalla de Bypass y el script de inicio).
+2.  **`static/style.css`** (Añade el fondo negro, los estilos de bypass, los estilos de foco sutil y la regla "nuclear" `#mockD { opacity: 1 !important; }` para forzar la visibilidad de la Card D).
+3.  **`static/utils.js`** (Corrige el fondo del lienzo a `p.background(0);`).
+4.  **`static/app.js`** (Implementa la corrección de `setAppState` para ignorar la Card D en el reseteo y maneja la visibilidad de la barra superior).
+5.  **`static/ui-manager.js`** (Implementa la lógica para que la Card D sea fija).
+6.  **`static/data-handler.js`** (Implementa la animación de carga fluida y la aparición tardía de la barra de edición).
