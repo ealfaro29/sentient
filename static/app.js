@@ -1,15 +1,43 @@
-// app.js
+// static/app.js
 
 import { DataHandler } from './data-handler.js';
 import { UIManager } from './ui-manager.js';
 import { CARD_IDS } from './utils.js';
+
+// --- TEMA HARDCODEADO ---
+const SENTIENT_THEME = {
+  "name": "Sentient (Default)",
+  "id": "default",
+  "cssVariables": {
+    "--brand": "#CCFF00",
+    "--bg-main": "#000000", 
+    "--bg-panel": "#0a0a0a",
+    "--border": "#262626",
+    "--text": "#e4e4e7",
+    "--text-dim": "#71717a"
+  },
+  "fontConfig": {
+    "cardBodyFont": "'Inter', sans-serif",
+    "headlineFont": "'Inter', sans-serif",
+    "fontWeight": "800"
+  },
+  "overlays": {
+    "black": "rgba(0,0,0,0.5)",
+    "white": "rgba(255,255,255,0.3)"
+  },
+  "defaultLayouts": {
+    "A": "layout-standard",
+    "B": "layout-centered",
+    "C": "layout-bold"
+  }
+};
+// -----------------------
 
 const App = {
     state: {
         active: 'A',
         mode: 'LANDING',
         theme: {}, 
-        themes: {}, 
         url: '',
         data: {
             A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS', layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...' },
@@ -22,9 +50,10 @@ const App = {
     async init() {
         this.cacheDOM();
         UIManager.bindEvents(this);
-        await this.loadThemes(); 
+        this.applyTheme(); 
         await DataHandler.loadInitialPlaceholders(this); 
         this.setAppState('LANDING');
+
         lucide.createIcons(); 
         window.addEventListener('resize', () => { UIManager.fitStage(this); UIManager.positionControls(this); });
     },
@@ -36,7 +65,7 @@ const App = {
             landingUrl: $('landingUrlInput'), 
             scrape: $('landingScrapeBtn'),
             fusionContainer: $('fusionContainer'),
-            topControlBar: $('topControlBar'),
+            topControlBar: $('topControlBar'), 
             loadingPill: $('loadingPill'),
             appStage: $('appStage'),
             
@@ -53,7 +82,6 @@ const App = {
             overlayBtn: $('overlayBtn'),
             overlayValue: $('overlayValue'),
             stageGrid: document.querySelector('.stage-grid'), 
-            theme: $('themeSelector'),
             loadingBar: $('loadingBar'),
             fbModal: $('fallbackModal'), 
             fbList: $('fallbackList'), 
@@ -68,57 +96,59 @@ const App = {
     
     setAppState(mode) {
         this.state.mode = mode;
-        this.els.landingStage.classList.toggle('opacity-0', mode !== 'LANDING');
-        this.els.landingStage.classList.toggle('pointer-events-none', mode !== 'LANDING');
         
+        // --- Lógica de Landing Stage (Barra "Fantasma") ---
+        if (mode === 'LANDING') {
+            this.els.landingStage.style.display = 'flex';
+            this.els.landingStage.offsetHeight; 
+            this.els.landingStage.classList.remove('opacity-0', 'pointer-events-none');
+            this.els.landingInputWrapper.style.opacity = '1';
+            this.els.scrape.style.opacity = '1';
+            this.els.fusionContainer.style.display = 'flex';
+        } else {
+            this.els.landingStage.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                if (this.state.mode !== 'LANDING') { 
+                   this.els.landingStage.style.display = 'none';
+                }
+            }, 500); 
+        }
+        // ------------------------------------
+
         this.els.appStage.classList.toggle('opacity-0', mode === 'LANDING');
         this.els.appStage.classList.toggle('pointer-events-none', mode === 'LANDING');
         
-        if (mode === 'APP') {
+        // --- Lógica de Barra Superior (Progreso/URL) ---
+        if (mode === 'APP' || mode === 'LOADING') {
             this.els.topControlBar.classList.remove('hidden');
-            this.els.topControlBar.classList.add('flex');
+            this.els.topControlBar.classList.add('flex'); 
+        } else {
+             this.els.topControlBar.classList.add('hidden'); 
+        }
+        // -------------------------------------------
+        
+        if (mode === 'APP') {
             UIManager.updateTopControlBar(this, this.state.url);
-            this.els.activeControls.classList.add('is-visible');
             UIManager.renderAll(this);
+            
         } else if (mode === 'LANDING') {
-            this.els.topControlBar.classList.add('hidden');
             this.els.activeControls.classList.remove('is-visible');
-            CARD_IDS.forEach(v => document.getElementById(`mock${v}`).classList.remove('visible-card'));
-        } else if (mode === 'LOADING') {
-             this.els.topControlBar.classList.remove('hidden');
-             this.els.topControlBar.classList.add('flex');
+            
+            // --- Lógica de Reset (Excluyendo Card D) ---
+            CARD_IDS.forEach(v => {
+                const mockEl = document.getElementById(`mock${v}`);
+                if (mockEl && v !== 'D') { // No ocultar Card D
+                   mockEl.classList.remove('visible-card');
+                }
+            });
+            // ---------------------------------------------
         }
     },
 
-    async loadThemes() {
-        try {
-            const themesToLoad = ['sentient.json', 'cyber.json', 'elegant.json', 'chatgptricks.json'];
-            const responses = await Promise.all(themesToLoad.map(f => fetch(f)));
-            const themesData = await Promise.all(responses.map(res => { 
-                if (!res.ok) throw new Error(`Failed to load theme: ${res.url}`); 
-                return res.json(); 
-            }));
-            
-            if (this.els.theme) {
-                this.els.theme.innerHTML = ''; 
-                themesData.forEach(t => {
-                    this.state.themes[t.id] = t; 
-                    const o = document.createElement('option'); o.value = t.id; o.innerText = t.name; this.els.theme.appendChild(o);
-                });
-            } else {
-                 themesData.forEach(t => { this.state.themes[t.id] = t; });
-            }
-            
-            if (themesData.length > 0) this.applyTheme(themesData[0].id);
-
-        } catch (err) { 
-            console.error("Theme loader error:", err); 
-            toast("Could not load themes. Check console.", "error"); 
-        }
-    },
-
-    applyTheme(tid) {
-        const t = this.state.themes[tid]; if (!t) return;
+    applyTheme() {
+        const t = SENTIENT_THEME;
+        if (!t) return;
+        
         this.state.theme = t; 
         document.body.className = t.id; 
         
@@ -137,7 +167,9 @@ const App = {
         }
         root.style.setProperty('--brand-rgb', `${r}, ${g}, ${b}`);
 
-        for (const [k, v] of Object.entries(t.cssVariables)) root.style.setProperty(k, v);
+        for (const [k, v] of Object.entries(t.cssVariables)) {
+            root.style.setProperty(k, v);
+        }
         
         root.style.setProperty('--font-card-body', t.fontConfig.cardBodyFont);
         root.style.setProperty('--font-headline', t.fontConfig.headlineFont);
@@ -164,7 +196,7 @@ const App = {
     copyCaption: function() { UIManager.copyCaption(this); }
 };
 
-// --- CORRECCIÓN CLAVE: EXPOSICIÓN GLOBAL ---
+// --- EXPOSICIÓN GLOBAL (para que módulos importados puedan acceder a métodos internos) ---
 window.App = {
     init: App.init.bind(App),
     downloadHD: App.downloadHD.bind(App),
@@ -175,10 +207,13 @@ window.App = {
     handleFocus: App.handleFocus.bind(App),
     handleBlur: App.handleBlur.bind(App),
     updateTextFromCard: App.updateTextFromCard.bind(App),
+    
+    autoFit: function(app, el, maxFs, minFs, maxHeight) {
+        UIManager.autoFit(app, el, maxFs, minFs, maxHeight);
+    },
+    renderCard: App.renderCard.bind(App) 
 };
 // -------------------------------------------
 
-// Start the engine
-document.addEventListener('DOMContentLoaded', () => {
-    App.init();
-});
+// --- Se elimina el 'DOMContentLoaded' listener ---
+// La app ahora es iniciada por el script de bypass en index.html

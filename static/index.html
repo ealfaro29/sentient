@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale:1, maximum-scale=1, user-scalable=no" />
   <title>Sentient V0.2.0 UI</title>
   
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -169,15 +169,34 @@
   </style>
 </head>
 <body class="bg-[var(--bg-main)] text-[var(--text)] font-sans">
-    <div class="app-container">
+
+    <!-- --- PANTALLA DE BYPASS --- -->
+    <div id="bypassScreen" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-5">
+        <div class="w-full max-w-md text-center">
+            <h1 class="text-2xl font-bold text-white mb-4">WebApp is in an intermediate state</h1>
+            <p class="text-lg text-gray-400 mb-8">Please come back later.</p>
+            
+            <div class="flex items-center gap-2">
+                <input id="bypassInput" type="password" class="flex-1 h-12 bg-gray-900 border border-gray-700 text-white px-4 rounded-lg outline-none focus:border-var-brand" placeholder="bypass">
+                <button id="bypassButton" class="h-12 px-6 bg-[var(--brand)] text-black font-extrabold text-lg rounded-lg flex items-center gap-2 transition-all duration-300 hover:opacity-90 active:scale-[0.98]">
+                    Enter
+                </button>
+            </div>
+            <p id="bypassError" class="text-red-500 text-sm mt-3 h-5"></p>
+        </div>
+    </div>
+    <!-- --- FIN PANTALLA DE BYPASS --- -->
+
+
+    <!-- El 'app-container' ahora es 'appContainer' y está oculto por defecto -->
+    <div id="appContainer" class="app-container" style="display: none;">
         
         <div id="p5-canvas-container" class="fixed inset-0 z-0 opacity-80"></div>
 
-        <div class="loading-bar fixed top-0 left-0 right-0 h-1 bg-[var(--bg-panel)] z-[9999] overflow-hidden hidden" id="loadingBar"></div>
-        
-        <div id="topControlBar" class="hidden absolute top-0 left-0 right-0 h-[60px] bg-[var(--bg-panel)] z-50 px-5 border-b border-[var(--border)] items-center transition-opacity duration-500 ease-out">
-            <div id="loadingPill" class="flex items-center justify-center h-full w-full">
-                </div>
+        <!-- BARRA SUPERIOR INVISIBLE (SOLO CONTIENE LA PÍLDORA) -->
+        <div id="topControlBar" class="hidden absolute top-0 left-0 right-0 h-[60px] z-50">
+            <!-- La píldora se moverá aquí al final, pero es 'position: fixed' -->
+            <div id="loadingPill"></div>
         </div>
         
         <main class="flex-1 bg-transparent flex flex-col items-center justify-center p-5 overflow-hidden relative z-10" id="mainStage">
@@ -207,35 +226,46 @@
                     
                     <div id="mockC" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('C')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('C');"></i></div><div class="canvas-wrapper" id="mountC"><div id="cardC" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-bold"><div class="c-pill">BREAKING</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">GO</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Customize & export.</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6" fill="#ffffff" color="#ffffff"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">45,200 likes</div></div></div>
                     
-                    <div id="mockD" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('D')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3" style="background: linear-gradient(45deg, #00ffff, #0080ff);"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient_caption</span><i data-lucide="copy" id="copyBtnD" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn cursor-pointer" onclick="event.stopPropagation(); App.copyCaption();"></i></div><div class="canvas-wrapper h-full" id="mountD"><div id="cardD" class="render-target w-full h-full p-6 text-left" style="transform:none; background:var(--bg-panel);"><div class="c-pill text-xl font-bold bg-gray-900 text-white rounded-lg px-4 py-2 mb-4">CAPTION</div><div id="captionTextD" class="text-sm text-gray-400 whitespace-pre-wrap overflow-y-auto" style="height: calc(100% - 60px);">Paste an article URL to generate a caption...</div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="font-semibold text-sm text-gray-500">Auto-Generated Caption</div></div></div>
-
-                </div>
-
-                <div id="activeControls" class="bg-transparent p-1.5 flex flex-col gap-1.5 font-bold absolute bottom-5 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[700px]">
-                    <div class="flex gap-1.5 items-center justify-center">
-                        <div class="flex gap-1.5 items-center">
-                            <div class="neon-box selector" id="layoutBtn">
-                                <span class="selector-label">LAYOUT</span>
-                                <div class="value-badge" id="layoutValue">STD</div>
-                            </div>
-                            <div class="neon-box selector" id="overlayBtn">
-                                <span class="selector-label">OVERLAY</span>
-                                <div class="value-badge" id="overlayValue">B</div>
+                    <!-- CARD D: FIJA Y SIN MARCO DE INSTAGRAM -->
+                    <div id="mockD" class="mockup no-insta lg:min-h-0 lg:w-auto w-full max-w-[450px]">
+                        <div class="canvas-wrapper h-full" id="mountD">
+                            <div id="cardD" class="render-target w-full h-full p-6 text-left" style="transform:none; background:var(--bg-panel);">
+                                <div class="c-pill text-xl font-bold bg-gray-900 text-white rounded-lg px-4 py-2 mb-4 flex items-center justify-between">
+                                    <span>CAPTION</span>
+                                    <i data-lucide="copy" id="copyBtnD" class="insta-icon text-white stroke-[1.5px] w-5 h-5 cursor-pointer" onclick="App.copyCaption();"></i>
+                                </div>
+                                <div id="captionTextD" class="text-sm text-gray-400 whitespace-pre-wrap overflow-y-auto" style="height: calc(100% - 70px);">Paste an article URL to generate a caption...</div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="flex gap-1.5 items-center flex-grow max-w-[250px] min-w-[150px]">
-                            <div class="neon-box slider-box flex gap-1 items-center px-1.5 bg-gray-700 text-gray-200">
-                                <svg class="slider-icon fill-gray-200" viewBox="0 0 24 24">
-                                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-                                </svg>
-                                <input type="range" id="blurRange" min="0" max="20" value="0" step="1" class="neon-slider-track">
+                    <!-- BARRA DE EDICIÓN: POSICIONAMIENTO EN EL GRID -->
+                    <div id="activeControls" class="bg-transparent p-1.5 flex flex-col gap-1.5 font-bold z-50 controls-grid-position">
+                        <div class="flex gap-1.5 items-center justify-center">
+                            <div class="flex gap-1.5 items-center">
+                                <div class="neon-box selector" id="layoutBtn">
+                                    <span class="selector-label">LAYOUT</span>
+                                    <div class="value-badge" id="layoutValue">STD</div>
+                                </div>
+                                <div class="neon-box selector" id="overlayBtn">
+                                    <span class="selector-label">OVERLAY</span>
+                                    <div class="value-badge" id="overlayValue">B</div>
+                                </div>
                             </div>
-                            <div class="neon-box slider-box flex gap-1 items-center px-1.5 bg-gray-700 text-gray-200">
-                                <svg class="slider-icon fill-gray-200" viewBox="0 0 24 24">
-                                    <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
-                                </svg>
-                                <input type="range" id="contrastRange" min="50" max="150" value="100" step="5" class="neon-slider-track">
+
+                            <div class="flex gap-1.5 items-center flex-grow max-w-[250px] min-w-[150px]">
+                                <div class="neon-box slider-box flex gap-1 items-center px-1.5 bg-gray-700 text-gray-200">
+                                    <svg class="slider-icon fill-gray-200" viewBox="0 0 24 24">
+                                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                                    </svg>
+                                    <input type="range" id="blurRange" min="0" max="20" value="0" step="1" class="neon-slider-track">
+                                </div>
+                                <div class="neon-box slider-box flex gap-1 items-center px-1.5 bg-gray-700 text-gray-200">
+                                    <svg class="slider-icon fill-gray-200" viewBox="0 0 24 24">
+                                        <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+                                    </svg>
+                                    <input type="range" id="contrastRange" min="50" max="150" value="100" step="5" class="neon-slider-track">
+                                </div>
                             </div>
                         </div>
 
@@ -248,7 +278,9 @@
                     </div>
                     
                     <input type="file" id="imgFileInput" hidden accept="image/*" />
+
                 </div>
+
             </div>
         </main>
     </div>
@@ -279,9 +311,48 @@
         </div>
     </div>
 
+    <!-- Módulos JS -->
     <script type="module" src="utils.js"></script>
     <script type="module" src="data-handler.js"></script>
     <script type="module" src="ui-manager.js"></script>
     <script type="module" src="app.js"></script>
+
+    <!-- Script de Bypass (Debe estar al final) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const bypassInput = document.getElementById('bypassInput');
+            const bypassButton = document.getElementById('bypassButton');
+            const bypassError = document.getElementById('bypassError');
+            const bypassScreen = document.getElementById('bypassScreen');
+            const appContainer = document.getElementById('appContainer');
+
+            function attemptBypass() {
+                if (bypassInput.value === '5421') {
+                    bypassScreen.style.transition = 'opacity 0.5s ease';
+                    bypassScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        bypassScreen.style.display = 'none';
+                        appContainer.style.display = 'flex';
+                        // INICIAR LA APP (App.init ahora es global gracias a app.js)
+                        window.App.init(); 
+                    }, 500);
+                } else {
+                    bypassError.textContent = 'Invalid code';
+                    bypassInput.style.borderColor = '#ef4444';
+                    setTimeout(() => {
+                        bypassError.textContent = '';
+                        bypassInput.style.borderColor = '#4b5563'; // Tailwind gray-700
+                    }, 2000);
+                }
+            }
+
+            bypassButton.addEventListener('click', attemptBypass);
+            bypassInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    attemptBypass();
+                }
+            });
+        });
+    </script>
 </body>
 </html>

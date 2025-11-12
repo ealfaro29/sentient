@@ -1,4 +1,4 @@
-// utils.js
+// static/utils.js
 
 export const LAYOUTS = [
     { id: 'layout-standard', name: 'Standard (Bottom Left)', short: 'STD' },
@@ -75,7 +75,12 @@ export const p5_sketch = (p) => {
     };
 
     p.draw = () => {
-        p.background(0, 0, 0, 40); // FIX: Use transparent black to maintain black base and trail effect
+        // --- CORRECCIÓN DEL FONDO GRIS ---
+        // Se cambió de 'p.background(0, 0, 0, 40)' a 'p.background(0);'
+        // Esto fuerza un fondo negro opaco en CADA fotograma.
+        p.background(0);
+        // -----------------------------------
+        
         const brandColor = getComputedStyle(document.documentElement).getPropertyValue('--brand') || '#ccff00';
         p.stroke(brandColor);
         p.fill(brandColor);

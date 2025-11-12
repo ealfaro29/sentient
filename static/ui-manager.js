@@ -1,4 +1,4 @@
-// ui-manager.js
+// static/ui-manager.js
 
 import { CARD_IDS, LAYOUTS, OVERLAYS } from './utils.js';
 
@@ -45,6 +45,11 @@ export const UIManager = {
             s.classList.remove('is-placeholder');
         }
         
+        // --- CORRECCIÓN TARJETAS VACÍAS ---
+        if (t) t.textContent = d.title;
+        if (s) s.textContent = d.subtitle;
+        // ------------------------------------
+
         t.style.color = (d.layout === 'layout-chatgptricks') ? '#FFFFFF' : (d.overlayColor === 'white' ? '#000' : 'var(--brand)');
         s.style.color = d.overlayColor === 'white' ? '#333' : '#fff';
         
@@ -71,6 +76,8 @@ export const UIManager = {
             const isActive = v === app.state.active;
             
             mockEl.classList.toggle('active-stage', isActive); 
+            
+            // CORRECCIÓN CARD D: Asegurarse de que 'D' nunca reciba 'inactive'
             mockEl.classList.toggle('inactive', !isActive && v !== 'D');
             
             if (t && !d.isPlaceholder) this.autoFit(app, t, isChatGPTricks ? 180 : 120, isChatGPTricks ? 80 : 60, 650);
@@ -80,6 +87,7 @@ export const UIManager = {
     },
     
     autoFit(app, el, maxFs, minFs, maxHeight) { 
+        if (!el) return;
         let fs = maxFs; 
         el.style.fontSize = fs + 'px'; 
         while (el.scrollHeight > maxHeight && fs > minFs) { 
@@ -175,13 +183,15 @@ export const UIManager = {
             }
         };
 
-        // Variant activation from the mockup click
-        CARD_IDS.forEach(v => document.getElementById(`mock${v}`).onclick = () => app.switchVar(v));
+        // --- CORRECCIÓN CARD D (Caption) ---
+        // Se modifica el loop para que solo A, B, y C sean clickables
+        ['A', 'B', 'C'].forEach(v => {
+            const el = document.getElementById(`mock${v}`);
+            if (el) el.onclick = () => app.switchVar(v);
+        });
+        // ---------------------------------
         
-        // --- FIX: Add null check for theme selector (app.els.theme is null) ---
-        if (app.els.theme) {
-            app.els.theme.onchange = (e) => app.applyTheme(e.target.value);
-        }
+        // (Event listener del selector de temas eliminado)
 
         const up = () => app.renderCard(app.state.active);
         
@@ -231,9 +241,6 @@ export const UIManager = {
             };
         }
         
-        // --- FIX: The obsolete app.els.dl binding is removed. We only rely on the dynamically created download button.
-        // The original dl button is the download button inside the sidebar, which is now removed.
-        // We ensure a null check is used, just in case (though it should be null).
         if (app.els.dl) {
             app.els.dl.onclick = () => app.downloadHD();
         }
@@ -246,14 +253,23 @@ export const UIManager = {
 
     switchVar(app, v) {
         app.state.active = v;
+        
+        // CORRECCIÓN CARD D: 'D' nunca debe ser 'active' ni 'inactive'
         CARD_IDS.forEach(x => { 
             const mockEl = document.getElementById(`mock${x}`);
+            if (!mockEl) return;
+            
+            if (x === 'D') {
+                mockEl.classList.remove('active-stage', 'inactive');
+                return; // Saltar 'D' de la lógica de activación
+            }
+            
             const isActive = x === v;
             mockEl.classList.toggle('active-stage', isActive); 
-            mockEl.classList.toggle('inactive', !isActive && x !== 'D');
+            mockEl.classList.toggle('inactive', !isActive); // 'D' ya fue excluida
+            
             if (isActive) {
-                const mockupEl = document.getElementById(`mock${x}`);
-                if (mockupEl) mockupEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                if (mockEl) mockEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
         });
         
@@ -274,8 +290,7 @@ export const UIManager = {
         }
 
         const isContentCard = (v !== 'D');
-        app.els.activeControls.classList.toggle('opacity-0', !isContentCard);
-        app.els.activeControls.classList.toggle('pointer-events-none', !isContentCard);
+        app.els.activeControls.classList.toggle('is-visible', isContentCard);
         
         if (isContentCard) {
             const layoutShort = LAYOUTS.find(l => l.id === d.layout)?.short || 'ERR';
@@ -296,7 +311,7 @@ export const UIManager = {
     },
     
     positionControls(app) {
-        app.els.stageGrid.style.transform = ''; 
+        // Esta función ya no es necesaria, el CSS maneja el posicionamiento
     },
     
     updateTopControlBar(app, url, downloadFn = null) {
@@ -317,6 +332,6 @@ export const UIManager = {
     copyCaption(app) {
         const captionToCopy = app.els.captionTextD.innerText;
         navigator.clipboard.writeText(captionToCopy); 
-        app.toast('Caption copied to clipboard!'); 
+        toast('Caption copied to clipboard!'); 
     },
 }
