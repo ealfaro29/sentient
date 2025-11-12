@@ -3,20 +3,7 @@
 body { height: 100vh; display: flex; overflow: hidden; }
 .app-container { display: flex; width: 100vw; height: 100vh; position: relative; }
 
-/* Sidebar Enhancements */
-.sidebar { 
-    /* Use the variable but enforce a border and transition */
-    border-right: 1px solid var(--border); 
-    display: flex; 
-    flex-direction: column; 
-    z-index: 20; 
-    flex-shrink: 0; 
-    transition: transform 0.3s ease;
-    /* NEW: Sombra interior para profundidad */
-    box-shadow: inset -5px 0 15px rgba(0,0,0,0.4); 
-}
-
-/* NEW: Estilo de campo de entrada base y foco con glow */
+/* Input Field with Glow */
 .input-field { 
     width: 100%; 
     background: rgba(0,0,0,0.3); 
@@ -25,19 +12,17 @@ body { height: 100vh; display: flex; overflow: hidden; }
     border-radius: var(--radius-md); 
     outline: none; 
     font-size: 0.9rem; 
-    transition: all 0.2s; /* Transición para el glow */
+    transition: all 0.2s;
     font-family: inherit; 
     color: inherit; 
 }
 .input-field:focus {
-    /* NEW: Glow sutil en el foco usando --brand-rgb */
     border-color: var(--brand); 
     background: rgba(0,0,0,0.5); 
     box-shadow: 0 0 10px rgba(var(--brand-rgb), 0.5); 
 }
 
-
-/* NEW: Custom Scrollbar para el sidebar scroll area */
+/* Custom Scrollbar */
 .scroll-area::-webkit-scrollbar {
     width: 8px;
 }
@@ -47,21 +32,21 @@ body { height: 100vh; display: flex; overflow: hidden; }
 .scroll-area::-webkit-scrollbar-thumb {
     background: var(--text-dim);
     border-radius: 4px;
-    border: 2px solid var(--bg-panel); /* Coincide con el fondo del sidebar */
+    border: 2px solid var(--bg-panel);
 }
 .scroll-area::-webkit-scrollbar-thumb:hover {
     background: var(--brand);
 }
 
-/* Loading Bar (Keep custom animation) */
+/* Loading Bar (Initial state animation, kept for compatibility) */
 .loading-bar::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 100%; background: var(--brand); animation: loading-indeterminate 1.5s infinite linear; transform: translateX(-100%); }
 @keyframes loading-indeterminate { 0% { transform: translateX(-100%); } 50% { transform: translateX(0%); } 100% { transform: translateX(100%); } }
 
-/* Insta Mockup Elements (Keep specific, non-utility CSS) */
+/* Insta Mockup Elements */
 .insta-avatar { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); padding: 2px; }
 .insta-avatar div { width: 100%; height: 100%; background: #000; border-radius: 50%; }
 
-/* Card Components (Keep font/size config based on variables) */
+/* Card Components */
 .card-content { position: absolute; inset: 0; padding: 80px; display: flex; flex-direction: column; z-index: 2; }
 .layout-standard { justify-content: flex-end; text-align: left; }
 .layout-centered { justify-content: center; align-items: center; text-align: center; }
@@ -105,11 +90,9 @@ body { height: 100vh; display: flex; overflow: hidden; }
     font-style: italic;
 }
 
-/* HD Stage */
+/* HD Stage / Fallback Modal (Unchanged) */
 #hd-stage-container { position:fixed; top:0; left:0; z-index:-9999; opacity:0; pointer-events:none; }
 #hd-render-card { position:relative !important; transform: none !important; }
-
-/* Fallback Modal Styles (using custom variables for theme consistency) */
 .fallback-item {
     padding:12px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s ease;
 }
@@ -118,7 +101,7 @@ body { height: 100vh; display: flex; overflow: hidden; }
     background: rgba(255,255,255,0.05); 
 }
 
-/* Transiciones Mockup/Neon Controls (mejoradas) */
+/* --- MOCKUP TRANSITIONS & ANIMATIONS --- */
 .stage-grid { 
     perspective: 1000px;
     transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
@@ -126,6 +109,13 @@ body { height: 100vh; display: flex; overflow: hidden; }
 .mockup { 
     transform-style: preserve-3d;
     transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+    opacity: 0; /* Initially hidden */
+    transform: scale(0.5);
+}
+.mockup.visible-card {
+    opacity: 1;
+    transform: scale(1);
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .mockup.active-stage { 
     transform: scale(1.05) translateY(-5px);
@@ -138,7 +128,7 @@ body { height: 100vh; display: flex; overflow: hidden; }
     filter: brightness(0.7) blur(1px); 
 }
 
-/* Animación de entrada/salida de la barra de controles flotante */
+/* --- NEON CONTROLS ANIMATION --- */
 #activeControls {
     opacity: 0;
     transform: translateY(20px);
@@ -160,4 +150,84 @@ body { height: 100vh; display: flex; overflow: hidden; }
 .neon-box:active {
     transform: scale(0.98);
     box-shadow: none;
+}
+
+/* --- FUSION/LOADING ANIMATION CSS --- */
+
+@keyframes pulse {
+    0% { transform: translate(-50%, 0) scale(1); opacity: 0.9; }
+    50% { transform: translate(-50%, 0) scale(1.05); opacity: 1; }
+    100% { transform: translate(-50%, 0) scale(1); opacity: 0.9; }
+}
+
+#loadingPill.loading-state {
+    width: 250px !important;
+    height: 38px !important;
+    border-radius: 9999px !important;
+    background-color: var(--brand) !important;
+    color: black;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    position: absolute;
+    top: 30px; /* Al centro de la barra superior */
+    left: 50%;
+    transform: translate(-50%, 0);
+    opacity: 1;
+    animation: pulse 1.5s infinite ease-in-out;
+    transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    overflow: hidden;
+}
+
+/* Pill for final URL/Download state */
+#loadingPill.app-state {
+    width: 600px !important;
+    height: 48px !important;
+    border-radius: 9999px !important;
+    background-color: var(--bg-panel) !important;
+    border: 1px solid var(--brand);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    opacity: 1;
+    animation: none;
+    transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+}
+#loadingPill.app-state .url-text {
+    flex: 1;
+    font-size: 0.9rem;
+    margin-right: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-dim);
+}
+#loadingPill.app-state .download-btn {
+    background-color: var(--brand);
+    color: var(--bg-main);
+    padding: 6px 15px;
+    font-weight: 800;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+#loadingPill.app-state .download-btn:hover {
+    opacity: 0.9;
+    box-shadow: 0 0 8px rgba(var(--brand-rgb), 0.5);
+}
+
+/* Binary animation container */
+.binary-animation {
+    font-family: 'Share Tech Mono', monospace;
+    color: black;
+    overflow: hidden;
+    white-space: nowrap;
 }

@@ -1,3 +1,4 @@
+// --- CONSTANTS ---
 const LAYOUTS = [
     { id: 'layout-standard', name: 'Standard (Bottom Left)', short: 'STD' },
     { id: 'layout-centered', name: 'Centered (Middle)', short: 'CTR' },
@@ -8,6 +9,8 @@ const OVERLAYS = [
     { id: 'black', short: 'B' },
     { id: 'white', short: 'W' }
 ];
+
+const CARD_IDS = ['A', 'B', 'C', 'D']; // A, B, C for content, D for caption
 
 const toast = (msg, type = 'info') => {
     Toastify({
@@ -25,15 +28,91 @@ const toast = (msg, type = 'info') => {
     }).showToast();
 };
 
+// --- P5.JS SKETCH (BACKGROUND ANIMATION) ---
+const p5_sketch = (p) => {
+    let lines = [];
+    const MAX_LINES = 100;
+
+    p.setup = () => {
+        const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+        canvas.parent('p5-canvas-container');
+        p.strokeWeight(1);
+        p.frameRate(30);
+    };
+
+    p.windowResized = () => {
+        p.resizeCanvas(p.windowWidth, p.windowHeight);
+        lines = []; // Reset lines on resize
+    };
+
+    p.draw = () => {
+        p.background('rgba(0,0,0,0.01)'); // Very light residual for trail effect
+        const brandColor = getComputedStyle(document.documentElement).getPropertyValue('--brand') || '#ccff00';
+        p.stroke(brandColor);
+
+        if (lines.length < MAX_LINES && p.frameCount % 5 === 0) {
+            lines.push(new Line(p.width / 2, p.height / 2));
+        }
+
+        for (let i = lines.length - 1; i >= 0; i--) {
+            lines[i].update();
+            lines[i].display();
+            if (lines[i].isOffScreen()) {
+                lines.splice(i, 1);
+            }
+        }
+    };
+
+    class Line {
+        constructor(x, y) {
+            this.pos = p.createVector(x, y);
+            this.vel = p.createVector(p.random(-1, 1), p.random(-1, 1));
+            this.vel.normalize();
+            this.vel.mult(p.random(1, 3));
+            this.length = p.random(20, 50);
+            this.history = [];
+            this.alpha = 255;
+        }
+
+        update() {
+            this.history.push(this.pos.copy());
+            this.pos.add(this.vel);
+
+            if (this.history.length > this.length) {
+                this.history.splice(0, 1);
+            }
+            this.alpha = p.map(p.dist(p.width / 2, p.height / 2, this.pos.x, this.pos.y), 0, p.width / 2, 255, 50);
+        }
+
+        display() {
+            p.beginShape();
+            for (let i = 0; i < this.history.length; i++) {
+                const pos = this.history[i];
+                p.vertex(pos.x, pos.y);
+            }
+            p.endShape();
+        }
+
+        isOffScreen() {
+            return (this.pos.x < 0 || this.pos.x > p.width || this.pos.y < 0 || this.pos.y > p.height);
+        }
+    }
+};
+new p5(p5_sketch);
+
+// --- APP CORE ---
 const App = {
     state: {
         active: 'A',
+        mode: 'LANDING', // 'LANDING', 'LOADING', 'APP'
         theme: {}, 
         themes: {}, 
+        url: '', // The URL that was scraped
         data: {
             A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS', layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...' },
             B: { title: 'SET', subtitle: 'Choose variant...', bg: '', tag: 'INFO', layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'SET', defaultSubtitle: 'Choose variant...' },
-            C: { title: 'GO', subtitle: 'Customize & export.', bg: '', tag: 'BREAKING', layout: 'layout-bold', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO', defaultSubtitle: 'Customize & export.' }
+            C: { title: 'GO', subtitle: 'Customize & export.', bg: '', tag: 'BREAKING', layout: 'layout-bold', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO', defaultSubtitle: 'Customize & export.' },
+            D: { title: 'CAPTION', subtitle: 'Copy ready text.', bg: '', tag: 'TEXT', layout: 'layout-standard', caption: 'Paste an article URL to generate a caption...', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'CAPTION', defaultSubtitle: 'Copy ready text.' }
         }
     },
 
@@ -42,120 +121,82 @@ const App = {
         this.bindEvents();
         await this.loadThemes(); 
         await this.loadInitialPlaceholders(); 
-        this.renderAll(); 
+        this.setAppState('LANDING'); // Start in landing mode
         lucide.createIcons(); 
-        this.fitStage();
-        this.positionControls(); 
-        document.fonts.ready.then(() => { this.renderAll(); this.fitStage(); this.positionControls(); });
         window.addEventListener('resize', () => { this.fitStage(); this.positionControls(); });
+    },
+
+    setAppState(mode) {
+        this.state.mode = mode;
+        this.els.landingStage.classList.toggle('opacity-0', mode !== 'LANDING');
+        this.els.landingStage.classList.toggle('pointer-events-none', mode !== 'LANDING');
+        
+        this.els.appStage.classList.toggle('opacity-0', mode === 'LANDING');
+        this.els.appStage.classList.toggle('pointer-events-none', mode === 'LANDING');
+        
+        this.els.sidebar.classList.toggle('hidden', mode === 'LANDING');
+        this.els.mobToggle.classList.toggle('hidden', mode === 'LANDING');
+
+        // Initial App Stage Setup
+        if (mode === 'APP') {
+            this.els.topControlBar.classList.remove('hidden');
+            this.els.topControlBar.classList.add('flex');
+            this.updateTopControlBar(this.state.url);
+            this.els.activeControls.classList.add('is-visible');
+            this.renderAll();
+        } else if (mode === 'LANDING') {
+            this.els.topControlBar.classList.add('hidden');
+            this.els.activeControls.classList.remove('is-visible');
+            // Reset card visibility on returning to landing
+            CARD_IDS.forEach(v => document.getElementById(`mock${v}`).classList.remove('visible-card'));
+        } else if (mode === 'LOADING') {
+             this.els.topControlBar.classList.remove('hidden');
+             this.els.topControlBar.classList.add('flex');
+        }
     },
 
     async loadInitialPlaceholders() {
         try {
-            console.log("⏳ Loading initial random placeholders...");
             const res = await fetch('/api/initial_images');
             if (!res.ok) throw new Error('Failed to fetch initial images');
             const data = await res.json();
             if (data.A) this.state.data.A.bg = data.A;
             if (data.B) this.state.data.B.bg = data.B;
             if (data.C) this.state.data.C.bg = data.C;
-            console.log("✅ Initial placeholders loaded.");
         } catch (e) {
             console.error("Error loading initial placeholders:", e);
         }
     },
-    
-    handleFocus(el, type) {
-        const v = el.closest('.mockup').id.replace('mock', '');
-        const d = this.state.data[v];
-        
-        if (d.isPlaceholder) {
-            requestAnimationFrame(() => {
-                el.textContent = '';
-                el.classList.remove('is-placeholder');
-                d.isPlaceholder = false;
-            });
-        }
-    },
 
-    handleBlur(el, type) {
-        const v = el.closest('.mockup').id.replace('mock', '');
-        const d = this.state.data[v];
-        const currentText = el.textContent; 
-        const trimmedText = currentText.trim();
-        const isChatGPTricks = this.state.theme.id === 'chatgptricks';
-
-        if (trimmedText === '') {
-            d.isPlaceholder = true;
-            d.title = d.defaultTitle;
-            d.subtitle = d.defaultSubtitle;
-            
-            if (type === 'title') el.textContent = d.defaultTitle;
-            else el.textContent = d.defaultSubtitle;
-            
-            el.classList.add('is-placeholder');
-        } else {
-            d.isPlaceholder = false;
-            
-            // APLICA EL AUTOFIT AL TERMINAR DE EDITAR
-            if (type === 'title') {
-                 this.autoFit(el, isChatGPTricks ? 180 : 120, isChatGPTricks ? 80 : 60, 650);
-            } else {
-                 this.autoFit(el, 56, 30, 400);
-            }
-            // Sincronizar el estado con el contenido final
-            if (type === 'title') d.title = currentText;
-            if (type === 'subtitle') d.subtitle = currentText;
-        }
-    },
-
-    updateTextFromCard(el, type) {
-        const v = el.closest('.mockup').id.replace('mock', '');
-        const newText = el.textContent; 
-        const isChatGPTricks = this.state.theme.id === 'chatgptricks';
-
-        // Bloqueo específico para tema chatgptricks en subtítulo
-        if (type === 'subtitle' && isChatGPTricks) {
-             if (newText.trim() !== this.state.data[v].subtitle) {
-                 el.textContent = this.state.data[v].subtitle; 
-             }
-             return;
-        }
-
-        // SOLO actualizamos el estado.
-        if (type === 'title') {
-            this.state.data[v].title = newText;
-        } else {
-            this.state.data[v].subtitle = newText;
-        }
-    },
-    
     cacheDOM() {
         const $ = (id) => document.getElementById(id);
         this.els = {
-            url: $('urlInput'), scrape: $('scrapeBtn'), editor: $('editorPanel'), dl: $('dlBtn'),
-            // Textareas 
+            // New Landing/App State Elements
+            landingStage: $('landingStage'),
+            landingUrl: $('landingUrlInput'), 
+            scrape: $('landingScrapeBtn'),
+            fusionContainer: $('fusionContainer'),
+            topControlBar: $('topControlBar'),
+            loadingPill: $('loadingPill'),
+            appStage: $('appStage'),
+            
+            // Existing App Elements
+            editor: $('editorPanel'), 
+            dl: $('dlBtn'),
             ti: $('titleInput'), 
             sub: $('subInput'), 
-            
-            // NEW CONTROL PANEL ELEMENTS
             iUrl: $('imgUrlInput'), 
             iFile: $('imgFileInput'),
             imgFileBtn: $('imgFileBtn'),
             blur: $('blurRange'), 
             contrast: $('contrastRange'), 
             activeControls: $('activeControls'), 
-            
-            // NEW MOCKUP ELEMENTS
             layoutBtn: $('layoutBtn'),
             layoutValue: $('layoutValue'),
             overlayBtn: $('overlayBtn'),
             overlayValue: $('overlayValue'),
             stageGrid: document.querySelector('.stage-grid'), 
-            
             theme: $('themeSelector'),
-            cap: $('captionPreview'), 
-            cpy: $('copyBtn'),
             sidebar: $('mainSidebar'), 
             mobToggle: $('mobileToggle'),
             loadingBar: $('loadingBar'),
@@ -164,7 +205,9 @@ const App = {
             fbMsg: $('fallbackMsg'), 
             fbGoogle: $('googleFallbackBtn'),
             subGroup: $('subtitle-control-group'), 
-            capGroup: $('caption-control-group'),
+            // New Card D Caption Element
+            captionTextD: $('captionTextD'),
+            copyBtnD: $('copyBtnD')
         };
     },
 
@@ -198,7 +241,6 @@ const App = {
         
         const root = document.documentElement;
         
-        // --- START: Update to include brand-rgb for focus glow ---
         const brandColorHex = t.cssVariables['--brand'].replace('#', '');
         let r, g, b;
         if (brandColorHex.length === 3) {
@@ -211,7 +253,6 @@ const App = {
             b = parseInt(brandColorHex.substring(4, 6), 16);
         }
         root.style.setProperty('--brand-rgb', `${r}, ${g}, ${b}`);
-        // --- END: Update to include brand-rgb for focus glow ---
 
         for (const [k, v] of Object.entries(t.cssVariables)) root.style.setProperty(k, v);
         
@@ -226,32 +267,27 @@ const App = {
             this.els.subGroup.style.display = isChatGPTricks ? 'none' : 'block';
         }
         
-        if (this.els.editor.classList.contains('hidden')) this.renderAll(); 
-        else this.switchVar(this.state.active);
+        // Re-render only if already in the app stage
+        if (this.state.mode === 'APP') this.switchVar(this.state.active);
     },
 
     bindEvents() {
-        this.els.scrape.onclick = () => this.scrape();
+        this.els.scrape.onclick = () => this.animateFusionAndScrape();
+        this.els.landingUrl.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.animateFusionAndScrape();
+            }
+        };
         this.els.mobToggle.onclick = () => this.els.sidebar.classList.toggle('open');
         
-        // Clicks on the 'more-horizontal' icon also switch the active variant
-        document.querySelectorAll('.card-options-btn').forEach(btn => 
-            btn.onclick = (e) => { 
-                e.stopPropagation(); 
-                const v = e.target.closest('.mockup').id.replace('mock', '');
-                this.switchVar(v);
-            }
-        );
-
         // Variant activation from the mockup click
-        ['A', 'B', 'C'].forEach(v => document.getElementById(`mock${v}`).onclick = () => this.switchVar(v));
+        CARD_IDS.forEach(v => document.getElementById(`mock${v}`).onclick = () => this.switchVar(v));
         this.els.theme.onchange = (e) => this.applyTheme(e.target.value);
 
         const up = () => this.renderCard(this.state.active);
         
         // --- MOCKUP CONTROL LOGIC ---
-        
-        // Layout Cycler
         this.els.layoutBtn.onclick = () => {
             const currentLayout = this.state.data[this.state.active].layout;
             const currentIndex = LAYOUTS.findIndex(l => l.id === currentLayout);
@@ -262,7 +298,6 @@ const App = {
             up();
         };
 
-        // Overlay Cycler
         this.els.overlayBtn.onclick = () => {
             const currentOverlay = this.state.data[this.state.active].overlayColor;
             const currentIndex = OVERLAYS.findIndex(o => o.id === currentOverlay);
@@ -273,7 +308,6 @@ const App = {
             up();
         };
 
-        // Sliders and URL Input (standard bindings)
         this.els.iUrl.oninput = (e) => { 
             this.state.data[this.state.active].bg = e.target.value; 
             up(); 
@@ -281,7 +315,6 @@ const App = {
         this.els.blur.oninput = (e) => { this.state.data[this.state.active].blur = e.target.value; up(); };
         this.els.contrast.oninput = (e) => { this.state.data[this.state.active].contrast = e.target.value; up(); };
 
-        // Local Image Upload (existing logic)
         this.els.iFile.onchange = (e) => {
             if (e.target.files?.[0]) {
                 const r = new FileReader();
@@ -293,41 +326,184 @@ const App = {
                 r.readAsDataURL(e.target.files[0]);
             }
         };
-        // --- END MOCKUP CONTROL LOGIC ---
 
         this.els.dl.onclick = () => this.downloadHD();
-        this.els.cpy.onclick = () => { 
-            const captionToCopy = (this.state.theme.id === 'chatgptricks') ? "read de caption" : this.state.data[this.state.active].caption;
-            navigator.clipboard.writeText(captionToCopy); 
-            toast('Caption copied to clipboard!'); 
-        };
+        this.els.copyBtnD.onclick = (e) => {
+            e.stopPropagation();
+            this.copyCaption();
+        }
+    },
+    
+    copyCaption() {
+        const captionToCopy = this.els.captionTextD.innerText;
+        navigator.clipboard.writeText(captionToCopy); 
+        toast('Caption copied to clipboard!'); 
     },
 
-    enableCustomMode() {
-        ['A','B','C'].forEach((v, i) => {
-            const isChatGPTricks = this.state.theme.id === 'chatgptricks';
-            this.state.data[v].title = this.state.data[v].defaultTitle;
-            this.state.data[v].subtitle = this.state.data[v].defaultSubtitle;
-            this.state.data[v].isPlaceholder = true; 
-            this.state.data[v].tag = isChatGPTricks ? '' : ['NEWS', 'STORY', 'BREAKING'][i]; 
-            this.state.data[v].caption = isChatGPTricks ? "read de caption" : 'Write your caption here...';
-            this.state.data[v].layout = this.state.theme.defaultLayouts[v];
-            this.state.data[v].bg = ''; 
-        });
-        this.els.editor.classList.remove('hidden'); 
-        this.switchVar('A'); 
-        this.renderAll(); 
-        toast('Manual mode activated.');
-        if(window.innerWidth<=1024) this.els.sidebar.classList.remove('open');
+    // --- ANIMATIONS & STATE TRANSITIONS ---
+    animateFusionAndScrape() {
+        const url = this.els.landingUrl.value.trim();
+        if (!url) { toast('Please enter a URL first.', 'error'); return; }
+        
+        // --- FIX 1: Guard against null elements and stop execution ---
+        if (!this.els.landingUrl || !this.els.scrape || !this.els.appStage) {
+            console.error("Landing elements not found in cache.");
+            toast("UI Error: Cannot start, please reload.", "error");
+            return;
+        }
+        
+        this.state.url = url;
+        const pill = this.els.loadingPill;
+        
+        // 1. Get initial positions
+        const inputRect = this.els.landingUrl.getBoundingClientRect();
+        const btnRect = this.els.scrape.getBoundingClientRect();
+        // --- FIX 2: Change selector from '.main-stage' to '#mainStage' ---
+        const mainStageRect = this.els.appStage.closest('#mainStage').getBoundingClientRect(); 
+
+        // 2. Set the loading pill to input/button size/position
+        // We set position relative to mainStage for animation consistency
+        pill.style.width = `${inputRect.width + btnRect.width}px`;
+        pill.style.height = `${inputRect.height}px`;
+        pill.style.left = `${inputRect.left - mainStageRect.left}px`;
+        pill.style.top = `${inputRect.top - mainStageRect.top}px`;
+        pill.style.borderRadius = `${inputRect.height}px`; // Full pill shape
+        pill.style.position = 'absolute';
+        pill.style.background = getComputedStyle(this.els.scrape).backgroundColor;
+        pill.innerHTML = `<span class="font-extrabold text-black">ANALYZING...</span>`;
+        
+        // Hide original elements
+        this.els.landingUrl.style.opacity = '0';
+        this.els.scrape.style.opacity = '0';
+        
+        // Start state
+        this.setAppState('LOADING'); 
+
+        // 3. Animate to final loading state (top center)
+        setTimeout(() => {
+            // Force position to top bar center
+            pill.style.width = '250px';
+            pill.style.height = '38px';
+            pill.style.left = '50%';
+            pill.style.top = '30px'; 
+            pill.style.transform = 'translate(-50%, 0)';
+            
+            // Wait for pill to reach position before setting loading class
+            setTimeout(() => {
+                pill.classList.add('loading-state');
+                
+                // Binary animation (simplified to CSS-driven text)
+                pill.innerHTML = '<span class="binary-animation">10101010101010101010101010101010</span>';
+                this.startBinaryAnimation();
+            }, 500); // Wait for CSS transition (0.6s)
+
+            // 4. Start scraping after animation completes
+            setTimeout(() => this.scrapeContent(url), 1500); 
+        }, 500); // Start of fusion move
     },
+    
+    startBinaryAnimation() {
+        let text = this.els.loadingPill.querySelector('.binary-animation');
+        let interval = setInterval(() => {
+            if (this.state.mode !== 'LOADING') {
+                clearInterval(interval);
+                return;
+            }
+            const randomBinary = Array.from({ length: 30 }, () => Math.round(Math.random())).join('');
+            text.textContent = randomBinary;
+        }, 100);
+    },
+
+    async scrapeContent(url) {
+        try {
+            const res = await fetch('/api/scrape', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({url}) 
+            });
+            const d = await res.json(); 
+            if (d.error) throw new Error(d.error);
+
+            // Update App State
+            this.setAppState('APP'); 
+            
+            // 1. Reset Landing UI (for future use)
+            this.els.landingUrl.value = '';
+            this.els.landingUrl.style.opacity = '1';
+            this.els.scrape.style.opacity = '1';
+
+            // 2. Prepare Data Structure
+            const isChatGPTricks = this.state.theme.id === 'chatgptricks';
+            const commonCaption = d.ai_content?.common_caption || d.original.subtitle || 'Caption not found.';
+            const variants = d.ai_content?.variants || { A: { title: d.original.title, subtitle: d.original.subtitle }, B: { title: d.original.title, subtitle: d.original.subtitle }, C: { title: d.original.title, subtitle: d.original.subtitle } };
+
+            // Apply images and caption to state (D)
+            this.state.data.A.bg = d.images.a; this.state.data.A.tag = 'NEWS';
+            this.state.data.B.bg = d.images.b; this.state.data.B.tag = 'STORY';
+            this.state.data.C.bg = d.images.c; this.state.data.C.tag = 'BREAKING';
+            this.state.data.D.caption = commonCaption;
+            
+            // 3. Sequential Card Fill Animation
+            for (let i = 0; i < CARD_IDS.length; i++) {
+                const v = CARD_IDS[i];
+                await new Promise(resolve => setTimeout(resolve, 300)); // Delay between cards
+
+                const cardData = this.state.data[v];
+
+                if (v === 'D') { // Caption Card Logic
+                    cardData.isPlaceholder = false;
+                    this.els.captionTextD.innerText = cardData.caption;
+                } else { // A, B, C Content Card Logic
+                    cardData.isPlaceholder = false; 
+                    cardData.tag = ['NEWS', 'STORY', 'BREAKING'][i];
+                    cardData.title = variants[v].title.toUpperCase(); 
+                    cardData.subtitle = isChatGPTricks ? '' : variants[v].subtitle;
+                }
+
+                this.renderCard(v);
+                document.getElementById(`mock${v}`).classList.add('visible-card');
+            }
+
+            // 4. Update Final Top Bar
+            this.updateTopControlBar(url, this.downloadHD.bind(this));
+
+            this.switchVar('A'); // Set A as active stage
+            toast('Content processed successfully!');
+
+        } catch (e) {
+            console.error("Scrape error:", e);
+            this.setAppState('LANDING'); // Reset to landing state
+            toast('Link unreachable or scraping failed. Try alternative source.', 'error');
+            this.showFallback(url);
+        }
+    },
+    
+    updateTopControlBar(url, downloadFn = null) {
+        const pill = this.els.loadingPill;
+        pill.classList.remove('loading-state');
+        pill.classList.add('app-state');
+        
+        // NEW: URL Display and Download Button logic
+        let content = `<span class="url-text" title="${url}">${url}</span>`;
+        
+        if (downloadFn) {
+            content += `<button class="download-btn" id="downloadTopBtn" onclick="App.downloadHD()"><i data-lucide="download"></i> DOWNLOAD</button>`;
+        }
+
+        pill.innerHTML = content;
+        lucide.createIcons();
+    },
+
+
+    // --- RENDERING AND UX ---
 
     switchVar(v) {
         this.state.active = v;
-        ['A', 'B', 'C'].forEach(x => { 
+        CARD_IDS.forEach(x => { 
             const mockEl = document.getElementById(`mock${x}`);
             const isActive = x === v;
             mockEl.classList.toggle('active-stage', isActive); 
-            mockEl.classList.toggle('inactive', !isActive); // Toggle inactive class for visual effect
+            mockEl.classList.toggle('inactive', !isActive && x !== 'D'); // D doesn't need inactive style
             if (isActive) {
                 const mockupEl = document.getElementById(`mock${x}`);
                 if (mockupEl) mockupEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -335,78 +511,51 @@ const App = {
         });
         
         const d = this.state.data[v];
-        // Sync textareas with active card (for quick reference/debugging)
+        
+        // Sync textareas with active card (Sidebar is hidden in APP mode, but useful)
         this.els.ti.value = d.title; 
         this.els.sub.value = d.subtitle; 
         
         const titleEl = document.querySelector(`#card${v} .c-title`);
         const subEl = document.querySelector(`#card${v} .c-subtitle`);
         
-        // Sync content if not actively editing
-        if (document.activeElement !== titleEl) titleEl.textContent = d.title;
-        if (document.activeElement !== subEl) subEl.textContent = d.subtitle;
-        
-        if (d.isPlaceholder) {
-            titleEl.classList.add('is-placeholder');
-            subEl.classList.add('is-placeholder');
-        } else {
-             titleEl.classList.remove('is-placeholder');
-             subEl.classList.remove('is-placeholder');
+        if (titleEl) {
+            if (document.activeElement !== titleEl) titleEl.textContent = d.title;
+            if (d.isPlaceholder) titleEl.classList.add('is-placeholder');
+            else titleEl.classList.remove('is-placeholder');
+        }
+        if (subEl) {
+            if (document.activeElement !== subEl) subEl.textContent = d.subtitle;
+            if (d.isPlaceholder) subEl.classList.add('is-placeholder');
+            else subEl.classList.remove('is-placeholder');
         }
 
-        const isChatGPTricks = this.state.theme.id === 'chatgptricks';
-        const displayedCaption = isChatGPTricks ? "read de caption" : (d.caption || 'Waiting for AI...');
-        this.els.cap.innerText = displayedCaption;
+        // Hide controls for Caption Card (D)
+        const isContentCard = (v !== 'D');
+        this.els.activeControls.classList.toggle('opacity-0', !isContentCard);
+        this.els.activeControls.classList.toggle('pointer-events-none', !isContentCard);
         
-        // --- MOCKUP CONTROL PANEL SYNCHRONIZATION ---
-        const layoutShort = LAYOUTS.find(l => l.id === d.layout)?.short || 'ERR';
-        const overlayShort = OVERLAYS.find(o => o.id === d.overlayColor)?.short || 'ERR';
+        if (isContentCard) {
+            const layoutShort = LAYOUTS.find(l => l.id === d.layout)?.short || 'ERR';
+            const overlayShort = OVERLAYS.find(o => o.id === d.overlayColor)?.short || 'ERR';
 
-        this.els.layoutValue.textContent = layoutShort;
-        this.els.overlayValue.textContent = overlayShort;
-        this.els.blur.value = d.blur;
-        this.els.contrast.value = d.contrast;
-        // Sincronizar el input de URL solo si no es una imagen local
-        if (!d.bg.startsWith('data:')) {
-            this.els.iUrl.value = d.bg;
-        } else {
-            this.els.iUrl.value = "(Local Image Loaded)";
+            this.els.layoutValue.textContent = layoutShort;
+            this.els.overlayValue.textContent = overlayShort;
+            this.els.blur.value = d.blur;
+            this.els.contrast.value = d.contrast;
+            if (!d.bg.startsWith('data:')) {
+                this.els.iUrl.value = d.bg;
+            } else {
+                this.els.iUrl.value = "(Local Image Loaded)";
+            }
         }
         
-        // Recalculamos la posición vertical y la posición de los controles
-        this.updateVerticalCentering(v); 
-        this.positionControls(v);
-        // ----------------------------------------------------
-
         this.fitStage();
     },
-    
-    // --- FUNCIÓN DE CENTRADO SIMPLIFICADA (ELIMINADO CÁLCULO DE OFFSET) ---
-    updateVerticalCentering(v) {
-        // La barra de controles ahora flota, el stage-grid debe centrarse sin compensación.
+
+    positionControls() {
+        // Position is now fixed by Tailwind: absolute bottom-5 left-1/2 -translate-x-1/2
         this.els.stageGrid.style.transform = ''; 
-        return;
-    },
-    // --- FIN FUNCIÓN DE CENTRADO ---
-
-    positionControls(v = this.state.active) {
-        const controlsEl = this.els.activeControls;
-        const editorHidden = this.els.editor.classList.contains('hidden');
-        const isMobile = window.innerWidth <= 1024;
-        
-        // El control flotante se oculta/muestra solo en función del estado de edición y si es móvil
-        if (editorHidden || isMobile) {
-            controlsEl.classList.remove('is-visible'); 
-            this.els.stageGrid.style.transform = ''; 
-            return;
-        }
-
-        // Si no está oculto y no es móvil, lo mostramos (la posición la da Tailwind: absolute bottom-5)
-        controlsEl.classList.add('is-visible'); 
-        
-        // La lógica de cálculo de posición fue ELIMINADA.
-        
-        this.updateVerticalCentering(v); // Asegura que el grid principal no tenga offset.
     },
     
     renderCard(v, tid = `card${v}`) {
@@ -417,6 +566,11 @@ const App = {
         const ovs = (this.state.theme && this.state.theme.overlays) 
             ? this.state.theme.overlays 
             : { black: 'rgba(0,0,0,0.5)', white: 'rgba(255,255,255,0.3)' }; 
+
+        if (v === 'D') {
+             if (this.els.captionTextD) this.els.captionTextD.innerText = d.caption;
+             return;
+        }
 
         const imgEl = c.querySelector('.card-bg');
         if (d.bg && d.bg.length > 0) {
@@ -437,7 +591,6 @@ const App = {
         const t = c.querySelector('.c-title'); 
         const s = c.querySelector('.c-subtitle');
         
-        // Sincronizar classes de placeholder
         if(d.isPlaceholder) {
             t.classList.add('is-placeholder');
             s.classList.add('is-placeholder');
@@ -458,29 +611,26 @@ const App = {
     },
 
     renderAll() { 
-        ['A', 'B', 'C'].forEach(v => {
+        CARD_IDS.forEach(v => {
             this.renderCard(v);
             const d = this.state.data[v];
             const t = document.querySelector(`#card${v} .c-title`);
             const s = document.querySelector(`#card${v} .c-subtitle`);
             const isChatGPTricks = this.state.theme.id === 'chatgptricks';
             
-            // FIX: Actualizar el textContent de todas las tarjetas immediately
             if (t) t.textContent = d.title;
             if (s) s.textContent = d.subtitle;
             
-            // FIX: Aplicar las clases de activo/inactivo si es necesario
             const mockEl = document.getElementById(`mock${v}`);
             const isActive = v === this.state.active;
+            
             mockEl.classList.toggle('active-stage', isActive); 
-            mockEl.classList.toggle('inactive', !isActive);
-
-            // FIX: Aplicar AutoFit inicial
+            mockEl.classList.toggle('inactive', !isActive && v !== 'D');
+            
             if (t && !d.isPlaceholder) this.autoFit(t, isChatGPTricks ? 180 : 120, isChatGPTricks ? 80 : 60, 650);
             if (s && !d.isPlaceholder) this.autoFit(s, 56, 30, 400);
         }); 
-        this.updateVerticalCentering(this.state.active); // Re-center on full render
-        this.positionControls(); 
+        this.fitStage();
     },
     
     autoFit(el, maxFs, minFs, maxHeight) { 
@@ -493,93 +643,23 @@ const App = {
     },
     
     fitStage() { 
-        ['A','B','C'].forEach(v => { 
+        CARD_IDS.forEach(v => { 
             const w = document.getElementById(`mount${v}`); 
             const c = document.getElementById(`card${v}`); 
             if (w && c) {
+                // Skip scaling for the caption card (D) as it should fill its grid cell
+                if (v === 'D') return;
+
                 const scale = Math.min(w.clientWidth / 1080, w.clientHeight / 1350);
                 c.style.transform = `scale(${scale})`; 
             }
         }); 
     },
 
-    async scrape() {
-        const url = this.els.url.value.trim();
-        if (!url) { toast('Please enter a URL first.', 'error'); return; }
-        
-        this.els.scrape.innerHTML = '<i data-lucide="loader-2" class="spin"></i>'; 
-        this.els.scrape.disabled = true; 
-        this.els.loadingBar.style.display = 'block'; 
-        lucide.createIcons();
-        
-        try {
-            const res = await fetch('/api/scrape', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({url}) 
-            });
-            const d = await res.json(); 
-            if (d.error) throw new Error(d.error);
-
-            this.state.data.A.bg = d.images.a; this.state.data.A.tag = 'NEWS';
-            this.state.data.B.bg = d.images.b; this.state.data.B.tag = 'STORY';
-            this.state.data.C.bg = d.images.c; this.state.data.C.tag = 'UPDATE';
-            
-            const isChatGPTricks = this.state.theme.id === 'chatgptricks';
-
-            if (d.ai_content && d.ai_content.variants) {
-                this.state.data.A.tag = 'NEWS';
-                this.state.data.B.tag = 'STORY';
-                this.state.data.C.tag = 'BREAKING'; 
-
-                ['A','B','C'].forEach(v => {
-                    this.state.data[v].isPlaceholder = false; 
-                    if (isChatGPTricks) {
-                        this.state.data[v].subtitle = ''; 
-                        this.state.data[v].tag = '';      
-                        this.state.data[v].caption = "read de caption"; 
-                    } else {
-                        this.state.data[v].caption = d.ai_content.common_caption;
-                        this.state.data[v].subtitle = d.ai_content.variants[v].subtitle;
-                    }
-                    this.state.data[v].title = d.ai_content.variants[v].title.toUpperCase(); 
-                });
-                
-            } else {
-                toast('AI generation failed. Using raw text.', 'error');
-                ['A','B','C'].forEach(v => { 
-                    this.state.data[v].isPlaceholder = false; 
-                    this.state.data[v].title = d.original.title; 
-                    if (isChatGPTricks) {
-                         this.state.data[v].subtitle = ''; 
-                         this.state.data[v].tag = '';
-                         this.state.data[v].caption = "read de caption";
-                    } else {
-                         this.state.data[v].subtitle = d.original.subtitle; 
-                    }
-                });
-            }
-            
-            this.els.editor.classList.remove('hidden'); 
-            this.switchVar('A'); 
-            this.renderAll(); 
-            toast('Content processed successfully!');
-            if(window.innerWidth<=1024) this.els.sidebar.classList.remove('open');
-
-        } catch (e) {
-            console.error("Scrape error:", e);
-            toast('Link unreachable. Finding alternatives...', 'info');
-            this.showFallback(url);
-        } finally { 
-            this.els.scrape.innerHTML = '<i data-lucide="sparkles"></i>'; 
-            this.els.scrape.disabled = false; 
-            this.els.loadingBar.style.display = 'none'; 
-            lucide.createIcons(); 
-        }
-    },
-
     async showFallback(failedUrl) {
-        // Change display to show the Tailwind utility of fixed inset-0
+        // Hide the top loading bar before showing the modal
+        this.els.topControlBar.classList.add('hidden');
+        
         this.els.fbModal.classList.remove('hidden'); 
         this.els.fbModal.style.display = 'flex';
         this.els.fbMsg.innerHTML = 'Scraping failed. Analyzing URL to find similar sources...';
@@ -609,7 +689,6 @@ const App = {
             data.results.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'fallback-item';
-                // Styles are now handled by .fallback-item in style.css, but we keep the inline text styles
                 item.innerHTML = `
                     <div style="font-weight:700; color:var(--text); font-size:0.95rem; margin-bottom:4px; line-height:1.3;">${r.title}</div>
                     <div style="color:var(--text-dim); font-size:0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${r.snippet}</div>
@@ -620,11 +699,11 @@ const App = {
                 item.onmouseout = () => { item.style.borderColor = 'var(--border)'; item.style.background = 'rgba(0,0,0,0.3)'; };
                 
                 item.onclick = () => {
-                    this.els.url.value = r.url;
+                    this.els.landingUrl.value = r.url; // Use landing URL input for retry
                     this.els.fbModal.style.display = 'none';
-                    this.els.fbModal.classList.add('hidden'); // Add hidden back
+                    this.els.fbModal.classList.add('hidden'); 
                     toast(`Retrying with new source...`);
-                    this.scrape(); 
+                    this.animateFusionAndScrape(); 
                 };
                 this.els.fbList.appendChild(item);
             });
@@ -637,23 +716,28 @@ const App = {
     },
 
     async downloadHD() {
-        const btn = this.els.dl; 
+        // Use the existing logic for HD download
+        const btn = document.getElementById('downloadTopBtn') || this.els.dl;
         const ogHtml = btn.innerHTML;
         btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> RENDERING HD...'; 
         btn.disabled = true; 
         lucide.createIcons(); 
-        this.els.loadingBar.style.display = 'block';
         
         try {
-            const activeCardData = this.state.data[this.state.active]; // Obtener los datos del estado
+            const activeCardData = this.state.data[this.state.active]; 
+            if (this.state.active === 'D') {
+                 toast('Cannot export the Caption Card (D). Please select a visual card (A, B, or C).', 'error');
+                 return;
+            }
+            
             this.renderCard(this.state.active, 'hd-render-card');
             const hd = document.getElementById('hd-render-card');
             
-            // 1. Asegurar que el texto editable esté en el elemento HD (CORRECCIÓN WYSIWYG)
+            // Sync text
             hd.querySelector('.c-title').textContent = activeCardData.title;
             hd.querySelector('.c-subtitle').textContent = activeCardData.subtitle;
 
-            // 2. Sincronizar clases de placeholder para aplicar el estilo correcto antes de renderizar (CORRECCIÓN WYSIWYG)
+            // Sync placeholders
             if (activeCardData.isPlaceholder) {
                 hd.querySelector('.c-title').classList.add('is-placeholder');
                 hd.querySelector('.c-subtitle').classList.add('is-placeholder');
@@ -663,17 +747,18 @@ const App = {
             }
 
             const hdImg = hd.querySelector('.card-bg');
-            
             hdImg.crossOrigin = "anonymous"; 
             const currentBg = activeCardData.bg;
             if (!currentBg.startsWith('data:')) {
                  hdImg.src = `/api/proxy_image?url=${encodeURIComponent(currentBg)}`;
             }
             
+            // AutoFit
             const isChatGPTricks = activeCardData.layout === 'layout-chatgptricks';
             this.autoFit(hd.querySelector('.c-title'), isChatGPTricks ? 180 : 140, isChatGPTricks ? 80 : 70, 700); 
             this.autoFit(hd.querySelector('.c-subtitle'), 56, 30, 400);
             
+            // Wait for image load
             await new Promise((resolve, reject) => {
                 if (!currentBg || currentBg.length === 0) { 
                     resolve();
@@ -705,7 +790,6 @@ const App = {
             btn.innerHTML = ogHtml; 
             btn.disabled = false; 
             lucide.createIcons(); 
-            this.els.loadingBar.style.display = 'none'; 
         }
     }
 };

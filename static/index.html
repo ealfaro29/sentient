@@ -9,6 +9,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
   <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +22,6 @@
         theme: {
             extend: {
                 colors: {
-                    // Mapeo de variables CSS a tokens de color para clases como bg-[var(--brand)]
                     'var-brand': 'var(--brand)',
                     'var-bg-main': 'var(--bg-main)',
                     'var-bg-panel': 'var(--bg-panel)',
@@ -30,10 +30,10 @@
                     'var-text-dim': 'var(--text-dim)',
                 },
                 borderRadius: {
-                    'xl': 'var(--radius-md)', // Mapeo de var(--radius-md)
+                    'xl': 'var(--radius-md)',
                 },
                 spacing: {
-                    '60px': '60px', // Header height
+                    '60px': '60px',
                 }
             }
         }
@@ -50,8 +50,8 @@
         --font-card-body: 'Inter', sans-serif;
         
         /* ENFORZAR FONDOS OSCUROS/NEGROS */
-        --bg-main: #000000; /* Fondo principal negro puro */
-        --bg-panel: #0a0a0a; /* Fondo del panel (cercano a negro para contraste) */
+        --bg-main: #000000;
+        --bg-panel: #0a0a0a;
         --border: #1a1a1a; 
         --text: #ffffff;
         --text-dim: #9ca3af;
@@ -61,17 +61,10 @@
         --bg-color: #000000;
         --element-height: 20px; 
         
-        /* NEW: Valor RGB asumido para el glow del input (Inicial, se actualiza por JS) */
         --brand-rgb: 204, 255, 0; 
     }
     
-    /* Media Query Responsiva adaptada a Tailwind (usando clases `lg:` en HTML) */
-    @media (max-width: 1024px) { 
-        .sidebar { position: absolute; height: 100%; transform: translateX(-100%); box-shadow: 10px 0 30px rgba(0,0,0,0.5); } 
-        .sidebar.open { transform: translateX(0); } 
-    }
-
-    /* --- ESTILOS DE COMPONENTES ÚNICOS (Mantenidos) --- */
+    /* --- ESTILOS DE COMPONENTES ÚNICOS --- */
     
     .mockup { 
         cursor: pointer; 
@@ -177,105 +170,89 @@
 </head>
 <body class="bg-[var(--bg-main)] text-[var(--text)] font-sans">
     <div class="app-container">
+        
+        <div id="p5-canvas-container" class="fixed inset-0 z-0 opacity-80"></div>
+
         <div class="loading-bar fixed top-0 left-0 right-0 h-1 bg-[var(--bg-panel)] z-[9999] overflow-hidden hidden" id="loadingBar"></div>
-        <button id="mobileToggle" class="lg:hidden fixed top-5 left-5 z-[30] bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg p-2 text-[var(--brand)] cursor-pointer"><i data-lucide="menu"></i></button>
         
-        <aside class="sidebar w-[400px] min-w-[350px] bg-[var(--bg-panel)] flex flex-col z-20 transition-transform duration-300 ease-in-out" id="mainSidebar">
-            <header class="h-[60px] px-6 border-b border-[var(--border)] flex items-center justify-between">
-                <div class="text-[var(--brand)] font-black tracking-tighter flex gap-2 items-center text-lg"><i data-lucide="zap"></i> SENTIENT V0.2.0</div>
-                <select id="themeSelector" class="w-auto p-2 text-sm bg-black/30 border border-[var(--border)] rounded-xl outline-none transition-colors duration-200 focus:border-[var(--brand)] focus:bg-black/50 font-inherit text-inherit"></select>
-            </header>
-            
-            <div class="scroll-area flex-1 overflow-y-auto p-6 flex flex-col gap-7">
-                
-                <div class="p-4 bg-black/50 rounded-xl shadow-inner border border-[var(--border)]">
-                    <span class="text-xs font-bold uppercase tracking-wider text-[var(--text-dim)] mb-2 block">1. SOURCE & CREATE</span>
-                    <div class="flex space-x-2">
-                        <input id="urlInput" type="url" class="input-field flex-1" placeholder="Paste article URL..." />
-                        <button id="scrapeBtn" class="cursor-pointer border-none flex items-center justify-center gap-2 font-bold rounded-xl transition-all duration-200 text-sm w-[60px] bg-[var(--brand)] text-[var(--bg-main)] hover:opacity-90 active:scale-[0.98]"><i data-lucide="sparkles"></i></button>
-                    </div>
+        <div id="topControlBar" class="hidden absolute top-0 left-0 right-0 h-[60px] bg-[var(--bg-panel)] z-50 px-5 border-b border-[var(--border)] items-center transition-opacity duration-500 ease-out">
+            <div id="loadingPill" class="flex items-center justify-center h-full w-full">
                 </div>
-                
-                <div id="editorPanel" class="hidden flex-col gap-7">
-                    <hr class="border-t border-[var(--border)] opacity-30">
+        </div>
+        
+        <main class="flex-1 bg-transparent flex flex-col items-center justify-center p-5 overflow-hidden relative z-10" id="mainStage">
+            
+            <div id="landingStage" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-opacity duration-500 opacity-100">
+                <div id="fusionContainer" class="flex items-center justify-center w-full max-w-[600px] h-[52px]">
                     
-                    <div class="p-4 bg-black/50 rounded-xl shadow-inner border border-[var(--border)]">
-                        <span class="text-xs font-bold uppercase tracking-wider text-[var(--text-dim)] mb-2 block">2. TEXT (ACTIVE CARD)</span>
-                        <textarea id="titleInput" class="input-field w-full hidden" placeholder="HEADLINE"></textarea>
-                        <div id="subtitle-control-group">
-                            <textarea id="subInput" class="input-field w-full hidden" placeholder="Subtitle..."></textarea>
-                        </div>
-                        <p class="text-[var(--text-dim)] text-sm text-center py-2 border-t border-[var(--border)]/50 mt-2 pt-2">
-                            Edit text directly on the active card preview.
-                        </p>
+                    <div id="landingInputWrapper" class="relative flex-1 h-full w-full">
+                        <svg class="h-6 w-6 text-[var(--brand)] absolute left-3 top-1/2 -translate-y-1/2 z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"></circle><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M4 12H0m16 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <input id="landingUrlInput" type="url" class="h-full w-full bg-black/70 border border-[var(--brand)] text-white pl-10 pr-4 text-lg rounded-l-full outline-none transition-all duration-500 ease-in-out focus:border-white focus:bg-black/90" placeholder="Paste article URL and Press Enter..." />
                     </div>
 
-                    <div class="p-4 bg-black/50 rounded-xl shadow-inner border border-[var(--border)]">
-                        <div id="caption-control-group">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-xs font-bold uppercase tracking-wider text-[var(--text-dim)] m-0">3. CAPTION & EXPORT</span>
-                                <button id="copyBtn" class="cursor-pointer border-none flex items-center justify-center gap-2 font-bold rounded-xl transition-all duration-200 text-xs h-6 px-3 bg-[var(--brand)] text-[var(--bg-main)] hover:opacity-90 active:scale-[0.98]">COPY</button>
+                    <button id="landingScrapeBtn" class="h-full px-6 bg-[var(--brand)] text-black font-extrabold text-lg rounded-r-full flex items-center gap-2 transition-all duration-500 ease-in-out hover:opacity-90 active:scale-[0.98] focus:z-10 focus:outline-none">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+
+            <div id="appStage" class="w-full h-full opacity-0 transition-opacity duration-500 pointer-events-none">
+                
+                <div class="stage-grid w-full h-full grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5 justify-center items-center overflow-y-auto lg:overflow-hidden p-5 transition-all duration-300 ease-in-out" style="padding-top: 70px;">
+                    
+                    <div id="mockA" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('A')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('A');"></i></div><div class="canvas-wrapper" id="mountA"><div id="cardA" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-standard"><div class="c-pill">NEWS</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">READY</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Paste an article URL...</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">8,432 likes</div></div></div>
+                    
+                    <div id="mockB" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('B')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('B');"></i></div><div class="canvas-wrapper" id="mountB"><div id="cardB" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-centered"><div class="c-pill">STORY</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">SET</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Choose variant...</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">12,901 likes</div></div></div>
+                    
+                    <div id="mockC" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('C')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('C');"></i></div><div class="canvas-wrapper" id="mountC"><div id="cardC" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-bold"><div class="c-pill">BREAKING</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">GO</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Customize & export.</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6" fill="#ffffff" color="#ffffff"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">45,200 likes</div></div></div>
+                    
+                    <div id="mockD" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('D')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3" style="background: linear-gradient(45deg, #00ffff, #0080ff);"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient_caption</span><i data-lucide="copy" id="copyBtnD" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn cursor-pointer" onclick="event.stopPropagation(); App.copyCaption();"></i></div><div class="canvas-wrapper h-full" id="mountD"><div id="cardD" class="render-target w-full h-full p-6 text-left" style="transform:none; background:var(--bg-panel);"><div class="c-pill text-xl font-bold bg-gray-900 text-white rounded-lg px-4 py-2 mb-4">CAPTION</div><div id="captionTextD" class="text-sm text-gray-400 whitespace-pre-wrap overflow-y-auto" style="height: calc(100% - 60px);">Paste an article URL to generate a caption...</div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="font-semibold text-sm text-gray-500">Auto-Generated Caption</div></div></div>
+
+                </div>
+
+                <div id="activeControls" class="bg-transparent p-1.5 flex flex-col gap-1.5 font-bold absolute bottom-5 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[700px]">
+                    <div class="flex gap-1.5 items-center justify-center">
+                        <div class="flex gap-1.5 items-center">
+                            <div class="neon-box selector" id="layoutBtn">
+                                <span class="selector-label">LAYOUT</span>
+                                <div class="value-badge" id="layoutValue">STD</div>
                             </div>
-                            <div id="captionPreview" class="input-field max-h-[150px] overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap text-[var(--text-dim)]"></div>
+                            <div class="neon-box selector" id="overlayBtn">
+                                <span class="selector-label">OVERLAY</span>
+                                <div class="value-badge" id="overlayValue">B</div>
+                            </div>
                         </div>
-                        
-                        <button id="dlBtn" class="cursor-pointer border-none flex items-center justify-center gap-2 font-black rounded-xl transition-all duration-200 text-sm h-12 w-full bg-[var(--brand)] text-[var(--bg-main)] mt-5 hover:opacity-90 active:scale-[0.98]"><i data-lucide="download"></i> EXPORT CLEAN HD</button>
-                    </div>
-                </div>
-            </div>
-        </aside>
-        
-        <main class="flex-1 bg-[var(--bg-main)] flex flex-col items-center justify-center p-5 overflow-hidden relative" onclick="if(window.innerWidth<=1024) document.getElementById('mainSidebar').classList.remove('open')">
-            
-            <div class="stage-grid flex gap-[25px] w-full h-full items-center justify-center transition-all duration-300 ease-in-out lg:flex-row flex-col lg:overflow-hidden overflow-y-auto lg:p-0 py-[50px] lg:gap-[25px] gap-[40px]">
-                
-                <div id="mockA" class="mockup active-stage lg:min-h-0 lg:w-auto lg:max-w-none w-full max-w-[450px]" onclick="App.switchVar('A')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('A');"></i></div><div class="canvas-wrapper" id="mountA"><div id="cardA" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-standard"><div class="c-pill">NEWS</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">READY</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Paste an article URL...</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">8,432 likes</div></div></div>
-                
-                <div id="mockB" class="mockup inactive lg:min-h-0 lg:w-auto lg:max-w-none w-full max-w-[450px]" onclick="App.switchVar('B')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('B');"></i></div><div class="canvas-wrapper" id="mountB"><div id="cardB" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-centered"><div class="c-pill">STORY</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">SET</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Choose variant...</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">12,901 likes</div></div></div>
-                
-                <div id="mockC" class="mockup inactive lg:min-h-0 lg:w-auto lg:max-w-none w-full max-w-[450px]" onclick="App.switchVar('C')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('C');"></i></div><div class="canvas-wrapper" id="mountC"><div id="cardC" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-bold"><div class="c-pill">BREAKING</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">GO</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Customize & export.</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6" fill="#ffffff" color="#ffffff"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">45,200 likes</div></div></div>
-            </div>
 
-            <div id="activeControls" class="bg-transparent p-1.5 flex flex-col gap-1.5 font-bold absolute bottom-5 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-[450px]">
-                <div class="flex gap-1.5 items-center">
-                    <div class="neon-box selector" id="overlayBtn">
-                        <span class="selector-label">OVERLAY</span>
-                        <div class="value-badge" id="overlayValue">B</div>
-                    </div>
-                    <div class="neon-box selector" id="layoutBtn">
-                        <span class="selector-label">LAYOUT</span>
-                        <div class="value-badge" id="layoutValue">STD</div>
-                    </div>
-                </div>
+                        <div class="flex gap-1.5 items-center flex-grow max-w-[250px] min-w-[150px]">
+                            <div class="neon-box slider-box flex gap-1 items-center px-1.5 bg-gray-700 text-gray-200">
+                                <svg class="slider-icon fill-gray-200" viewBox="0 0 24 24">
+                                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                                </svg>
+                                <input type="range" id="blurRange" min="0" max="20" value="0" step="1" class="neon-slider-track">
+                            </div>
+                            <div class="neon-box slider-box flex gap-1 items-center px-1.5 bg-gray-700 text-gray-200">
+                                <svg class="slider-icon fill-gray-200" viewBox="0 0 24 24">
+                                    <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+                                </svg>
+                                <input type="range" id="contrastRange" min="50" max="150" value="100" step="5" class="neon-slider-track">
+                            </div>
+                        </div>
 
-                <div class="flex gap-1.5 items-center">
-                    <div class="neon-box slider-box flex gap-1 items-center px-1.5">
-                         <svg class="slider-icon" viewBox="0 0 24 24">
-                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-                        </svg>
-                        <input type="range" id="blurRange" min="0" max="20" value="0" step="1">
-                    </div>
-                    <div class="neon-box slider-box flex gap-1 items-center px-1.5">
-                         <svg class="slider-icon" viewBox="0 0 24 24">
-                            <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
-                        </svg>
-                        <input type="range" id="contrastRange" min="50" max="150" value="100" step="5">
-                    </div>
-                </div>
-                
-                <div class="flex gap-1.5 items-center">
-                    <div class="neon-box url-input-container flex flex-1 p-0 px-1 gap-1"> 
-                        <input type="text" id="imgUrlInput" class="url-input" placeholder="https://www..." />
-                        <div id="imgFileBtn" onclick="document.getElementById('imgFileInput').click()" class="neon-upload-icon-btn">
-                            <i data-lucide="upload"></i>
+                        <div class="neon-box url-input-container flex flex-1 p-0 px-1 gap-1 min-w-[200px] bg-gray-700/50"> 
+                            <input type="text" id="imgUrlInput" class="url-input bg-black/50" placeholder="https://image-url.com" />
+                            <div id="imgFileBtn" onclick="document.getElementById('imgFileInput').click()" class="neon-upload-icon-btn bg-black hover:bg-black/80">
+                                <i data-lucide="upload" class="stroke-gray-400"></i>
+                            </div>
                         </div>
                     </div>
+                    
+                    <input type="file" id="imgFileInput" hidden accept="image/*" />
                 </div>
-                
-                <input type="file" id="imgFileInput" hidden accept="image/*" />
             </div>
-            </main>
+        </main>
     </div>
+    
     <div id="hd-stage-container">
         <div id="hd-render-card" class="render-target">
              <img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div>
@@ -302,6 +279,9 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="utils.js"></script>
+    <script type="module" src="data-handler.js"></script>
+    <script type="module" src="ui-manager.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
