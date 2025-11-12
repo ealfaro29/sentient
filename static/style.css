@@ -1,0 +1,163 @@
+/* Core structure styles (Minimal, most should be Tailwind) */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { height: 100vh; display: flex; overflow: hidden; }
+.app-container { display: flex; width: 100vw; height: 100vh; position: relative; }
+
+/* Sidebar Enhancements */
+.sidebar { 
+    /* Use the variable but enforce a border and transition */
+    border-right: 1px solid var(--border); 
+    display: flex; 
+    flex-direction: column; 
+    z-index: 20; 
+    flex-shrink: 0; 
+    transition: transform 0.3s ease;
+    /* NEW: Sombra interior para profundidad */
+    box-shadow: inset -5px 0 15px rgba(0,0,0,0.4); 
+}
+
+/* NEW: Estilo de campo de entrada base y foco con glow */
+.input-field { 
+    width: 100%; 
+    background: rgba(0,0,0,0.3); 
+    border: 1px solid var(--border); 
+    padding: 12px 16px; 
+    border-radius: var(--radius-md); 
+    outline: none; 
+    font-size: 0.9rem; 
+    transition: all 0.2s; /* Transición para el glow */
+    font-family: inherit; 
+    color: inherit; 
+}
+.input-field:focus {
+    /* NEW: Glow sutil en el foco usando --brand-rgb */
+    border-color: var(--brand); 
+    background: rgba(0,0,0,0.5); 
+    box-shadow: 0 0 10px rgba(var(--brand-rgb), 0.5); 
+}
+
+
+/* NEW: Custom Scrollbar para el sidebar scroll area */
+.scroll-area::-webkit-scrollbar {
+    width: 8px;
+}
+.scroll-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+.scroll-area::-webkit-scrollbar-thumb {
+    background: var(--text-dim);
+    border-radius: 4px;
+    border: 2px solid var(--bg-panel); /* Coincide con el fondo del sidebar */
+}
+.scroll-area::-webkit-scrollbar-thumb:hover {
+    background: var(--brand);
+}
+
+/* Loading Bar (Keep custom animation) */
+.loading-bar::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 100%; background: var(--brand); animation: loading-indeterminate 1.5s infinite linear; transform: translateX(-100%); }
+@keyframes loading-indeterminate { 0% { transform: translateX(-100%); } 50% { transform: translateX(0%); } 100% { transform: translateX(100%); } }
+
+/* Insta Mockup Elements (Keep specific, non-utility CSS) */
+.insta-avatar { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); padding: 2px; }
+.insta-avatar div { width: 100%; height: 100%; background: #000; border-radius: 50%; }
+
+/* Card Components (Keep font/size config based on variables) */
+.card-content { position: absolute; inset: 0; padding: 80px; display: flex; flex-direction: column; z-index: 2; }
+.layout-standard { justify-content: flex-end; text-align: left; }
+.layout-centered { justify-content: center; align-items: center; text-align: center; }
+.layout-bold { justify-content: flex-start; padding-top: 160px; }
+.layout-chatgptricks { justify-content: flex-start; align-items: flex-start; text-align: left; padding-top: 80px; }
+.layout-chatgptricks .c-title { font-size: 140px; line-height: 0.9; margin-bottom: 0; color: #FFFFFF; }
+.layout-chatgptricks .c-subtitle { display: none !important; }
+.layout-chatgptricks .c-pill { display: none !important; }
+
+.c-pill { align-self: flex-start; padding: 16px 48px; background: var(--brand); color: var(--bg-main); font-size: 36px; font-weight: 900; border-radius: 100px; margin-bottom: 50px; letter-spacing: -1px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
+.c-title { 
+    font-size: 120px; 
+    font-family: var(--font-headline); 
+    font-weight: var(--font-headline-weight); 
+    line-height: 0.95; 
+    color: var(--brand); 
+    margin-bottom: 40px; 
+    letter-spacing: -3px; 
+    transition: color 0.3s;
+    text-transform: uppercase; 
+}
+.c-subtitle { font-size: 56px; font-weight: 500; line-height: 1.15; color: #fff; letter-spacing: -1px; opacity: 0.9; transition: color 0.3s; font-family: var(--font-card-body); }
+
+/* Editable Content UX */
+[contenteditable="true"] {
+    user-select: text;
+    cursor: text;
+    min-width: 50px; 
+}
+[contenteditable="true"]:focus {
+    outline: 3px solid var(--brand);
+    outline-offset: 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2); 
+    caret-color: var(--brand); 
+    padding: 2px 5px; 
+}
+
+.is-placeholder {
+    opacity: 0.5;
+    font-style: italic;
+}
+
+/* HD Stage */
+#hd-stage-container { position:fixed; top:0; left:0; z-index:-9999; opacity:0; pointer-events:none; }
+#hd-render-card { position:relative !important; transform: none !important; }
+
+/* Fallback Modal Styles (using custom variables for theme consistency) */
+.fallback-item {
+    padding:12px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s ease;
+}
+.fallback-item:hover { 
+    border-color: var(--brand); 
+    background: rgba(255,255,255,0.05); 
+}
+
+/* Transiciones Mockup/Neon Controls (mejoradas) */
+.stage-grid { 
+    perspective: 1000px;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+}
+.mockup { 
+    transform-style: preserve-3d;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
+}
+.mockup.active-stage { 
+    transform: scale(1.05) translateY(-5px);
+    box-shadow: 0 0 10px 3px var(--brand), 0 30px 60px -15px rgba(0,0,0,0.8); 
+    z-index: 10;
+}
+.mockup.inactive { 
+    opacity: 0.8; 
+    transform: scale(0.95) rotateY(-5deg);
+    filter: brightness(0.7) blur(1px); 
+}
+
+/* Animación de entrada/salida de la barra de controles flotante */
+#activeControls {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+    pointer-events: none;
+}
+#activeControls.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+.neon-box {
+    transition: all 0.15s ease-out;
+}
+.neon-box:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 8px var(--neon-color);
+}
+.neon-box:active {
+    transform: scale(0.98);
+    box-shadow: none;
+}

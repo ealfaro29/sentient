@@ -39,7 +39,6 @@ const App = {
 
     async init() {
         this.cacheDOM();
-        this.initUI(); 
         this.bindEvents();
         await this.loadThemes(); 
         await this.loadInitialPlaceholders(); 
@@ -151,9 +150,8 @@ const App = {
             layoutBtn: $('layoutBtn'),
             layoutValue: $('layoutValue'),
             overlayBtn: $('overlayBtn'),
-            controlRows: document.querySelectorAll('#activeControls .row'), // Capturar filas para cálculo de altura
             overlayValue: $('overlayValue'),
-            stageGrid: document.querySelector('.stage-grid'), // Capturar stage-grid para la transformación
+            stageGrid: document.querySelector('.stage-grid'), 
             
             theme: $('themeSelector'),
             cap: $('captionPreview'), 
@@ -170,10 +168,6 @@ const App = {
         };
     },
 
-    initUI() { 
-        // No longer needed: this.els.lay.innerHTML = '';
-    },
-    
     async loadThemes() {
         try {
             const themesToLoad = ['sentient.json', 'cyber.json', 'elegant.json', 'chatgptricks.json'];
@@ -203,6 +197,22 @@ const App = {
         document.body.className = t.id; 
         
         const root = document.documentElement;
+        
+        // --- START: Update to include brand-rgb for focus glow ---
+        const brandColorHex = t.cssVariables['--brand'].replace('#', '');
+        let r, g, b;
+        if (brandColorHex.length === 3) {
+            r = parseInt(brandColorHex.charAt(0) + brandColorHex.charAt(0), 16);
+            g = parseInt(brandColorHex.charAt(1) + brandColorHex.charAt(1), 16);
+            b = parseInt(brandColorHex.charAt(2) + brandColorHex.charAt(2), 16);
+        } else if (brandColorHex.length === 6) {
+            r = parseInt(brandColorHex.substring(0, 2), 16);
+            g = parseInt(brandColorHex.substring(2, 4), 16);
+            b = parseInt(brandColorHex.substring(4, 6), 16);
+        }
+        root.style.setProperty('--brand-rgb', `${r}, ${g}, ${b}`);
+        // --- END: Update to include brand-rgb for focus glow ---
+
         for (const [k, v] of Object.entries(t.cssVariables)) root.style.setProperty(k, v);
         
         root.style.setProperty('--font-card-body', t.fontConfig.cardBodyFont);
@@ -239,7 +249,7 @@ const App = {
 
         const up = () => this.renderCard(this.state.active);
         
-        // --- NEW MOCKUP CONTROL LOGIC ---
+        // --- MOCKUP CONTROL LOGIC ---
         
         // Layout Cycler
         this.els.layoutBtn.onclick = () => {
@@ -283,7 +293,7 @@ const App = {
                 r.readAsDataURL(e.target.files[0]);
             }
         };
-        // --- END NEW MOCKUP CONTROL LOGIC ---
+        // --- END MOCKUP CONTROL LOGIC ---
 
         this.els.dl.onclick = () => this.downloadHD();
         this.els.cpy.onclick = () => { 
@@ -314,8 +324,11 @@ const App = {
     switchVar(v) {
         this.state.active = v;
         ['A', 'B', 'C'].forEach(x => { 
-            document.getElementById(`mock${x}`).classList.toggle('active-stage', x === v); 
-            if (x === v) {
+            const mockEl = document.getElementById(`mock${x}`);
+            const isActive = x === v;
+            mockEl.classList.toggle('active-stage', isActive); 
+            mockEl.classList.toggle('inactive', !isActive); // Toggle inactive class for visual effect
+            if (isActive) {
                 const mockupEl = document.getElementById(`mock${x}`);
                 if (mockupEl) mockupEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
@@ -368,68 +381,32 @@ const App = {
         this.fitStage();
     },
     
-    // --- FUNCIÓN PARA EL CENTRADO VERTICAL DEL CONJUNTO (Stage-grid + Controls) ---
+    // --- FUNCIÓN DE CENTRADO SIMPLIFICADA (ELIMINADO CÁLCULO DE OFFSET) ---
     updateVerticalCentering(v) {
-        if (this.els.activeControls.classList.contains('hidden') || window.innerWidth <= 1024) {
-            this.els.stageGrid.style.transform = ''; // Reset transform if controls are hidden
-            return;
-        }
-        
-        // Medir la altura sin interferir con la visibilidad final (solo posición)
-        const originalPosition = this.els.activeControls.style.position;
-        const originalLeft = this.els.activeControls.style.left;
-
-        this.els.activeControls.style.position = 'static';
-        this.els.activeControls.style.left = '0';
-        this.els.activeControls.classList.remove('hidden');
-
-        const controlsHeight = this.els.activeControls.offsetHeight;
-        
-        // Restaurar estado de posición, pero mantener la visibilidad para positionControls()
-        this.els.activeControls.style.position = 'absolute';
-        this.els.activeControls.style.left = originalLeft; 
-
-        const separation = 20; 
-        const totalOffset = controlsHeight + separation;
-        const translateY = -(totalOffset / 2);
-        
-        // Aplicar el desplazamiento a stageGrid para centrar el conjunto visualmente
-        this.els.stageGrid.style.transform = `translateY(${translateY}px)`;
+        // La barra de controles ahora flota, el stage-grid debe centrarse sin compensación.
+        this.els.stageGrid.style.transform = ''; 
+        return;
     },
     // --- FIN FUNCIÓN DE CENTRADO ---
 
     positionControls(v = this.state.active) {
-        if (this.els.editor.classList.contains('hidden') || window.innerWidth <= 1024) {
-            this.els.activeControls.classList.add('hidden'); 
-            this.els.stageGrid.style.transform = ''; // Asegurar que se centra si los controles se ocultan
+        const controlsEl = this.els.activeControls;
+        const editorHidden = this.els.editor.classList.contains('hidden');
+        const isMobile = window.innerWidth <= 1024;
+        
+        // El control flotante se oculta/muestra solo en función del estado de edición y si es móvil
+        if (editorHidden || isMobile) {
+            controlsEl.classList.remove('is-visible'); 
+            this.els.stageGrid.style.transform = ''; 
             return;
         }
 
-        const activeMockup = document.getElementById(`mock${v}`);
-        if (!activeMockup) {
-            this.els.activeControls.classList.add('hidden');
-            return;
-        }
-
-        // Hacemos el panel visible para medir y posicionar
-        this.els.activeControls.classList.remove('hidden'); 
+        // Si no está oculto y no es móvil, lo mostramos (la posición la da Tailwind: absolute bottom-5)
+        controlsEl.classList.add('is-visible'); 
         
-        const rect = activeMockup.getBoundingClientRect();
-        const mainStageRect = this.els.activeControls.closest('.main-stage').getBoundingClientRect();
+        // La lógica de cálculo de posición fue ELIMINADA.
         
-        // 1. Posición vertical (rect.bottom ya incorpora el desplazamiento del centrado)
-        const topPosition = (rect.bottom - mainStageRect.top) + 20; // + 20px separación
-        
-        // 2. Centrar horizontalmente
-        const panelWidth = this.els.activeControls.offsetWidth; 
-        const leftPosition = (rect.left - mainStageRect.left) + (rect.width / 2) - (panelWidth / 2);
-        
-        // Apply the new position
-        this.els.activeControls.style.left = `${leftPosition}px`;
-        this.els.activeControls.style.top = `${topPosition}px`;
-        this.els.activeControls.style.transform = 'none'; 
-        
-        this.updateVerticalCentering(v); // Re-centrar después de posicionar para asegurar que el stage-grid esté compensado
+        this.updateVerticalCentering(v); // Asegura que el grid principal no tenga offset.
     },
     
     renderCard(v, tid = `card${v}`) {
@@ -491,6 +468,12 @@ const App = {
             // FIX: Actualizar el textContent de todas las tarjetas immediately
             if (t) t.textContent = d.title;
             if (s) s.textContent = d.subtitle;
+            
+            // FIX: Aplicar las clases de activo/inactivo si es necesario
+            const mockEl = document.getElementById(`mock${v}`);
+            const isActive = v === this.state.active;
+            mockEl.classList.toggle('active-stage', isActive); 
+            mockEl.classList.toggle('inactive', !isActive);
 
             // FIX: Aplicar AutoFit inicial
             if (t && !d.isPlaceholder) this.autoFit(t, isChatGPTricks ? 180 : 120, isChatGPTricks ? 80 : 60, 650);
@@ -596,6 +579,8 @@ const App = {
     },
 
     async showFallback(failedUrl) {
+        // Change display to show the Tailwind utility of fixed inset-0
+        this.els.fbModal.classList.remove('hidden'); 
         this.els.fbModal.style.display = 'flex';
         this.els.fbMsg.innerHTML = 'Scraping failed. Analyzing URL to find similar sources...';
         this.els.fbList.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-dim);"><i data-lucide="loader-2" class="spin" style="width:32px; height:32px; opacity:0.5;"></i></div>';
@@ -624,7 +609,7 @@ const App = {
             data.results.forEach(r => {
                 const item = document.createElement('div');
                 item.className = 'fallback-item';
-                item.style.cssText = 'padding:12px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px; cursor:pointer; transition:all 0.2s ease;';
+                // Styles are now handled by .fallback-item in style.css, but we keep the inline text styles
                 item.innerHTML = `
                     <div style="font-weight:700; color:var(--text); font-size:0.95rem; margin-bottom:4px; line-height:1.3;">${r.title}</div>
                     <div style="color:var(--text-dim); font-size:0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${r.snippet}</div>
@@ -637,6 +622,7 @@ const App = {
                 item.onclick = () => {
                     this.els.url.value = r.url;
                     this.els.fbModal.style.display = 'none';
+                    this.els.fbModal.classList.add('hidden'); // Add hidden back
                     toast(`Retrying with new source...`);
                     this.scrape(); 
                 };
