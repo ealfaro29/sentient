@@ -11,7 +11,6 @@ const FIXED_FS = {
   'layout-standard': { title: 84, subtitle: 32, titleLH: 0.98, subLH: 1.15 },
   'layout-centered': { title: 92, subtitle: 36, titleLH: 0.98, subLH: 1.15 },
   'layout-bold':     { title: 110, subtitle: 34, titleLH: 0.95, subLH: 1.15 },
-  // Por si existiera el layout chatgptricks:
   'layout-chatgptricks': { title: 140, subtitle: 0, titleLH: 0.9, subLH: 1 }
 };
 
@@ -32,22 +31,7 @@ export const UIManager = {
       ? app.state.theme.overlays
       : { black: 'rgba(0,0,0,0.5)', white: 'rgba(255,255,255,0.3)' };
 
-    if (v === 'D') {
-      // Panel de caption
-      if (app.els.captionTextD) app.els.captionTextD.value = d.caption || '';
-      if (app.els.copyBtnD) {
-        app.els.copyBtnD.onclick = () => {
-          try {
-            app.els.captionTextD?.select();
-            document.execCommand?.('copy');
-            navigator.clipboard?.writeText(app.els.captionTextD.value).catch(() => {});
-          } catch (_) {}
-        };
-      }
-      return;
-    }
-
-    // Fondo
+    // Fondo (Aplica para A, B, C, D)
     const imgEl = c.querySelector('.card-bg');
     if (d.bg && d.bg.length > 0) {
       imgEl.src = d.bg.startsWith('data:') ? d.bg : `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
@@ -56,30 +40,38 @@ export const UIManager = {
     }
     imgEl.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%)`;
 
-    // Overlay / Layout
+    // Overlay / Layout (Aplica para A, B, C, D)
     c.querySelector('.card-overlay').style.background = d.overlayColor === 'white' ? ovs.white : ovs.black;
     c.querySelector('.card-content').className = `card-content ${d.layout}`;
-    c.querySelector('.c-pill').textContent = d.tag;
-
+    
+    // ===== INICIO DE LA CORRECCIÓN (CSS PLACEHOLDER) =====
+    const p = c.querySelector('.c-pill');
     const t = c.querySelector('.c-title');
     const s = c.querySelector('.c-subtitle');
 
-    // Placeholders
-    if (d.isPlaceholder) {
-      t.classList.add('is-placeholder');
-      s.classList.add('is-placeholder');
-    } else {
-      t.classList.remove('is-placeholder');
-      s.classList.remove('is-placeholder');
-    }
+    // 1. Asignar atributos de placeholder (para CSS)
+    p.setAttribute('data-placeholder', d.defaultTag || 'TAG');
+    t.setAttribute('data-placeholder', d.defaultTitle || 'TITLE');
+    s.setAttribute('data-placeholder', d.defaultSubtitle || 'Subtitle');
+    
+    // 2. Poner el texto o dejarlo vacío (para que :empty funcione)
+    p.textContent = d.isPlaceholder ? '' : d.tag;
+    t.textContent = d.isPlaceholder ? '' : d.title;
+    s.textContent = d.isPlaceholder ? '' : d.subtitle;
 
-    // Texto
-    t.textContent = d.title || '';
-    s.textContent = d.subtitle || '';
+    // 3. Quitar la clase .is-placeholder (ya no la usamos)
+    p.classList.remove('is-placeholder');
+    t.classList.remove('is-placeholder');
+    s.classList.remove('is-placeholder');
+    // ===== FIN DE LA CORRECCIÓN =====
 
     // Colores y edición
     t.style.color = (d.layout === 'layout-chatgptricks') ? '#FFFFFF' : (d.overlayColor === 'white' ? '#000' : 'var(--brand)');
     s.style.color = d.overlayColor === 'white' ? '#333' : '#fff';
+
+    // Aplicar 'contenteditable' CADA VEZ que se renderiza
+    p.setAttribute('contenteditable', 'true');
+    t.setAttribute('contenteditable', 'true');
     s.setAttribute('contenteditable', isChatGPTricks ? 'false' : 'true');
 
     // Tamaños fijos
@@ -105,12 +97,6 @@ export const UIManager = {
   renderAll(app) {
     CARD_IDS.forEach(v => {
       this.renderCard(app, v);
-      const d = app.state.data[v];
-
-      const mockEl = document.getElementById(`mock${v}`);
-      const isActive = v === app.state.active;
-      mockEl.classList.toggle('active-stage', isActive);
-      mockEl.classList.toggle('inactive', !isActive && v !== 'D');
     });
     this.fitStage(app);
   },
@@ -120,7 +106,6 @@ export const UIManager = {
       const w = document.getElementById(`mount${v}`);
       const c = document.getElementById(`card${v}`);
       if (!w || !c) return;
-      if (v === 'D') return; // D es panel, no escalamos
 
       const scale = Math.min(w.clientWidth / CARD_W, w.clientHeight / CARD_H);
       c.style.transformOrigin = 'center center';
@@ -128,84 +113,45 @@ export const UIManager = {
     });
   },
 
-  // --- INPUT HANDLERS (editable text) ---
-  handleFocus(app, el, type) {
-    const v = el.closest('.mockup').id.replace('mock', '');
-    const d = app.state.data[v];
-    if (d.isPlaceholder) {
-      requestAnimationFrame(() => {
-        el.textContent = '';
-        el.classList.remove('is-placeholder');
-        d.isPlaceholder = false;
-      });
-    }
+  // ===== INICIO DE LA CORRECCIÓN (LÓGICA DE EDICIÓN REAL) =====
+  
+  // Soluciona Ctrl+V pegando solo texto plano
+  handlePaste(e) {
+    e.preventDefault(); // Detener el pegado por defecto
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text); // Insertar solo el texto
   },
+  
+  // (handleFocus y handleBlur ya no son necesarios gracias al placeholder CSS)
 
-  handleBlur(app, el, type) {
-    const v = el.closest('.mockup').id.replace('mock', '');
-    const d = app.state.data[v];
-    const currentText = el.textContent;
-    const trimmedText = currentText.trim();
-    const isChatGPTricks = app.state.theme.id === 'chatgptricks';
-
-    if (trimmedText === '') {
-      d.isPlaceholder = true;
-      d.title = d.defaultTitle;
-      d.subtitle = d.defaultSubtitle;
-      if (type === 'title') el.textContent = d.defaultTitle;
-      else el.textContent = d.defaultSubtitle;
-      el.classList.add('is-placeholder');
-    } else {
-      d.isPlaceholder = false;
-      if (type === 'title') d.title = currentText;
-      if (type === 'subtitle') d.subtitle = currentText;
-      if (isChatGPTricks) {
-        // asegurar subtítulo oculto
-        const s = el.closest('.card-content')?.querySelector('.c-subtitle');
-        if (s) s.style.display = 'none';
-      }
-    }
-  },
-
+  // Guarda el dato en el estado de la App
   updateTextFromCard(app, el, type) {
     const v = el.closest('.mockup').id.replace('mock', '');
-    const newText = el.textContent;
-    const isChatGPTricks = app.state.theme.id === 'chatgptricks';
+    const newText = el.textContent; // .textContent ya es texto plano
 
-    if (type === 'subtitle' && isChatGPTricks) {
-      if (newText.trim() !== app.state.data[v].subtitle) {
-        el.textContent = app.state.data[v].subtitle;
-      }
-      return;
-    }
+    let key;
+    if (type === 'title') key = 'title';
+    else if (type === 'subtitle') key = 'subtitle';
+    else if (type === 'tag') key = 'tag';
 
-    if (type === 'title') {
-      app.state.data[v].title = newText;
-    } else {
-      app.state.data[v].subtitle = newText;
+    if (key) {
+      app.updateCardData(v, key, newText);
     }
   },
+  // ===== FIN DE LA CORRECCIÓN =====
 
   // --- UI/EVENT LOGIC ---
   bindEvents(app) {
-    // Landing
-    app.els.scrape.onclick = () => app.animateFusionAndScrape();
-    app.els.landingUrl.onkeydown = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        app.animateFusionAndScrape();
-      }
-    };
-
-    // Solo A, B, C son clickables (D es panel)
-    ['A', 'B', 'C'].forEach(v => {
+    
+    // Enlazar eventos para A, B, C, D
+    ['A', 'B', 'C', 'D'].forEach(v => { 
       const el = document.getElementById(`mock${v}`);
       if (el) el.onclick = () => app.switchVar(v);
     });
 
     const up = () => this.renderCard(app, app.state.active);
 
-    // Controles
+    // Controles (que están ocultos, pero la lógica está lista)
     if (app.els.layoutBtn) {
       app.els.layoutBtn.onclick = () => {
         const currentLayout = app.state.data[app.state.active].layout;
@@ -244,7 +190,38 @@ export const UIManager = {
         reader.readAsDataURL(file);
       };
     }
-  },
 
+    // ===== INICIO DE LA CORRECCIÓN (TEXTO EDITABLE) =====
+    // Enlazar eventos para todos los campos de texto editables
+    // Ahora incluye '.c-pill'
+    document.querySelectorAll('.c-title[contenteditable="true"], .c-subtitle[contenteditable="true"], .c-pill[contenteditable="true"]').forEach(el => {
+      
+      let type;
+      if (el.classList.contains('c-title')) type = 'title';
+      else if (el.classList.contains('c-subtitle')) type = 'subtitle';
+      else if (el.classList.contains('c-pill')) type = 'tag';
+
+      // 1. Actualizar el estado en tiempo real (input)
+      el.addEventListener('input', () => {
+        // 'this' es UIManager
+        this.updateTextFromCard(app, el, type);
+      });
+
+      // 2. Evitar saltos de línea y desenfocar (Enter)
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault(); // Evita que se cree un <br> o <div>
+          el.blur(); // Trata Enter como "Confirmar"
+        }
+      });
+      
+      // 3. Forzar pegado de texto plano
+      el.addEventListener('paste', (e) => {
+        this.handlePaste(e);
+      });
+    });
+    // ===== FIN DE LA CORRECCIÓN =====
+  },
+  
   positionControls(app) { /* noop */ }
 };

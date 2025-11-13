@@ -1,7 +1,8 @@
 // static/app.js
 import { DataHandler } from './data-handler.js';
 import { UIManager } from './ui-manager.js';
-import { CARD_IDS } from './utils.js';
+import { CARD_IDS, toast } from './utils.js'; 
+import { Animation } from './animation.js'; 
 
 const SENTIENT_THEME = {
   name: 'Sentient (Default)',
@@ -28,39 +29,81 @@ const App = {
     active: 'A',
     mode: 'LANDING',
     theme: {},
-    url: '',
+    url: '', 
     data: {
-      A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...' },
-      B: { title: 'SET',   subtitle: 'Choose variant...',       bg: '', tag: 'STORY',    layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'SET',   defaultSubtitle: 'Choose variant...' },
-      C: { title: 'GO',    subtitle: 'Customize & export.',     bg: '', tag: 'BREAKING', layout: 'layout-bold',     caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO',    defaultSubtitle: 'Customize & export.' },
-      D: { title: 'CAPTION', subtitle: 'Copy ready text.',      bg: '', tag: 'TEXT',     layout: 'layout-standard', caption: 'Paste an article URL to generate a caption...', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'CAPTION', defaultSubtitle: 'Copy ready text.' }
+      A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...', defaultTag: 'NEWS' },
+      B: { title: 'SET',   subtitle: 'Choose variant...',       bg: '', tag: 'STORY',    layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'SET',   defaultSubtitle: 'Choose variant...', defaultTag: 'STORY' },
+      C: { title: 'GO',    subtitle: 'Customize & export.',     bg: '', tag: 'BREAKING', layout: 'layout-bold',     caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO',    defaultSubtitle: 'Customize & export.', defaultTag: 'BREAKING' },
+      D: { title: 'GIGA', subtitle: 'Analyze & Synthesize.', bg: '', tag: 'NERD',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GIGA', defaultSubtitle: 'Analyze & Synthesize.', defaultTag: 'NERD' } 
     }
   },
 
   async init() {
     this.cacheDOM();
-    UIManager.bindEvents(this);
+    UIManager.bindEvents(this); // <-- UIManager ahora se encarga de todo
     this.applyTheme();
+    Animation.init(this); 
+    
+    // Listener para el botón de cierre manual (la 'X')
+    this.els.closeFallbackBtn?.addEventListener('click', () => {
+      this.closeFallbackModal();
+      this.setAppState('LANDING'); // Vuelve al landing si se cancela
+    });
+
+    // Listener para el fondo (backdrop) del modal
+    this.els.fbModal?.addEventListener('click', (e) => {
+      // Si el clic es SOBRE el fondo (fbModal) y NO sobre sus hijos (el cuadro de contenido)
+      if (e.target === this.els.fbModal) {
+        this.closeFallbackModal();
+        this.setAppState('LANDING'); // Vuelve al landing si se cancela
+      }
+    });
+
     await DataHandler.loadInitialPlaceholders(this);
     this.setAppState('LANDING');
-    window.lucide?.createIcons?.();
     window.addEventListener('resize', () => {
       UIManager.fitStage(this);
-      UIManager.positionControls?.(this);
     });
+  },
+  
+  closeFallbackModal() {
+    if (this.els.fbModal) {
+      this.els.fbModal.classList.add('hidden');
+    }
+  },
+  
+  restartWithUrl(url) {
+    if (!url) return;
+    
+    // Cierra el modal y vuelve a LANDING
+    this.closeFallbackModal();
+    this.setAppState('LANDING');
+    
+    setTimeout(() => {
+      if (this.els.url) {
+        this.els.url.value = url; 
+      }
+      Animation.start(true); 
+    }, 100); 
   },
 
   cacheDOM() {
     const $ = (id) => document.getElementById(id);
     this.els = {
-      landingStage: $('landingStage'),
-      landingUrl: $('landingUrlInput'),
-      scrape: $('landingScrapeBtn'),
-      fusionContainer: $('fusionContainer'),
+      // IDs del nuevo landing
+      landing: $('landing'),
+      logo: $('logo'),
+      url: $('url'),
+      magic: $('magic'),
+      fusion: $('fusion'),
+      morphPill: $('morphPill'),
+      particles: $('particles'),
+      host: $('host'), 
+
+      // IDs de la App (conservados)
       topControlBar: $('topControlBar'),
-      loadingPill: $('loadingPill'),
       appStage: $('appStage'),
-      dl: $('dlBtn'),
+      dl: $('dlBtn'), 
       iUrl: $('imgUrlInput'),
       iFile: $('imgFileInput'),
       imgFileBtn: $('imgFileBtn'),
@@ -72,13 +115,13 @@ const App = {
       overlayBtn: $('overlayBtn'),
       overlayValue: $('overlayValue'),
       stageGrid: document.querySelector('.stage-grid'),
+      
+      // Modal de Fallback
       fbModal: $('fallbackModal'),
       fbList: $('fallbackList'),
-      fbMsg: $('fallbackMsg'),
+      fbMsg: $('fbMsg'),
       fbGoogle: $('googleFallbackBtn'),
-      captionTextD: $('captionTextD'),
-      copyBtnD: $('copyBtnD'),
-      landingInputWrapper: $('landingInputWrapper')
+      closeFallbackBtn: $('closeFallbackBtn'), 
     };
   },
 
@@ -89,33 +132,53 @@ const App = {
     this.els.topControlBar.classList.toggle('hidden', !showTop);
     this.els.topControlBar.classList.toggle('flex', showTop);
 
-    // botón de descarga solo en APP
-    if (this.els.dl) this.els.dl.style.display = (mode === 'APP') ? 'inline-flex' : 'none';
-
     if (mode === 'LANDING') {
-      this.els.landingStage.style.display = 'flex';
-      this.els.landingStage.offsetHeight;
-      this.els.landingStage.classList.remove('opacity-0', 'pointer-events-none');
-      this.els.landingInputWrapper.style.opacity = '1';
-      this.els.scrape.style.opacity = '1';
-      this.els.fusionContainer.style.display = 'flex';
+      // Mostrar nuevos elementos del landing
+      if (this.els.landing) {
+        this.els.landing.style.display = 'flex';
+        this.els.landing.style.opacity = '1';
+        this.els.landing.style.pointerEvents = 'auto';
+      }
+      if (this.els.logo) this.els.logo.style.opacity = '1';
+      if (this.els.fusion) this.els.fusion.style.visibility = 'visible';
+      
+      // Ocultar modal de fallback si estuviera abierto
+      this.closeFallbackModal(); 
+      
+      // Ocultar app stage
+      this.els.appStage.classList.add('opacity-0', 'pointer-events-none');
+      this.els.activeControls?.classList.remove('is-visible');
+      
+      // Resetear tarjetas
       ['A','B','C','D'].forEach(v => {
         const el = document.getElementById(`mock${v}`);
         el?.classList.remove('visible-card','active-stage','inactive');
       });
-    } else {
-      this.els.landingStage.classList.add('opacity-0', 'pointer-events-none');
-      setTimeout(() => { if (this.state.mode !== 'LANDING') this.els.landingStage.style.display = 'none'; }, 500);
-    }
 
-    this.els.appStage.classList.toggle('opacity-0', mode === 'LANDING');
-    this.els.appStage.classList.toggle('pointer-events-none', mode === 'LANDING');
+    } else if (mode === 'LOADING') {
+      // La animación (runMorph) se encarga de la UI
+      // Ocultamos el landing, pero appStage sigue oculto
+      this.els.appStage.classList.add('opacity-0', 'pointer-events-none');
+      if (this.els.landing) {
+          this.els.landing.style.opacity = '0';
+          this.els.landing.style.pointerEvents = 'none';
+      }
+      
+    } else if (mode === 'APP') {
+      // Ocultar landing (la animación ya debería haberlo hecho)
+      if (this.els.landing) {
+          this.els.landing.style.display = 'none';
+      }
+      if (this.els.logo) this.els.logo.style.opacity = '0';
 
-    if (mode === 'APP') {
+      // Ocultar modal de fallback
+      this.closeFallbackModal(); 
+
+      // Mostrar app stage
+      this.els.appStage.classList.remove('opacity-0', 'pointer-events-none');
+      
       UIManager.updateTopControlBar?.(this, this.state.url);
       UIManager.renderAll(this);
-    } else if (mode === 'LANDING') {
-      this.els.activeControls?.classList.remove('is-visible');
     }
   },
 
@@ -136,12 +199,26 @@ const App = {
   },
 
   updateTopControlBar(url, onDownload) {
-    UIManager.updateTopControlBar?.(this, url);
     if (this.els?.dl) this.els.dl.onclick = () => this.downloadHD();
     if (typeof onDownload === 'function') this.els?.dl && (this.els.dl.onclick = onDownload);
   },
 
-  animateFusionAndScrape() { return DataHandler.animateFusionAndScrape(this); },
+  // ===== INICIO DE LA CORRECCIÓN =====
+  // Esta es la *única* función que UIManager llamará para guardar datos.
+  updateCardData(cardId, field, newText) {
+    if (this.state.data[cardId]) {
+      this.state.data[cardId][field] = newText;
+      // También borramos el placeholder si el texto ya no está vacío
+      if (newText.trim() !== '') {
+        this.state.data[cardId].isPlaceholder = false;
+      } else {
+        // Si el usuario borró todo, marcamos que es un placeholder
+        // para que la lógica de CSS (en style.css) pueda mostrar el default.
+        this.state.data[cardId].isPlaceholder = true;
+      }
+    }
+  },
+  // ===== FIN DE LA CORRECCIÓN =====
 
   renderCard(v) { UIManager.renderCard(this, v, `card${v}`); },
   renderAll() { UIManager.renderAll(this); },
@@ -150,7 +227,9 @@ const App = {
     if (!CARD_IDS.includes(v)) return;
     this.state.active = v;
     UIManager.renderAll(this);
-    this.els.activeControls?.classList.add('is-visible');
+    
+    // Oculta la barra de opciones
+    // this.els.activeControls?.classList.add('is-visible'); 
 
     const ids = ['A','B','C','D'];
     [document.getElementById('mockA'),
@@ -161,31 +240,26 @@ const App = {
       const id = ids[idx];
       const isActive = id === v;
       m.classList.toggle('active-stage', isActive);
-      m.classList.toggle('inactive', !isActive && id !== 'D');
+      m.classList.toggle('inactive', !isActive);
     });
   },
 
-  updateTextFromCard(el, type) { UIManager.updateTextFromCard(this, el, type); },
-  handleFocus(el, type) { UIManager.handleFocus(this, el, type); },
-  handleBlur(el, type) { UIManager.handleBlur(this, el, type); },
+  // Funciones de manejo de texto ELIMINADAS de aquí.
 
   async downloadHD() {
-    // Export nítido: clonado offscreen a 1080×1350 sin transformaciones
     const v = this.state.active;
     const source = document.getElementById(`card${v}`);
     if (!source || !window.htmlToImage) return;
 
-    // Desactivar stylesheets cross-origin
     const styles = Array.from(document.styleSheets);
     const toggled = [];
     styles.forEach(ss => {
-      try { /* eslint-disable no-unused-expressions */ ss.cssRules; /* eslint-enable */ 
+      try { 
         const href = ss.href;
         if (href && new URL(href, location.href).origin !== location.origin) { ss.disabled = true; toggled.push(ss); }
       } catch { ss.disabled = true; toggled.push(ss); }
     });
 
-    // Clonar offscreen
     const off = document.createElement('div');
     off.style.position = 'fixed';
     off.style.left = '-99999px';

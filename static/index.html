@@ -11,8 +11,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Inter:wght@400;500;700;800;900&family=Major+Mono+Display&family=Playfair+Display:wght@400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
@@ -22,46 +20,29 @@
 </head>
 <body class="bg-[var(--bg-main)] text-[var(--text)] font-sans">
 
-  <!-- BYPASS -->
-  <div id="bypassScreen" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-5">
-    <div class="w-full max-w-md text-center">
-      <h1 class="text-2xl font-bold text-white mb-4">WebApp is in an intermediate state</h1>
-      <p class="text-lg text-gray-400 mb-8">Please come back later.</p>
-      <div class="flex items-center gap-2">
-        <input id="bypassInput" type="password" class="flex-1 h-12 bg-gray-900 border border-gray-700 text-white px-4 rounded-lg outline-none focus:border-[var(--brand)]" placeholder="bypass">
-        <button id="bypassButton" class="h-12 px-6 bg-[var(--brand)] text-black font-extrabold text-lg rounded-lg">Enter</button>
-      </div>
-      <p id="bypassError" class="text-red-500 text-sm mt-3 h-5"></p>
-    </div>
-  </div>
-
-  <!-- APP -->
   <div id="appContainer" class="app-container" style="display:none;">
-    <div id="p5-canvas-container" class="fixed inset-0 z-0 opacity-80"></div>
 
-    <!-- Top bar -->
     <div id="topControlBar" class="hidden absolute top-0 left-0 right-0 h-[60px] z-50 items-center px-4">
-      <div id="loadingPill"></div>
-      <button id="dlBtn" class="ml-auto px-3 py-1 bg-[var(--brand)] text-black font-extrabold rounded-lg text-sm">Download</button>
+      <div id="host" class="font-bold text-white opacity-0 -translate-y-1 transition-all"></div>
+      <button id="dlBtn" class="ml-auto px-3 py-1 bg-[var(--brand)] text-black font-extrabold rounded-lg text-sm hidden">Download</button> 
     </div>
-
+    
+    <div id="particles"></div>
+    <img id="logo" src="logo.svg" alt="logo" />
+    <section id="landing" aria-label="Pantalla inicial">
+      <div id="fusion">
+        <input id="url" type="text" placeholder="https://example.org/demo" />
+        <button id="magic" type="button" aria-label="Magic">
+          <img id="btnMark" src="mark.svg" alt="" />
+        </button>
+      </div>
+    </section>
+    <div id="morphPill"></div>
     <main id="mainStage" class="flex-1 bg-transparent flex flex-col items-center justify-center p-5 overflow-hidden relative z-10">
 
-      <!-- LANDING -->
-      <div id="landingStage" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-opacity duration-500 opacity-100">
-        <div id="fusionContainer" class="flex items-center justify-center w-full max-w-[600px] h-[52px]">
-          <div id="landingInputWrapper" class="relative flex-1 h-full w-full">
-            <input id="landingUrlInput" type="url" class="h-full w-full bg-black/70 border border-[var(--brand)] text-white pl-4 pr-4 text-lg rounded-l-full outline-none transition-all duration-500 ease-in-out focus:border-white" placeholder="Paste article URL and press Enter..." />
-          </div>
-          <button id="landingScrapeBtn" class="h-full px-6 bg-[var(--brand)] text-black font-extrabold text-lg rounded-r-full">Go</button>
-        </div>
-      </div>
-
-      <!-- APP STAGE -->
       <div id="appStage" class="w-full h-full opacity-0 transition-opacity duration-500 pointer-events-none">
         <div class="stage-grid w-full h-full grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5 justify-center items-center overflow-y-auto lg:overflow-hidden p-5" style="padding-top: 70px;">
 
-          <!-- Card A -->
           <div id="mockA" class="mockup">
             <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
               <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
@@ -90,7 +71,6 @@
             </div>
           </div>
 
-          <!-- Card B -->
           <div id="mockB" class="mockup">
             <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
               <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
@@ -119,10 +99,9 @@
             </div>
           </div>
 
-          <!-- Card C -->
           <div id="mockC" class="mockup">
             <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
-              <div class="insta-avatar w-8 h-8 rounded-full mr-3" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div>
+              <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
               <span class="text-sm font-semibold text-white flex-1">sentient</span>
               <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
             </div>
@@ -148,26 +127,35 @@
             </div>
           </div>
 
-          <!-- Card D: Caption -->
-          <div id="mockD" class="mockup no-insta">
+          <div id="mockD" class="mockup">
+            <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
+              <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
+              <span class="text-sm font-semibold text-white flex-1">sentient</span>
+              <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
+            </div>
             <div class="canvas-wrapper" id="mountD">
-              <div id="cardD" class="render-target" style="display:flex;align-items:center;justify-content:center;">
-                <div class="p-6 w-full h-full overflow-auto">
-                  <div class="c-pill">CAPTION</div>
-                  <h1 class="c-title">CAPTION</h1>
-                  <div class="mt-4">
-                    <textarea id="captionTextD" class="w-full h-[400px] bg-black/60 border border-[var(--border)] p-4 rounded-lg outline-none" placeholder="Paste an article URL to generate a caption..." readonly></textarea>
-                    <div class="mt-3 flex justify-end">
-                      <button id="copyBtnD" class="px-3 py-2 bg-[var(--brand)] text-black font-extrabold rounded-lg text-sm">Copy</button>
-                    </div>
-                  </div>
+              <div id="cardD" class="render-target">
+                <img class="card-bg" crossorigin="anonymous" />
+                <div class="card-overlay"></div>
+                <div class="card-content layout-standard">
+                  <div class="c-pill">NERD</div>
+                  <h1 class="c-title is-placeholder" contenteditable="true">GIGA</h1>
+                  <h2 class="c-subtitle is-placeholder" contenteditable="true">Analyze & Synthesize.</h2>
                 </div>
               </div>
             </div>
+            <div class="insta-footer p-3 bg-black flex-shrink-0">
+              <div class="flex gap-4 mb-3">
+                <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+              </div>
+              <div class="font-semibold text-sm">1,337 views</div>
+            </div>
           </div>
 
-          <!-- Controles -->
-          <div id="activeControls" class="controls-grid-position">
+          <div id="activeControls" class="controls-grid-position"> 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="neon-box selector" id="layoutBtn"><span class="selector-label">LAYOUT</span><span class="value-badge" id="layoutValue">STD</span></div>
               <div class="neon-box selector" id="overlayBtn"><span class="selector-label">OVERLAY</span><span class="value-badge" id="overlayValue">B</span></div>
@@ -185,33 +173,30 @@
       </div>
 
     </main>
-  </div>
 
+    <div id="fallbackModal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-5 hidden">
+      <div class="w-full max-w-lg bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg shadow-lg p-6 relative">
+        <button id="closeFallbackBtn" class="absolute top-4 right-4 text-[var(--text-dim)] hover:text-white transition-colors" aria-label="Close modal">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+        <h2 class="text-xl font-bold text-[var(--brand)] mb-3">Scraping Failed</h2>
+        <p id="fbMsg" class="text-[var(--text-dim)] mb-4">Analyzing URL to find similar sources...</p>
+        <div id="fallbackList" class="max-h-60 overflow-y-auto mb-4 bg-black/50 p-3 rounded-md border border-[var(--border)]">
+          </div>
+        <a id="googleFallbackBtn" href="https://www.google.com" target="_blank" class="block w-full text-center px-4 py-2 bg-[var(--brand)] text-black font-extrabold rounded-lg transition-transform hover:scale-105">
+          Search on Google
+        </a>
+      </div>
+    </div>
+    </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script type="module" src="animation.js"></script>
   <script type="module">
     import { App } from './app.js';
-    import { p5_sketch } from './utils.js';
-
-    new window.p5(p5_sketch);
-
-    const PIN = '5421';
-    const screen = document.getElementById('bypassScreen');
-    const appContainer = document.getElementById('appContainer');
-    const input = document.getElementById('bypassInput');
-    const btn = document.getElementById('bypassButton');
-    const err = document.getElementById('bypassError');
-
-    const unlock = () => {
-      if ((input.value || '').trim() === PIN) {
-        screen.style.display = 'none';
-        appContainer.style.display = 'flex';
-        App.init();
-      } else {
-        err.textContent = 'Invalid PIN';
-        setTimeout(() => err.textContent = '', 1500);
-      }
-    };
-    btn.addEventListener('click', unlock);
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+    // No hay bypass, solo iniciamos la App.
+    document.getElementById('appContainer').style.display = 'flex';
+    App.init();
     window.lucide?.createIcons?.();
   </script>
 </body>

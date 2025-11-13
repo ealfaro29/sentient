@@ -4,10 +4,11 @@ import re
 import time
 from urllib.parse import urlparse, quote_plus, parse_qs
 
-import requests
+import requests  # Importación clave
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, Response
+from flask_cors import CORS # <-- IMPORTACIÓN NUEVA
 
 # --- IA / OpenAI ---
 OPENAI_CLIENT = None
@@ -18,7 +19,8 @@ except Exception:
 
 # --- Scraping principal ---
 from newspaper import Article
-from newspaper.article import ArticleDownloadState
+# 'ArticleDownloadState' ya no es necesario porque usamos requests
+# from newspaper.article import ArticleDownloadState
 
 # --------------------------------------------------------------------
 # Configuración base
@@ -26,6 +28,7 @@ from newspaper.article import ArticleDownloadState
 load_dotenv()
 
 app = Flask(__name__, static_url_path='', static_folder='static')
+CORS(app) # <-- INICIALIZACIÓN DE CORS (ARREGLA 'Failed to fetch')
 
 # Claves
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -45,6 +48,18 @@ if OPENAI_API_KEY and OpenAI is not None:
 SCRAPE_CACHE = {}
 CACHE_DURATION = 60 * 60 * 24  # 24 horas
 
+# --- Headers de Navegador (El "Disfraz") ---
+# Usaremos esto tanto para el Scrape como para el Proxy de Imágenes
+BROWSER_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Referer': 'https://www.google.com/',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Cache-Control': 'max-age=0',
+}
 
 # --------------------------------------------------------------------
 # Utilidades
@@ -60,13 +75,14 @@ def clean_pexels_query(query: str) -> str:
     return " ".join(words[:5])
 
 
-def get_pexels_images(query: str, count: int = 3):
+def get_pexels_images(query: str, count: int = 4): # <-- Solicitamos 4 (como fallback)
     if not PEXELS_API_KEY:
         return []
     search_query = clean_pexels_query(query)
     if not search_query:
         return []
     try:
+        # Pexels no necesita 'User-Agent' si se usa API key, pero es buena práctica
         headers = {'Authorization': PEXELS_API_KEY}
         url = f'https://api.pexels.com/v1/search?query={quote_plus(search_query)}&per_page={count}&orientation=portrait'
         r = requests.get(url, headers=headers, timeout=8)
@@ -82,13 +98,27 @@ def get_ai_data(title: str, text: str, source: str):
     if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
         return None, "Faltan credenciales OpenAI"
     try:
+        # Prompt actualizado para pedir keywords
+        prompt_content = f"""
+        Article data:
+        TITLE: {title}
+        SOURCE: {source}
+        TEXT: {text[:3000]}
+        
+        Task:
+        Return a JSON object with three keys:
+        1. "variants": An object with 3 variations (A, B, C) for social media posts.
+        2. "common_caption": A general, engaging caption for the post.
+        3. "image_keywords": A JSON list of 3-5 specific, relevant keywords from the text for searching stock photos (e.g., ["solar storm", "aurora", "sun"]).
+        """
+
         run = OPENAI_CLIENT.beta.threads.create_and_run_poll(
             assistant_id=OPENAI_ASSISTANT_ID,
             thread={
                 "messages": [
                     {
                         "role": "user",
-                        "content": f"TITLE: {title}\nSOURCE: {source}\nTEXT: {text[:3000]}"
+                        "content": prompt_content
                     }
                 ]
             },
@@ -97,7 +127,6 @@ def get_ai_data(title: str, text: str, source: str):
         )
         if run.status == 'completed':
             msgs = OPENAI_CLIENT.beta.threads.messages.list(thread_id=run.thread_id)
-            # Se espera que el asistente devuelva JSON válido en el primer mensaje
             try:
                 payload = json.loads(msgs.data[0].content[0].text.value)
                 return payload, None
@@ -219,14 +248,15 @@ def home():
 
 @app.route('/api/initial_images', methods=['GET'])
 def initial_images():
-    # Consulta base
-    images = get_pexels_images('technology AI', count=5)
+    # Consulta base (pedimos 4 imágenes)
+    images = get_pexels_images('technology AI', count=4)
 
     # Fallbacks por si Pexels falla
     fallback_imgs = [
         "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080",
         "https://images.unsplash.com/photo-1555212697-c20e29b10636?q=80&w=1080",
-        "https://images.unsplash.com/photo-1511376770913-2d2f1f510793?q=80&w=1080"
+        "https://images.unsplash.com/photo-1511376770913-2d2f1f510793?q=80&w=1080",
+        "https://images.unsplash.com/photo-1550745165-9bc0b252726c?w=1080"
     ]
 
     unique = []
@@ -236,7 +266,7 @@ def initial_images():
             unique.append(img)
             seen.add(img)
     for img in fallback_imgs:
-        if len(unique) >= 3:
+        if len(unique) >= 4:
             break
         if img not in seen:
             unique.append(img)
@@ -246,8 +276,9 @@ def initial_images():
     img_a = unique[0] if len(unique) >= 1 else default_img
     img_b = unique[1] if len(unique) >= 2 else default_img
     img_c = unique[2] if len(unique) >= 3 else default_img
+    img_d = unique[3] if len(unique) >= 4 else default_img 
 
-    return jsonify({"A": img_a, "B": img_b, "C": img_c})
+    return jsonify({"A": img_a, "B": img_b, "C": img_c, "D": img_d}) # <-- Enviar 4 imágenes
 
 
 @app.route('/api/search_alternatives', methods=['POST'])
@@ -288,60 +319,132 @@ def scrape():
         if now - cached['ts'] < CACHE_DURATION:
             return jsonify(cached['data'])
 
-    # Newspaper3k
     try:
+        # ===== INICIO DEL SCRAPE ROBUSTO (ARREGLA EL "SINSENTIDO") =====
+        
+        # 1. Usar 'requests' para descargar el HTML con headers de navegador
+        response = requests.get(url, headers=BROWSER_HEADERS, timeout=10)
+        response.raise_for_status() # Lanza error si es 4xx o 5xx
+        html_content = response.text
+        
+        if not html_content:
+            raise RuntimeError("Downloaded HTML is empty")
+
+        # 2. Inicializar Article y pasarle el HTML
         art = Article(url)
-        art.download()
-        if art.download_state != ArticleDownloadState.SUCCESS:
-            raise RuntimeError("download failed")
+        art.set_html(html_content)
         art.parse()
+
+        # 3. Correr NLP para obtener el resumen (summary)
+        summary = ""
         try:
             art.nlp()
+            summary = art.summary or '' # Capturamos el resumen
         except Exception:
-            # NLP puede fallar a veces, no es crítico
             pass
+        
+        # 4. CAPTURAR IMAGEN PRINCIPAL (PARA CARD A)
+        top_image = art.top_image or None
+        
+        # ===== FIN DEL SCRAPE ROBUSTO =====
 
         title = art.title or ''
         text = art.text or ''
         source = domain_of(url) or 'UNKNOWN'
-        original = {
-            "title": title.strip() or 'UNTITLED',
-            "subtitle": (text[:200] + '...') if text else ''
-        }
+        
+        # --- LÓGICA DE FALLBACK (SIMPLIFICADA) ---
+        original_title = title.strip() or 'UNTITLED'
+        original_subtitle = (text[:200] + '...') if text else ''
+        fallback_variant = {"title": original_title, "subtitle": original_subtitle}
 
-        # Imágenes relacionadas
-        # preferimos keywords del título, si no, el dominio
-        keys = title if title else source
-        imgs = get_pexels_images(keys, count=3)
-        # fallback si Pexels no dio 3
-        while len(imgs) < 3:
-            imgs.append("https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080")
+        # --- LÓGICA DE LA CARD D "NERD" (GARANTIZADA) ---
+        nerd_title = original_title 
+        nerd_subtitle = summary if summary else "A detailed breakdown of the key facts and implications."
+        nerd_variant = {"title": nerd_title, "subtitle": nerd_subtitle}
 
-        images = {"a": imgs[0], "b": imgs[1], "c": imgs[2]}
+        # --- IA PARA VARIANTES Y KEYWORDS DE IMÁGENES ---
+        ai_payload, ai_err = get_ai_data(title=original_title, text=text, source=source)
+        
+        # --- LÓGICA DE KEYWORDS DE IMAGEN (NUEVO) ---
+        search_query = ""
+        if ai_payload and 'image_keywords' in ai_payload:
+            keywords = ai_payload.get('image_keywords', [])
+            if isinstance(keywords, list) and len(keywords) > 0:
+                search_query = " ".join(keywords)
+        
+        if not search_query:
+            search_query = clean_pexels_query(original_title)
 
-        # IA para variantes y caption común
-        ai_payload, ai_err = get_ai_data(title=original["title"], text=text, source=source)
+        # --- LÓGICA DE IMÁGENES (NUEVO) ---
+        
+        num_pexels_needed = 3 if top_image else 4
+        imgs = get_pexels_images(search_query, count=num_pexels_needed)
+        
+        default_img = "https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080"
+        while len(imgs) < num_pexels_needed:
+            imgs.append(default_img)
+
+        images = {}
+        if top_image:
+            images["a"] = top_image
+            images["b"] = imgs[0]
+            images["c"] = imgs[1]
+            images["d"] = imgs[2]
+        else:
+            images["a"] = imgs[0]
+            images["b"] = imgs[1]
+            images["c"] = imgs[2]
+            images["d"] = imgs[3]
+        
+        # --- LÓGICA DE PAYLOAD FINAL (ROBUSTA) ---
+        
+        if ai_payload and 'variants' in ai_payload:
+            variants = ai_payload.get('variants', {})
+            common_caption = ai_payload.get('common_caption', original_subtitle)
+            
+            final_variants = {
+                'A': variants.get('A', fallback_variant),
+                'B': variants.get('B', fallback_variant),
+                'C': variants.get('C', fallback_variant),
+                'D': nerd_variant 
+            }
+            
+            final_payload = {
+                "variants": final_variants,
+                "common_caption": common_caption,
+                "image_keywords": search_query.split() 
+            }
+            
+        else:
+            # AI falló. Construimos todo desde cero.
+            final_payload = {
+                "variants": {
+                    "A": fallback_variant,
+                    "B": fallback_variant,
+                    "C": fallback_variant,
+                    "D": nerd_variant, 
+                },
+                "common_caption": original_subtitle,
+                "image_keywords": search_query.split()
+            }
+        
         result = {
             "source": source.upper() if source else "UNKNOWN",
-            "original": original,
+            "original": {"title": original_title, "subtitle": original_subtitle},
             "images": images,
-            "ai_content": ai_payload if ai_payload else {
-                "variants": {
-                    "A": {"title": original["title"], "subtitle": original["subtitle"]},
-                    "B": {"title": original["title"], "subtitle": original["subtitle"]},
-                    "C": {"title": original["title"], "subtitle": original["subtitle"]},
-                },
-                "common_caption": original["subtitle"],
-                "image_keywords": clean_pexels_query(keys)
-            },
+            "ai_content": final_payload, 
             "ai_error": ai_err
         }
 
         SCRAPE_CACHE[url] = {"ts": now, "data": result}
         return jsonify(result)
 
+    except requests.exceptions.RequestException as e:
+        # Captura errores de 'requests' (timeout, 403, 404, etc.)
+        return jsonify({'error': f'Scrape failed (Request Error): {str(e)}'}), 500
     except Exception as e:
-        return jsonify({'error': f'scrape failed: {str(e)}'}), 500
+        # Captura errores de newspaper3k (parse, nlp) u otros
+        return jsonify({'error': f'Scrape failed (Parse Error): {str(e)}'}), 500
 
 
 @app.route('/api/proxy_image', methods=['GET'])
@@ -350,14 +453,18 @@ def proxy_image():
     if not img_url:
         return jsonify({'error': 'Missing url'}), 400
     try:
-        r = requests.get(img_url, timeout=10, stream=True)
+        # ===== INICIO DE LA CORRECCIÓN DEL PROXY (ERROR 502) =====
+        # Usamos los mismos headers de navegador para el proxy
+        r = requests.get(img_url, headers=BROWSER_HEADERS, timeout=10, stream=True)
         r.raise_for_status()
+        # ===== FIN DE LA CORRECCIÓN DEL PROXY =====
+
         content_type = r.headers.get('Content-Type', 'image/jpeg')
         headers = {
             'Content-Type': content_type,
             'Cache-Control': 'public, max-age=300',
         }
-        # Stream del cuerpo en chunks para no cargar todo en memoria
+        
         def generate():
             for chunk in r.iter_content(chunk_size=64 * 1024):
                 if chunk:

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 6568 698" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g id="Artboard1" transform="matrix(1.82444,0,0,0.594765,2395.5,78.5089)">
-        <rect x="-1313" y="-132" width="3600" height="1173" style="fill:none;"/>
-    </g>
-    <g transform="matrix(1.19585,0,0,1.19585,-5.42436,-111.039)">
-        <g transform="matrix(556.324,0,0,556.324,5448.32,586.5)">
+<svg width="100%" height="100%" viewBox="0 0 6242 601" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,-163.15,-97.3536)">
+        <g transform="matrix(1.4484,0,0,1.4484,20.9933,-163.913)">
+            <text x="72px" y="586.5px" style="font-family:'LoveloBlack', 'Lovelo';font-weight:900;font-size:556.324px;fill:rgb(204,255,0);">S<tspan x="321.79px 552.108px 910.381px 1175.75px 1294.8px 1530.68px 1894.52px " y="586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px ">ENTIENT</tspan></text>
+            <g transform="matrix(409.751,0,0,409.751,4439.9,586.5)">
+            </g>
+            <text x="2267.81px" y="586.5px" style="font-family:'Geomanist';font-size:409.751px;fill:white;">S<tspan x="2434.17px 2721.41px 2957.42px 3014.38px 3240.15px 3391.35px 3491.33px 3673.26px 3872.81px 4094.48px 4151.44px " y="586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px ">OCIAL BRAIN</tspan></text>
         </g>
-        <text x="72px" y="586.5px" style="font-family:'LoveloBlack', 'Lovelo';font-weight:900;font-size:556.324px;fill:rgb(204,255,0);">S<tspan x="321.79px 552.108px 910.381px 1175.75px 1294.8px 1530.68px 1894.52px 2109.82px 2267.81px 2506.48px 2927.61px 3218.01px 3331.51px 3650.28px 3880.04px 4032.47px 4322.32px 4629.97px 4943.18px 5056.67px " y="586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px ">ENTIENT SOCIAL BRAIN</tspan></text>
     </g>
 </svg>
