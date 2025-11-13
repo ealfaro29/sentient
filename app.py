@@ -1,110 +1,115 @@
 import os
 import json
-import time
 import re
-import requests
+import time
 from urllib.parse import urlparse, quote_plus, parse_qs
+
+import requests
 from bs4 import BeautifulSoup
-from flask import Flask, request, jsonify, Response, stream_with_context
 from dotenv import load_dotenv
+from flask import Flask, request, jsonify, Response
+
+# --- IA / OpenAI ---
+OPENAI_CLIENT = None
+try:
+    from openai import OpenAI
+except Exception:
+    OpenAI = None
+
+# --- Scraping principal ---
 from newspaper import Article
 from newspaper.article import ArticleDownloadState
-import random
 
-# Cargar variables de entorno
+# --------------------------------------------------------------------
+# Configuración base
+# --------------------------------------------------------------------
 load_dotenv()
+
 app = Flask(__name__, static_url_path='', static_folder='static')
 
-# Configuración de claves API
+# Claves
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
 PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
-# Claves de Google
 GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
 GOOGLE_SEARCH_CX = os.getenv("GOOGLE_SEARCH_CX")
 
-OPENAI_CLIENT = None
-if OPENAI_API_KEY:
+if OPENAI_API_KEY and OpenAI is not None:
     try:
-        from openai import OpenAI
         OPENAI_CLIENT = OpenAI(api_key=OPENAI_API_KEY)
         print("✅ IA (OpenAI): Cliente activo")
     except Exception as e:
         print(f"⚠️ ERROR: No se pudo iniciar el cliente OpenAI: {e}")
 
+# Caché simple en memoria para resultados de scrape
 SCRAPE_CACHE = {}
-CACHE_DURATION = 86400
+CACHE_DURATION = 60 * 60 * 24  # 24 horas
 
-@app.route('/')
-def home(): return app.send_static_file('index.html')
 
-def clean_pexels_query(query):
-    """Limpia y simplifica la consulta para la API de Pexels."""
-    # Lista heurística de palabras comunes a ignorar para búsquedas de imágenes
-    stop_words = set(['the', 'a', 'an', 'is', 'are', 'was', 'were', 'by', 'of', 'in', 'on', 'at', 'for', 'with', 'and', 'but', 'or', 'so', 'if', 'it', 'to', 'from', 'about', 'as', 'that', 'this', 'told', 'says'])
-    
-    # 1. Limpieza básica
-    clean_query = re.sub(r'[^\w\s]', '', query).lower() # Eliminar puntuación y minúsculas
-    
-    # 2. Eliminar stop words
-    words = clean_query.split()
-    filtered_words = [word for word in words if word not in stop_words]
-    
-    # 3. Limitar a las primeras 5 palabras más significativas
-    final_query = " ".join(filtered_words[:5])
-    
-    return final_query
+# --------------------------------------------------------------------
+# Utilidades
+# --------------------------------------------------------------------
+def clean_pexels_query(query: str) -> str:
+    stop_words = set([
+        'the', 'a', 'an', 'is', 'are', 'was', 'were', 'by', 'of', 'in',
+        'on', 'at', 'for', 'with', 'and', 'but', 'or', 'so', 'if', 'it',
+        'to', 'from', 'about', 'as', 'that', 'this', 'told', 'says'
+    ])
+    clean_query = re.sub(r'[^\w\s]', '', query or '').lower()
+    words = [w for w in clean_query.split() if w not in stop_words]
+    return " ".join(words[:5])
 
-def get_pexels_images(query, count=3):
-    if not PEXELS_API_KEY: return []
-    
-    # Usar la nueva función de limpieza antes de buscar
-    search_query = clean_pexels_query(query)
-    
-    if not search_query: 
-        print("⚠️ Pexels: Query vacía después de la limpieza.")
+
+def get_pexels_images(query: str, count: int = 3):
+    if not PEXELS_API_KEY:
         return []
-        
-    print(f"🖼️ Pexels buscando: '{search_query}'")
-    
+    search_query = clean_pexels_query(query)
+    if not search_query:
+        return []
     try:
         headers = {'Authorization': PEXELS_API_KEY}
         url = f'https://api.pexels.com/v1/search?query={quote_plus(search_query)}&per_page={count}&orientation=portrait'
-        r = requests.get(url, headers=headers, timeout=5)
-        
-        if r.status_code == 200:
-            return [p['src']['large2x'] for p in r.json().get('photos', [])]
-        else:
-            print(f"⚠️ Pexels: Error HTTP {r.status_code}")
-            return []
-    except Exception as e:
-        print(f"⚠️ Pexels: Error de conexión: {e}")
+        r = requests.get(url, headers=headers, timeout=8)
+        if r.status_code == 200 and r.headers.get('content-type', '').startswith('application/json'):
+            data = r.json()
+            return [p['src']['large2x'] for p in data.get('photos', [])]
+        return []
+    except Exception:
         return []
 
-def get_ai_data(title, text, source):
+
+def get_ai_data(title: str, text: str, source: str):
     if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
         return None, "Faltan credenciales OpenAI"
-    print(f"🧠 IA pensando para: {title[:30]}...")
     try:
         run = OPENAI_CLIENT.beta.threads.create_and_run_poll(
             assistant_id=OPENAI_ASSISTANT_ID,
-            thread={"messages": [{"role": "user", "content": f"TITLE: {title}\nSOURCE: {source}\nTEXT: {text[:3000]}"}]},
+            thread={
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f"TITLE: {title}\nSOURCE: {source}\nTEXT: {text[:3000]}"
+                    }
+                ]
+            },
             poll_interval_ms=2000,
-            timeout=40 
+            timeout=40
         )
         if run.status == 'completed':
             msgs = OPENAI_CLIENT.beta.threads.messages.list(thread_id=run.thread_id)
-            return json.loads(msgs.data[0].content[0].text.value), None
+            # Se espera que el asistente devuelva JSON válido en el primer mensaje
+            try:
+                payload = json.loads(msgs.data[0].content[0].text.value)
+                return payload, None
+            except Exception as e:
+                return None, f"AI JSON parse error: {e}"
         else:
             return None, f"Estado IA no completado: {run.status}"
     except Exception as e:
-        print(f"❌ Error IA: {e}")
         return None, str(e)
 
-def infer_search_info(url):
-    """
-    Extrae dominio y palabras clave probables de una URL.
-    """
+
+def infer_search_info(url: str):
     try:
         parsed = urlparse(url)
         domain = parsed.netloc.replace('www.', '').split('.')[0]
@@ -114,34 +119,27 @@ def infer_search_info(url):
         year = year_match.group(1) if year_match else ""
 
         segments = [s for s in path.split('/') if s and not s.isdigit() and len(s) > 2]
-        
         slug = ""
         if segments:
             last_segment = segments[-1].split('.')[0]
-            
             if len(last_segment) < 5 and len(segments) > 1:
                 slug = segments[-2].split('.')[0]
             else:
                 slug = last_segment
-            
             keywords = slug.replace('-', ' ').replace('_', ' ').replace('+', ' ')
         else:
             keywords = ""
 
-        refined_keywords = " ".join(keywords.split()[:6]) 
-        refined_keywords = " ".join([word for word in refined_keywords.split() if not word.isdigit()])
-
+        refined_keywords = " ".join(keywords.split()[:6])
+        refined_keywords = " ".join([w for w in refined_keywords.split() if not w.isdigit()])
         return domain, year, refined_keywords
-    except:
+    except Exception:
         return "", "", ""
 
-def perform_google_search(query, max_results=5):
-    """Realiza la búsqueda utilizando la Google Custom Search API."""
-    if not GOOGLE_SEARCH_API_KEY or not GOOGLE_SEARCH_CX:
-        print("⚠️ ERROR: Faltan claves de Google Search. Usando DuckDuckGo de emergencia.")
-        # Fallback a DuckDuckGo si faltan claves de Google (Esto debería ser revisado)
-        return perform_ddg_search_fallback(query, max_results)
 
+def perform_google_search(query: str, max_results: int = 5):
+    if not GOOGLE_SEARCH_API_KEY or not GOOGLE_SEARCH_CX:
+        return perform_ddg_search_fallback(query, max_results)
     try:
         url = "https://www.googleapis.com/customsearch/v1"
         params = {
@@ -151,45 +149,34 @@ def perform_google_search(query, max_results=5):
             'num': max_results,
             'fields': 'items(title,link,snippet)'
         }
-        
         r = requests.get(url, params=params, timeout=8)
-        
-        # CRÍTICO: Verificar si la respuesta es JSON antes de parsear
         if r.headers.get('Content-Type', '').startswith('application/json'):
-             data = r.json()
+            data = r.json()
         else:
-             # Si no es JSON, probablemente es HTML de error (como el que causó 'Unexpected token <')
-             print(f"❌ Google API: Recibida respuesta no JSON. Status: {r.status_code}")
-             return perform_ddg_search_fallback(query, max_results)
-
+            return perform_ddg_search_fallback(query, max_results)
 
         results = []
-        if 'items' in data:
-            for item in data['items']:
-                results.append({
-                    'title': item.get('title', 'No Title'),
-                    'url': item.get('link', '#'),
-                    'snippet': item.get('snippet', 'No snippet available.')
-                })
-        
+        for item in data.get('items', []):
+            results.append({
+                'title': item.get('title', 'No Title'),
+                'url': item.get('link', '#'),
+                'snippet': item.get('snippet', '')
+            })
         return results
-    except Exception as e:
-        print(f"⚠️ Google Search API Error (Excepción): {e}")
-        # En caso de error de la API de Google, se puede intentar DuckDuckGo como último recurso
+    except Exception:
         return perform_ddg_search_fallback(query, max_results)
 
-def perform_ddg_search_fallback(query, max_results=5):
-    """Helper para realizar la búsqueda en DuckDuckGo HTML (Usado como fallback de emergencia)."""
-    # Esta función está desaconsejada debido a fallos recurrentes, solo es un plan B.
+
+def perform_ddg_search_fallback(query: str, max_results: int = 5):
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0',
             'Referer': 'https://html.duckduckgo.com/'
         }
         url = f"https://html.duckduckgo.com/html/?q={quote_plus(query)}"
         res = requests.get(url, headers=headers, timeout=8)
-        if res.status_code != 200: return []
-
+        if res.status_code != 200:
+            return []
         soup = BeautifulSoup(res.text, 'html.parser')
         results = []
         for result in soup.select('.result'):
@@ -198,196 +185,192 @@ def perform_ddg_search_fallback(query, max_results=5):
             if link_tag and link_tag.get('href'):
                 url_res = link_tag['href']
                 if url_res.startswith('/l/?'):
-                     try: url_res = parse_qs(urlparse(url_res).query)['uddg'][0]
-                     except: pass
-                
+                    try:
+                        url_res = parse_qs(urlparse(url_res).query)['uddg'][0]
+                    except Exception:
+                        pass
                 if url_res.startswith('http'):
                     results.append({
                         'title': link_tag.get_text(strip=True),
                         'url': url_res,
                         'snippet': snippet_tag.get_text(strip=True) if snippet_tag else ""
                     })
-                    if len(results) >= max_results: break
+                    if len(results) >= max_results:
+                        break
         return results
-    except Exception as e:
-        print(f"⚠️ DDG Search Error: {e}")
+    except Exception:
         return []
 
-# MODIFICACIÓN DE LÓGICA DE IMÁGENES INICIALES
+
+def domain_of(url: str) -> str:
+    try:
+        return urlparse(url).netloc.replace('www.', '')
+    except Exception:
+        return ""
+
+
+# --------------------------------------------------------------------
+# Rutas
+# --------------------------------------------------------------------
+@app.route('/')
+def home():
+    return app.send_static_file('index.html')
+
+
 @app.route('/api/initial_images', methods=['GET'])
 def initial_images():
-    """
-    Busca imágenes de Pexels para usar como placeholders de inicio con un tema de tecnología/IA.
-    Asegura que las 3 imágenes sean distintas usando fallbacks si Pexels devuelve menos de 3.
-    """
-    # Consulta: tecnología y IA
+    # Consulta base
     images = get_pexels_images('technology AI', count=5)
-    
-    # Fallback si Pexels falla o no devuelve resultados
+
+    # Fallbacks por si Pexels falla
     fallback_imgs = [
         "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080",
         "https://images.unsplash.com/photo-1555212697-c20e29b10636?q=80&w=1080",
         "https://images.unsplash.com/photo-1511376770913-2d2f1f510793?q=80&w=1080"
     ]
-    
-    # Selecciona 3 imágenes únicas, favoreciendo las de Pexels
-    unique_images = []
+
+    unique = []
     seen = set()
-    
-    # Add Pexels images first
     for img in images:
         if img not in seen:
-            unique_images.append(img)
+            unique.append(img)
             seen.add(img)
-
-    # Add fallbacks until we have 3
     for img in fallback_imgs:
-        if len(unique_images) >= 3:
+        if len(unique) >= 3:
             break
         if img not in seen:
-            unique_images.append(img)
+            unique.append(img)
             seen.add(img)
-    
-    # Assign the first three or a default
-    default_img = "https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080"
 
-    img_a = unique_images[0] if len(unique_images) >= 1 else default_img
-    img_b = unique_images[1] if len(unique_images) >= 2 else default_img
-    img_c = unique_images[2] if len(unique_images) >= 3 else default_img
-    
-    return jsonify({
-        "A": img_a,
-        "B": img_b,
-        "C": img_c
-    })
+    default_img = "https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080"
+    img_a = unique[0] if len(unique) >= 1 else default_img
+    img_b = unique[1] if len(unique) >= 2 else default_img
+    img_c = unique[2] if len(unique) >= 3 else default_img
+
+    return jsonify({"A": img_a, "B": img_b, "C": img_c})
+
 
 @app.route('/api/search_alternatives', methods=['POST'])
 def search_alternatives():
-    failed_url = request.json.get('url')
-    if not failed_url: return jsonify({"error": "No URL provided"}), 400
+    payload = request.get_json(silent=True) or {}
+    failed_url = payload.get('url')
+    if not failed_url:
+        return jsonify({"error": "No URL provided"}), 400
 
     domain, year, keywords = infer_search_info(failed_url)
-    
-    # 1. Fallback/Búsqueda Genérica si las keywords son débiles
+
     if len(keywords.split()) < 3:
-        query = f"{domain} news"
-        print(f"🔍 Consulta Genérica: '{query}'")
+        query = f"{domain} news".strip()
         return jsonify({'query': query, 'results': perform_google_search(query)})
 
-    # 2. Intento Temático (Keywords + Año) - Consulta más amplia
     query1 = f"{keywords} {year}".strip()
-    print(f"🔍 Intento 1 (Temático): '{query1}'")
     results = perform_google_search(query1, max_results=6)
 
-    # 3. Si tenemos pocos resultados, reintentamos con Dominio + Keywords (más específica)
-    if len(results) < 3:
-        query2 = f"{domain} {keywords} {year}".strip()
-        print(f"🔄 Intento 2 (Específico): '{query2}'")
-        results2 = perform_google_search(query2, max_results=6)
-        
-        # Combinar resultados sin duplicados
-        existing_urls = set(r['url'] for r in results)
-        for r in results2:
-            if r['url'] not in existing_urls:
-                results.append(r)
-        
-        final_query = query1
-    else:
-        final_query = query1
+    if not results:
+        query2 = f"{domain} {keywords}".strip()
+        results = perform_google_search(query2, max_results=6)
+        return jsonify({'query': query2, 'results': results})
 
-    return jsonify({'query': final_query, 'results': results[:8]}) 
+    return jsonify({'query': query1, 'results': results})
 
-@app.route('/api/proxy_image')
-def proxy_image():
-    url = request.args.get('url')
-    if not url: return "URL missing", 400
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0', 'Referer': 'https://www.google.com/'}
-        req = requests.get(url, headers=headers, stream=True, timeout=10, verify=False)
-        return Response(stream_with_context(req.iter_content(chunk_size=1024)), 
-                        content_type=req.headers.get('content-type', 'image/jpeg'))
-    except: return "Image blocked", 404
 
 @app.route('/api/scrape', methods=['POST'])
 def scrape():
-    url = request.json.get('url')
-    if not url: return jsonify({"error": "URL missing"}), 400
+    payload = request.get_json(silent=True) or {}
+    url = payload.get('url', '').strip()
+    if not url:
+        return jsonify({'error': 'Missing url'}), 400
 
+    # Caché
     now = time.time()
-    if url in SCRAPE_CACHE and now - SCRAPE_CACHE[url]['timestamp'] < CACHE_DURATION:
-        print(f"⚡ Caché: {url[:30]}...")
-        return jsonify(SCRAPE_CACHE[url]['data'])
+    if url in SCRAPE_CACHE:
+        cached = SCRAPE_CACHE[url]
+        if now - cached['ts'] < CACHE_DURATION:
+            return jsonify(cached['data'])
 
+    # Newspaper3k
     try:
-        print(f"📥 Descargando: {url[:50]}...")
-        nuclear_headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'Upgrade-Insecure-Requests': '1'
+        art = Article(url)
+        art.download()
+        if art.download_state != ArticleDownloadState.SUCCESS:
+            raise RuntimeError("download failed")
+        art.parse()
+        try:
+            art.nlp()
+        except Exception:
+            # NLP puede fallar a veces, no es crítico
+            pass
+
+        title = art.title or ''
+        text = art.text or ''
+        source = domain_of(url) or 'UNKNOWN'
+        original = {
+            "title": title.strip() or 'UNTITLED',
+            "subtitle": (text[:200] + '...') if text else ''
         }
-        response = requests.get(url, headers=nuclear_headers, timeout=15, verify=True)
-        if response.status_code != 200: raise Exception(f"HTTP {response.status_code}")
 
-        article = Article(url)
-        article.set_html(response.text)
-        article.download_state = ArticleDownloadState.SUCCESS
-        article.parse()
+        # Imágenes relacionadas
+        # preferimos keywords del título, si no, el dominio
+        keys = title if title else source
+        imgs = get_pexels_images(keys, count=3)
+        # fallback si Pexels no dio 3
+        while len(imgs) < 3:
+            imgs.append("https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080")
 
-        src = article.source_url.replace("https://","").replace("http://","").replace("www.","").split("/")[0].split(".")[0].upper()
-        ai_data, ai_error = get_ai_data(article.title, article.text, src)
-        
-        img_q = ai_data.get('image_keywords', article.title) if ai_data else article.title
-        
-        # --- REVISED IMAGE SELECTION LOGIC START ---
-        
-        # 1. Fallback images (for guaranteed options if Pexels or article image fail)
-        FALLBACK_PEXELS = [
-            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080",
-            "https://images.unsplash.com/photo-1555212697-c20e29b10636?q=80&w=1080",
-            "https://images.unsplash.com/photo-1511376770913-2d2f1f510793?q=80&w=1080"
-        ]
-        
-        # 2. Get images from Pexels (request more to increase diversity chances)
-        pexels_imgs = get_pexels_images(img_q, count=5) 
+        images = {"a": imgs[0], "b": imgs[1], "c": imgs[2]}
 
-        # 3. Create a prioritized list of all potential images
-        potential_images = []
-        # Priority 1: Article's top image
-        if article.top_image:
-            potential_images.append(article.top_image)
-        # Priority 2: Pexels search results
-        potential_images.extend(pexels_imgs)
-        # Priority 3: Hardcoded fallbacks
-        potential_images.extend(FALLBACK_PEXELS)
-        
-        # 4. Filter for unique, non-empty images
-        unique_images = []
-        seen_urls = set()
-        for url in potential_images:
-            if url and url not in seen_urls:
-                unique_images.append(url)
-                seen_urls.add(url)
-
-        # 5. Assign the first three unique images to the variants, defaulting to a basic fallback if < 3
-        default_img = "https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080" # Single default image
-        
-        img_a = unique_images[0] if len(unique_images) >= 1 else default_img
-        img_b = unique_images[1] if len(unique_images) >= 2 else default_img
-        img_c = unique_images[2] if len(unique_images) >= 3 else default_img
-
-        # --- REVISED IMAGE SELECTION LOGIC END ---
-
-        data = {
-            "source": src,
-            "images": {"a": img_a, "b": img_b, "c": img_c},
-            "ai_content": ai_data,
-            "ai_error": ai_error,
-            "original": {"title": article.title[:50].upper(), "subtitle": article.text[:100]+"..."}
+        # IA para variantes y caption común
+        ai_payload, ai_err = get_ai_data(title=original["title"], text=text, source=source)
+        result = {
+            "source": source.upper() if source else "UNKNOWN",
+            "original": original,
+            "images": images,
+            "ai_content": ai_payload if ai_payload else {
+                "variants": {
+                    "A": {"title": original["title"], "subtitle": original["subtitle"]},
+                    "B": {"title": original["title"], "subtitle": original["subtitle"]},
+                    "C": {"title": original["title"], "subtitle": original["subtitle"]},
+                },
+                "common_caption": original["subtitle"],
+                "image_keywords": clean_pexels_query(keys)
+            },
+            "ai_error": ai_err
         }
-        SCRAPE_CACHE[url] = {'data': data, 'timestamp': now}
-        return jsonify(data)
+
+        SCRAPE_CACHE[url] = {"ts": now, "data": result}
+        return jsonify(result)
+
     except Exception as e:
-        print(f"🔥 Error Scrape: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': f'scrape failed: {str(e)}'}), 500
 
-if __name__ == '__main__': app.run(host='0.0.0.0', port=5000, debug=True)
+
+@app.route('/api/proxy_image', methods=['GET'])
+def proxy_image():
+    img_url = request.args.get('url', '').strip()
+    if not img_url:
+        return jsonify({'error': 'Missing url'}), 400
+    try:
+        r = requests.get(img_url, timeout=10, stream=True)
+        r.raise_for_status()
+        content_type = r.headers.get('Content-Type', 'image/jpeg')
+        headers = {
+            'Content-Type': content_type,
+            'Cache-Control': 'public, max-age=300',
+        }
+        # Stream del cuerpo en chunks para no cargar todo en memoria
+        def generate():
+            for chunk in r.iter_content(chunk_size=64 * 1024):
+                if chunk:
+                    yield chunk
+        return Response(generate(), headers=headers)
+    except Exception as e:
+        return jsonify({'error': f'proxy failed: {str(e)}'}), 502
+
+
+# --------------------------------------------------------------------
+# Entry point
+# --------------------------------------------------------------------
+if __name__ == '__main__':
+    # Para desarrollo local; en producción usa gunicorn
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host='0.0.0.0', port=port, debug=True)

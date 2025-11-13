@@ -2,357 +2,217 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale:1, maximum-scale=1, user-scalable=no" />
-  <title>Sentient V0.2.0 UI</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Sentient UI</title>
+
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Inter:wght@400;500;700;800;900&family=Major+Mono+Display&family=Playfair+Display:wght@400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    'var-brand': 'var(--brand)',
-                    'var-bg-main': 'var(--bg-main)',
-                    'var-bg-panel': 'var(--bg-panel)',
-                    'var-border': 'var(--border)',
-                    'var-text': 'var(--text)',
-                    'var-text-dim': 'var(--text-dim)',
-                },
-                borderRadius: {
-                    'xl': 'var(--radius-md)',
-                },
-                spacing: {
-                    '60px': '60px',
-                }
-            }
-        }
-    }
-  </script>
 
-  <link rel="stylesheet" type="text/css" href="style.css">
-  
-  <style>
-    :root { 
-        --radius-md: 12px; 
-        --font-headline: 'Inter', sans-serif; 
-        --font-headline-weight: 800; 
-        --font-card-body: 'Inter', sans-serif;
-        
-        /* ENFORZAR FONDOS OSCUROS/NEGROS */
-        --bg-main: #000000;
-        --bg-panel: #0a0a0a;
-        --border: #1a1a1a; 
-        --text: #ffffff;
-        --text-dim: #9ca3af;
-        
-        /* NEON MOCKUP COLORS */
-        --neon-color: #ccff00;
-        --bg-color: #000000;
-        --element-height: 20px; 
-        
-        --brand-rgb: 204, 255, 0; 
-    }
-    
-    /* --- ESTILOS DE COMPONENTES ÚNICOS --- */
-    
-    .mockup { 
-        cursor: pointer; 
-        max-height: 95%; 
-        width: auto; 
-        min-width: 320px; 
-        background: #000; 
-        border: none;
-        border-radius: 20px; 
-        overflow: hidden; 
-        box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
-        display: flex; 
-        flex-direction: column; 
-    }
-    
-    .canvas-wrapper { aspect-ratio: 4/5; width: auto; height: auto; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; background: #111; }
-    .render-target { width: 1080px; height: 1350px; position: absolute; flex-shrink: 0; background: var(--bg-main); transform-origin: center center; will-change: transform; }
-    .card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s ease; }
-    .card-overlay { position: absolute; inset: 0; transition: background 0.3s; }
-    
-    /* Neon Controls: Estructura interna */
-    .neon-box {
-        background-color: var(--neon-color);
-        height: var(--element-height);
-        border-radius: 3px; 
-        display: flex;
-        align-items: center;
-        padding: 0 4px 0 6px; 
-        box-sizing: border-box;
-        color: black;
-        user-select: none;
-        flex: 1;
-    }
-    .selector {
-        cursor: pointer;
-        min-width: 100px; 
-        justify-content: space-between;
-        font-family: var(--font-headline);
-    }
-    .selector-label {
-        font-size: 10px;
-        letter-spacing: 0.5px;
-        font-weight: 900;
-    }
-    .value-badge {
-        background-color: black;
-        color: var(--neon-color);
-        width: 15px; 
-        height: 15px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        border-radius: 3px;
-        font-size: 10px; 
-        margin-left: 4px;
-    }
-    .url-input {
-        flex: 1; 
-        width: 100%;
-        height: 16px; 
-        background-color: black;
-        border: none;
-        border-radius: 3px;
-        color: var(--neon-color);
-        font-family: 'Share Tech Mono', monospace;
-        padding: 0 5px;
-        font-size: 9px; 
-        outline: none;
-    }
-    .url-input::placeholder {
-        color: var(--neon-color);
-        opacity: 0.7;
-    }
-    .slider-icon {
-        width: 12px; 
-        height: 12px;
-        fill: black; 
-        flex-shrink: 0;
-    }
-    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-    input[type=range]:focus { outline: none; }
-    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 1px; cursor: pointer; background: black; border-radius: 0.5px; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; border: 1px solid black; height: 12px; width: 5px; border-radius: 1px; background: var(--neon-color); cursor: pointer; margin-top: -6px; }
-    .neon-upload-icon-btn { 
-        width: 20px; 
-        height: 20px; 
-        background: black;
-        color: var(--neon-color);
-        border-radius: 3px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
-    }
-    .neon-upload-icon-btn i {
-        width: 10px; 
-        height: 10px;
-        stroke: var(--neon-color); 
-        stroke-width: 3;
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Inter:wght@400;500;700;800;900&family=Major+Mono+Display&family=Playfair+Display:wght@400;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-[var(--bg-main)] text-[var(--text)] font-sans">
 
-    <!-- --- PANTALLA DE BYPASS --- -->
-    <div id="bypassScreen" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-5">
-        <div class="w-full max-w-md text-center">
-            <h1 class="text-2xl font-bold text-white mb-4">WebApp is in an intermediate state</h1>
-            <p class="text-lg text-gray-400 mb-8">Please come back later.</p>
-            
-            <div class="flex items-center gap-2">
-                <input id="bypassInput" type="password" class="flex-1 h-12 bg-gray-900 border border-gray-700 text-white px-4 rounded-lg outline-none focus:border-var-brand" placeholder="bypass">
-                <button id="bypassButton" class="h-12 px-6 bg-[var(--brand)] text-black font-extrabold text-lg rounded-lg flex items-center gap-2 transition-all duration-300 hover:opacity-90 active:scale-[0.98]">
-                    Enter
-                </button>
-            </div>
-            <p id="bypassError" class="text-red-500 text-sm mt-3 h-5"></p>
-        </div>
+  <!-- BYPASS -->
+  <div id="bypassScreen" class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-5">
+    <div class="w-full max-w-md text-center">
+      <h1 class="text-2xl font-bold text-white mb-4">WebApp is in an intermediate state</h1>
+      <p class="text-lg text-gray-400 mb-8">Please come back later.</p>
+      <div class="flex items-center gap-2">
+        <input id="bypassInput" type="password" class="flex-1 h-12 bg-gray-900 border border-gray-700 text-white px-4 rounded-lg outline-none focus:border-[var(--brand)]" placeholder="bypass">
+        <button id="bypassButton" class="h-12 px-6 bg-[var(--brand)] text-black font-extrabold text-lg rounded-lg">Enter</button>
+      </div>
+      <p id="bypassError" class="text-red-500 text-sm mt-3 h-5"></p>
     </div>
-    <!-- --- FIN PANTALLA DE BYPASS --- -->
+  </div>
 
+  <!-- APP -->
+  <div id="appContainer" class="app-container" style="display:none;">
+    <div id="p5-canvas-container" class="fixed inset-0 z-0 opacity-80"></div>
 
-    <!-- El 'app-container' ahora es 'appContainer' y está oculto por defecto -->
-    <div id="appContainer" class="app-container" style="display: none;">
-        
-        <div id="p5-canvas-container" class="fixed inset-0 z-0 opacity-80"></div>
+    <!-- Top bar -->
+    <div id="topControlBar" class="hidden absolute top-0 left-0 right-0 h-[60px] z-50 items-center px-4">
+      <div id="loadingPill"></div>
+      <button id="dlBtn" class="ml-auto px-3 py-1 bg-[var(--brand)] text-black font-extrabold rounded-lg text-sm">Download</button>
+    </div>
 
-        <!-- BARRA SUPERIOR INVISIBLE (SOLO CONTIENE LA PÍLDORA) -->
-        <div id="topControlBar" class="hidden absolute top-0 left-0 right-0 h-[60px] z-50">
-            <!-- La píldora se moverá aquí al final, pero es 'position: fixed' -->
-            <div id="loadingPill"></div>
+    <main id="mainStage" class="flex-1 bg-transparent flex flex-col items-center justify-center p-5 overflow-hidden relative z-10">
+
+      <!-- LANDING -->
+      <div id="landingStage" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-opacity duration-500 opacity-100">
+        <div id="fusionContainer" class="flex items-center justify-center w-full max-w-[600px] h-[52px]">
+          <div id="landingInputWrapper" class="relative flex-1 h-full w-full">
+            <input id="landingUrlInput" type="url" class="h-full w-full bg-black/70 border border-[var(--brand)] text-white pl-4 pr-4 text-lg rounded-l-full outline-none transition-all duration-500 ease-in-out focus:border-white" placeholder="Paste article URL and press Enter..." />
+          </div>
+          <button id="landingScrapeBtn" class="h-full px-6 bg-[var(--brand)] text-black font-extrabold text-lg rounded-r-full">Go</button>
         </div>
-        
-        <main class="flex-1 bg-transparent flex flex-col items-center justify-center p-5 overflow-hidden relative z-10" id="mainStage">
-            
-            <div id="landingStage" class="absolute inset-0 flex flex-col items-center justify-center z-20 transition-opacity duration-500 opacity-100">
-                <div id="fusionContainer" class="flex items-center justify-center w-full max-w-[600px] h-[52px]">
-                    
-                    <div id="landingInputWrapper" class="relative flex-1 h-full w-full">
-                        <svg class="h-6 w-6 text-[var(--brand)] absolute left-3 top-1/2 -translate-y-1/2 z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="2"></circle><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M4 12H0m16 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        <input id="landingUrlInput" type="url" class="h-full w-full bg-black/70 border border-[var(--brand)] text-white pl-10 pr-4 text-lg rounded-l-full outline-none transition-all duration-500 ease-in-out focus:border-white focus:bg-black/90" placeholder="Paste article URL and Press Enter..." />
-                    </div>
+      </div>
 
-                    <button id="landingScrapeBtn" class="h-full px-6 bg-[var(--brand)] text-black font-extrabold text-lg rounded-r-full flex items-center gap-2 transition-all duration-500 ease-in-out hover:opacity-90 active:scale-[0.98] focus:z-10 focus:outline-none">
-                        <i data-lucide="sparkles" class="w-5 h-5"></i>
-                    </button>
+      <!-- APP STAGE -->
+      <div id="appStage" class="w-full h-full opacity-0 transition-opacity duration-500 pointer-events-none">
+        <div class="stage-grid w-full h-full grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5 justify-center items-center overflow-y-auto lg:overflow-hidden p-5" style="padding-top: 70px;">
+
+          <!-- Card A -->
+          <div id="mockA" class="mockup">
+            <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
+              <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
+              <span class="text-sm font-semibold text-white flex-1">sentient</span>
+              <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
+            </div>
+            <div class="canvas-wrapper" id="mountA">
+              <div id="cardA" class="render-target">
+                <img class="card-bg" crossorigin="anonymous" />
+                <div class="card-overlay"></div>
+                <div class="card-content layout-standard">
+                  <div class="c-pill">NEWS</div>
+                  <h1 class="c-title is-placeholder" contenteditable="true">READY</h1>
+                  <h2 class="c-subtitle is-placeholder" contenteditable="true">Paste an article URL...</h2>
                 </div>
+              </div>
             </div>
+            <div class="insta-footer p-3 bg-black flex-shrink-0">
+              <div class="flex gap-4 mb-3">
+                <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+              </div>
+              <div class="font-semibold text-sm">8,432 likes</div>
+            </div>
+          </div>
 
-
-            <div id="appStage" class="w-full h-full opacity-0 transition-opacity duration-500 pointer-events-none">
-                
-                <div class="stage-grid w-full h-full grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5 justify-center items-center overflow-y-auto lg:overflow-hidden p-5 transition-all duration-300 ease-in-out" style="padding-top: 70px;">
-                    
-                    <div id="mockA" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('A')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('A');"></i></div><div class="canvas-wrapper" id="mountA"><div id="cardA" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-standard"><div class="c-pill">NEWS</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">READY</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Paste an article URL...</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">8,432 likes</div></div></div>
-                    
-                    <div id="mockB" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('B')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('B');"></i></div><div class="canvas-wrapper" id="mountB"><div id="cardB" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-centered"><div class="c-pill">STORY</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">SET</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Choose variant...</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">12,901 likes</div></div></div>
-                    
-                    <div id="mockC" class="mockup lg:min-h-0 lg:w-auto w-full max-w-[450px]" onclick="App.switchVar('C')"><div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black"><div class="insta-avatar w-8 h-8 rounded-full mr-3" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div><span class="text-sm font-semibold text-white flex-1">sentient</span><i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn" onclick="event.stopPropagation(); App.switchVar('C');"></i></div><div class="canvas-wrapper" id="mountC"><div id="cardC" class="render-target"><img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div><div class="card-content layout-bold"><div class="c-pill">BREAKING</div><h1 class="c-title is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'title')" onfocus="App.handleFocus(this, 'title')" onblur="App.handleBlur(this, 'title')">GO</h1><h2 class="c-subtitle is-placeholder" contenteditable="true" oninput="App.updateTextFromCard(this, 'subtitle')" onfocus="App.handleFocus(this, 'subtitle')" onblur="App.handleBlur(this, 'subtitle')">Customize & export.</h2></div></div></div><div class="insta-footer p-3 bg-black flex-shrink-0"><div class="flex gap-4 mb-3"><i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6" fill="#ffffff" color="#ffffff"></i><i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i><i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i></div><div class="font-semibold text-sm">45,200 likes</div></div></div>
-                    
-                    <!-- CARD D: FIJA Y SIN MARCO DE INSTAGRAM -->
-                    <div id="mockD" class="mockup no-insta lg:min-h-0 lg:w-auto w-full max-w-[450px]">
-                        <div class="canvas-wrapper h-full" id="mountD">
-                            <div id="cardD" class="render-target w-full h-full p-6 text-left" style="transform:none; background:var(--bg-panel);">
-                                <div class="c-pill text-xl font-bold bg-gray-900 text-white rounded-lg px-4 py-2 mb-4 flex items-center justify-between">
-                                    <span>CAPTION</span>
-                                    <i data-lucide="copy" id="copyBtnD" class="insta-icon text-white stroke-[1.5px] w-5 h-5 cursor-pointer" onclick="App.copyCaption();"></i>
-                                </div>
-                                <div id="captionTextD" class="text-sm text-gray-400 whitespace-pre-wrap overflow-y-auto" style="height: calc(100% - 70px);">Paste an article URL to generate a caption...</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- BARRA DE EDICIÓN: POSICIONAMIENTO EN EL GRID -->
-                    <div id="activeControls" class="bg-transparent p-1.5 flex flex-col gap-1.5 font-bold z-50 controls-grid-position">
-                        <div class="flex gap-1.5 items-center justify-center">
-                            <div class="flex gap-1.5 items-center">
-                                <div class="neon-box selector" id="layoutBtn">
-                                    <span class="selector-label">LAYOUT</span>
-                                    <div class="value-badge" id="layoutValue">STD</div>
-                                </div>
-                                <div class="neon-box selector" id="overlayBtn">
-                                    <span class="selector-label">OVERLAY</span>
-                                    <div class="value-badge" id="overlayValue">B</div>
-                                </div>
-                            </div>
-
-                            <div class="flex gap-1.5 items-center flex-grow max-w-[250px] min-w-[150px]">
-                                <div class="neon-box slider-box flex gap-1 items-center px-1.5 bg-gray-700 text-gray-200">
-                                    <svg class="slider-icon fill-gray-200" viewBox="0 0 24 24">
-                                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-                                    </svg>
-                                    <input type="range" id="blurRange" min="0" max="20" value="0" step="1" class="neon-slider-track">
-                                </div>
-                                <div class="neon-box slider-box flex gap-1 items-center px-1.5 bg-gray-700 text-gray-200">
-                                    <svg class="slider-icon fill-gray-200" viewBox="0 0 24 24">
-                                        <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
-                                    </svg>
-                                    <input type="range" id="contrastRange" min="50" max="150" value="100" step="5" class="neon-slider-track">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="neon-box url-input-container flex flex-1 p-0 px-1 gap-1 min-w-[200px] bg-gray-700/50"> 
-                            <input type="text" id="imgUrlInput" class="url-input bg-black/50" placeholder="https://image-url.com" />
-                            <div id="imgFileBtn" onclick="document.getElementById('imgFileInput').click()" class="neon-upload-icon-btn bg-black hover:bg-black/80">
-                                <i data-lucide="upload" class="stroke-gray-400"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <input type="file" id="imgFileInput" hidden accept="image/*" />
-
+          <!-- Card B -->
+          <div id="mockB" class="mockup">
+            <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
+              <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
+              <span class="text-sm font-semibold text-white flex-1">sentient</span>
+              <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
+            </div>
+            <div class="canvas-wrapper" id="mountB">
+              <div id="cardB" class="render-target">
+                <img class="card-bg" crossorigin="anonymous" />
+                <div class="card-overlay"></div>
+                <div class="card-content layout-centered">
+                  <div class="c-pill">STORY</div>
+                  <h1 class="c-title is-placeholder" contenteditable="true">SET</h1>
+                  <h2 class="c-subtitle is-placeholder" contenteditable="true">Choose variant...</h2>
                 </div>
-
+              </div>
             </div>
-        </main>
-    </div>
-    
-    <div id="hd-stage-container">
-        <div id="hd-render-card" class="render-target">
-             <img class="card-bg" crossorigin="anonymous" /><div class="card-overlay"></div>
-             <div class="card-content"><div class="c-pill"></div><h1 class="c-title" contenteditable="true"></h1><h2 class="c-subtitle" contenteditable="true"></h2></div>
+            <div class="insta-footer p-3 bg-black flex-shrink-0">
+              <div class="flex gap-4 mb-3">
+                <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+              </div>
+              <div class="font-semibold text-sm">12,901 likes</div>
+            </div>
+          </div>
+
+          <!-- Card C -->
+          <div id="mockC" class="mockup">
+            <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
+              <div class="insta-avatar w-8 h-8 rounded-full mr-3" style="background: linear-gradient(45deg, #CCFF00, #00ff99);"><div></div></div>
+              <span class="text-sm font-semibold text-white flex-1">sentient</span>
+              <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
+            </div>
+            <div class="canvas-wrapper" id="mountC">
+              <div id="cardC" class="render-target">
+                <img class="card-bg" crossorigin="anonymous" />
+                <div class="card-overlay"></div>
+                <div class="card-content layout-bold">
+                  <div class="c-pill">BREAKING</div>
+                  <h1 class="c-title is-placeholder" contenteditable="true">GO</h1>
+                  <h2 class="c-subtitle is-placeholder" contenteditable="true">Customize & export.</h2>
+                </div>
+              </div>
+            </div>
+            <div class="insta-footer p-3 bg-black flex-shrink-0">
+              <div class="flex gap-4 mb-3">
+                <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+              </div>
+              <div class="font-semibold text-sm">9,217 likes</div>
+            </div>
+          </div>
+
+          <!-- Card D: Caption -->
+          <div id="mockD" class="mockup no-insta">
+            <div class="canvas-wrapper" id="mountD">
+              <div id="cardD" class="render-target" style="display:flex;align-items:center;justify-content:center;">
+                <div class="p-6 w-full h-full overflow-auto">
+                  <div class="c-pill">CAPTION</div>
+                  <h1 class="c-title">CAPTION</h1>
+                  <div class="mt-4">
+                    <textarea id="captionTextD" class="w-full h-[400px] bg-black/60 border border-[var(--border)] p-4 rounded-lg outline-none" placeholder="Paste an article URL to generate a caption..." readonly></textarea>
+                    <div class="mt-3 flex justify-end">
+                      <button id="copyBtnD" class="px-3 py-2 bg-[var(--brand)] text-black font-extrabold rounded-lg text-sm">Copy</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controles -->
+          <div id="activeControls" class="controls-grid-position">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="neon-box selector" id="layoutBtn"><span class="selector-label">LAYOUT</span><span class="value-badge" id="layoutValue">STD</span></div>
+              <div class="neon-box selector" id="overlayBtn"><span class="selector-label">OVERLAY</span><span class="value-badge" id="overlayValue">B</span></div>
+              <div class="neon-box flex gap-2 items-center">
+                <input id="imgUrlInput" class="url-input" placeholder="Image URL..." />
+                <label class="neon-upload-icon-btn" for="imgFileInput" id="imgFileBtn"><i data-lucide="upload"></i></label>
+                <input id="imgFileInput" type="file" accept="image/*" class="hidden" />
+              </div>
+              <div class="neon-box flex items-center gap-2"><input id="blurRange" type="range" min="0" max="30" value="0"></div>
+              <div class="neon-box flex items-center gap-2"><input id="contrastRange" type="range" min="50" max="200" value="100"></div>
+            </div>
+          </div>
+
         </div>
-    </div>
+      </div>
 
-    <div id="fallbackModal" class="hidden fixed inset-0 bg-black/85 z-[10000] items-center justify-center backdrop-blur-md">
-        <div class="bg-[var(--bg-panel)] w-[90%] max-w-[500px] rounded-xl border border-[var(--border)] shadow-2xl shadow-black/60 overflow-hidden flex flex-col max-h-[80vh]">
-            <div class="p-4 border-b border-[var(--border)] flex justify-between items-center bg-black/20">
-                <h3 class="text-[var(--brand)] font-extrabold text-lg flex items-center gap-2"><i data-lucide="search"></i> ALTERNATIVE SOURCES</h3>
-                <button onclick="document.getElementById('fallbackModal').style.display='none'" class="bg-none border-none text-[var(--text-dim)] cursor-pointer p-1"><i data-lucide="x"></i></button>
-            </div>
-            <div class="p-5 overflow-y-auto flex-1">
-                <p id="fallbackMsg" class="text-[var(--text-dim)] text-sm mb-4 leading-relaxed">Analyzing link...</p>
-                <div id="fallbackList" class="flex flex-col gap-2.5"></div>
-            </div>
-            <div class="p-4 border-t border-[var(--border)] bg-black/20 flex gap-2.5 items-center">
-                <span class="text-xs text-[var(--text-dim)]">Still not finding it?</span>
-                <a id="googleFallbackBtn" href="#" target="_blank" class="cursor-pointer border-none flex items-center justify-center gap-1.5 font-semibold rounded-xl transition-all duration-200 text-sm ml-auto bg-[var(--text)] text-[var(--bg-main)] p-2 px-4 no-underline">
-                    <i data-lucide="external-link" class="w-4"></i> Open Google Search
-                </a>
-            </div>
-        </div>
-    </div>
+    </main>
+  </div>
 
-    <!-- Módulos JS -->
-    <script type="module" src="utils.js"></script>
-    <script type="module" src="data-handler.js"></script>
-    <script type="module" src="ui-manager.js"></script>
-    <script type="module" src="app.js"></script>
+  <script type="module">
+    import { App } from './app.js';
+    import { p5_sketch } from './utils.js';
 
-    <!-- Script de Bypass (Debe estar al final) -->
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const bypassInput = document.getElementById('bypassInput');
-            const bypassButton = document.getElementById('bypassButton');
-            const bypassError = document.getElementById('bypassError');
-            const bypassScreen = document.getElementById('bypassScreen');
-            const appContainer = document.getElementById('appContainer');
+    new window.p5(p5_sketch);
 
-            function attemptBypass() {
-                if (bypassInput.value === '5421') {
-                    bypassScreen.style.transition = 'opacity 0.5s ease';
-                    bypassScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        bypassScreen.style.display = 'none';
-                        appContainer.style.display = 'flex';
-                        // INICIAR LA APP (App.init ahora es global gracias a app.js)
-                        window.App.init(); 
-                    }, 500);
-                } else {
-                    bypassError.textContent = 'Invalid code';
-                    bypassInput.style.borderColor = '#ef4444';
-                    setTimeout(() => {
-                        bypassError.textContent = '';
-                        bypassInput.style.borderColor = '#4b5563'; // Tailwind gray-700
-                    }, 2000);
-                }
-            }
+    const PIN = '5421';
+    const screen = document.getElementById('bypassScreen');
+    const appContainer = document.getElementById('appContainer');
+    const input = document.getElementById('bypassInput');
+    const btn = document.getElementById('bypassButton');
+    const err = document.getElementById('bypassError');
 
-            bypassButton.addEventListener('click', attemptBypass);
-            bypassInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    attemptBypass();
-                }
-            });
-        });
-    </script>
+    const unlock = () => {
+      if ((input.value || '').trim() === PIN) {
+        screen.style.display = 'none';
+        appContainer.style.display = 'flex';
+        App.init();
+      } else {
+        err.textContent = 'Invalid PIN';
+        setTimeout(() => err.textContent = '', 1500);
+      }
+    };
+    btn.addEventListener('click', unlock);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+    window.lucide?.createIcons?.();
+  </script>
 </body>
 </html>

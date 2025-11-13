@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Testing • Instagram mock 4:5 • v21</title>
+<style>
+  :root{ --brand:#CCFF00; --bg:#000; --border:#262626; --text:#e5e7eb; --dim:#a1a1aa }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#000;color:#e5e7eb;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;overflow:hidden}
+
+  #version{position:fixed;inset:auto 0 0 0;height:28px;z-index:9999;background:#111;color:#fff;font:12px/28px ui-monospace,Consolas,monospace;text-align:center;border-top:1px solid #222}
+
+  /* Top bar con URL centrada */
+  #top{position:sticky;top:0;left:0;right:0;height:64px;z-index:60;display:flex;align-items:center;justify-content:center;padding:0 16px;
+       background:linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,0))}
+  #host{font-weight:900;color:#fff;opacity:0;transform:translateY(-4px);transition:opacity .6s ease, transform .6s ease;letter-spacing:.2px}
+
+  #particles{position:fixed;inset:0;z-index:40;pointer-events:none}
+
+  /* Logo (400px, se desvanece al submit) */
+  #logo{
+    position:fixed;left:50%;top:calc(50% - 120px);
+    transform:translate(-50%,-50%);
+    width:400px;height:400px;object-fit:contain;
+    z-index:56;opacity:1;transition:opacity .3s ease;
+    pointer-events:none;user-select:none
+  }
+
+  /* Landing */
+  #landing{position:fixed;inset:0;z-index:50;background:transparent;opacity:1;pointer-events:auto}
+  #fusion{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;height:60px;gap:0;z-index:55}
+  #url{width:min(520px,56vw);height:60px;background:#000;border:1px solid var(--brand);color:#fff;border-radius:999px 0 0 999px;padding:0 16px;font-size:16px;outline:none}
+  #magic{
+    height:60px;min-width:68px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 18px;border-radius:0 999px 999px 0;background:var(--brand);color:#000;
+    border:none;cursor:pointer
+  }
+  #magic:active{transform:translateY(1px)}
+  #magic img{width:36px;height:36px;display:block;pointer-events:none;user-select:none}
+
+  /* Círculo morph */
+  #morphPill{
+    position:fixed;z-index:70;display:none;align-items:center;justify-content:center;
+    background:var(--brand);color:#000;font-weight:900;letter-spacing:.2px;border:1px solid var(--brand);
+    left:50%;top:50%;transform:translate(-50%,-50%) scale(1);
+    transition:width 1s cubic-bezier(.22,.61,.36,1),height 1s cubic-bezier(.22,.61,.36,1),border-radius 1s cubic-bezier(.22,.61,.36,1),opacity .4s ease;
+    aspect-ratio:1/1;
+    background:
+      radial-gradient(120% 220% at 50% 50%, rgba(204,255,0,0.15), transparent 55%),
+      linear-gradient(180deg, #D6FF57 0%, #B6FF00 100%);
+    border-radius:999px
+  }
+
+  /* Ícono único que viaja y luego se ancla dentro del círculo */
+  #flyMark{
+    position:fixed;z-index:71;left:0;top:0;width:36px;height:36px;pointer-events:none;user-select:none;
+    transform-origin:center center;
+    transition:left 1s cubic-bezier(.22,.61,.36,1), top 1s cubic-bezier(.22,.61,.36,1),
+               width 1s cubic-bezier(.22,.61,.36,1), height 1s cubic-bezier(.22,.61,.36,1);
+  }
+  .asEmbed{
+    position:absolute !important; z-index:71 !important; inset:0 !important; margin:auto !important;
+    width:100% !important; height:100% !important; object-fit:contain !important;
+    left:auto !important; top:auto !important; transition:none !important;
+  }
+
+  /* App y grid */
+  #app{position:absolute;inset:0;padding:84px 22px 50px 22px;overflow:auto}
+  .grid{display:grid;gap:20px;place-items:center;grid-template-columns:repeat(3,1fr);min-height:100%}
+  @media (max-width:1400px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:720px){.grid{grid-template-columns:1fr}}
+
+  .mock{min-width:320px;max-height:95%;background:#000;border-radius:22px;overflow:hidden;
+        box-shadow:0 36px 72px -28px rgba(0,0,0,.7);
+        opacity:0;transform:translateY(16px) scale(.92);
+        transition:transform .6s cubic-bezier(.22,.61,.36,1),opacity .6s ease;
+        position:relative}
+  .mock.visible{opacity:1;transform:translateY(0) scale(1)}
+
+  .wrap{aspect-ratio:4/5;width:100%;display:flex;align-items:center;justify-content:center;background:#111;position:relative}
+  .card{width:1080px;height:1350px;position:absolute;background:#000;border-radius:20px;overflow:hidden;transform-origin:center;
+        border:1px solid #1f1f1f}
+
+  /* ===== Marco Instagram (mejorado) ===== */
+  .ig{position:absolute;inset:0;display:flex;flex-direction:column;background:#000}
+
+  .ig-header{height:120px;display:flex;align-items:center;gap:18px;padding:0 32px;background:#000;
+             border-bottom:1px solid #151515}
+  .ig-avatar{width:70px;height:70px;border-radius:50%;background:#0a0a0a;flex:0 0 auto;overflow:hidden;box-shadow:0 0 0 2px #0f0f0f}
+  .ig-avatar img{width:100%;height:100%;object-fit:cover;filter:drop-shadow(0 0 12px rgba(204,255,0,.35))}
+  .ig-user{display:flex;flex-direction:column}
+  .ig-user .name{font-weight:900;font-size:40px;letter-spacing:-.3px;color:var(--brand);text-shadow:0 0 18px rgba(204,255,0,.25)}
+  .ig-user .meta{font-size:26px;color:#bfbfbf}
+  .ig-more{margin-left:auto;display:flex;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#6f6f6f}
+
+  .ig-media{position:relative;flex:1;min-height:0;background:#000}
+  .ig-media .ph{
+    position:absolute;inset:0;display:block;width:100%;height:100%;
+    object-fit:cover;
+    background:#000;
+  }
+
+  .ig-actions{height:140px;display:flex;align-items:center;gap:28px;padding:0 32px;border-top:1px solid #151515;background:#000}
+  .ig-actions .btn{
+    width:64px;height:64px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:#0f0f0f;border:1px solid #1f1f1f;
+    box-shadow:0 0 0 2px rgba(204,255,0,.05) inset, 0 8px 18px -10px rgba(0,0,0,.7)
+  }
+  .ig-actions svg{width:30px;height:30px;stroke:var(--brand);stroke-width:2;fill:none;filter:drop-shadow(0 0 8px rgba(204,255,0,.35))}
+  .ig-likes{margin-left:auto;font-size:28px;color:#d9d9d9}
+
+  .ig-caption{padding:26px 32px 40px 32px;font-size:30px;line-height:1.35;color:#e8e8e8;background:#000}
+  .ig-caption strong{color:#fafafa}
+</style>
+</head>
+<body>
+
+<div id="version">TESTING • v2025-11-13T03:14Z • v21</div>
+
+<header id="top">
+  <div id="host"></div>
+</header>
+
+<div id="particles"></div>
+
+<img id="logo" src="logo.svg" alt="logo" />
+
+<section id="landing" aria-label="Pantalla inicial">
+  <div id="fusion">
+    <input id="url" type="text" placeholder="https://example.org/demo" />
+    <button id="magic" type="button" aria-label="Magic">
+      <img id="btnMark" src="mark.svg" alt="" />
+    </button>
+  </div>
+</section>
+
+<!-- círculo (el ícono volador se ancla dentro) -->
+<div id="morphPill"></div>
+
+<main id="app" tabindex="-1" aria-label="Lienzo de tarjetas">
+  <div id="grid" class="grid">
+    <!-- A -->
+    <div id="mA" class="mock" data-key="A">
+      <div class="wrap"><div id="cA" class="card">
+        <div class="ig">
+          <div class="ig-header">
+            <div class="ig-avatar"><img src="mark.svg" alt="sentient"></div>
+            <div class="ig-user">
+              <div class="name">sentient</div>
+              <div class="meta">Neon • ahora</div>
+            </div>
+            <div class="ig-more"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          </div>
+          <div class="ig-media">
+            <img class="ph" src="https://images.pexels.com/photos/2102416/pexels-photo-2102416.jpeg?auto=compress&cs=tinysrgb&w=1920" alt="">
+          </div>
+          <div class="ig-actions">
+            <button class="btn" aria-label="Me gusta">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-4.35-9-7.35C1.5 12.15 1 9.5 3 7.5s5-2 7 0l2 2 2-2c2-2 5-2 7 0s1.5 4.65 0 6.15C18 16.65 12 21 12 21z"/></svg>
+            </button>
+            <button class="btn" aria-label="Comentar">
+              <svg viewBox="0 0 24 24"><path d="M21 12c0 4.418-4.477 8-10 8-1.392 0-2.711-.216-3.91-.61L3 21l1.699-3.398C3.644 16.386 3 14.764 3 13c0-4.418 4.477-8 10-8s8 3.582 8 7z"/></svg>
+            </button>
+            <div class="ig-likes">2,348 likes</div>
+          </div>
+          <div class="ig-caption">
+            <strong>sentient</strong> Simulación exacta 4:5, imagen sin bandas, acento neon y avatar con <code>mark.svg</code>.
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- B -->
+    <div id="mB" class="mock" data-key="B">
+      <div class="wrap"><div id="cB" class="card">
+        <div class="ig">
+          <div class="ig-header">
+            <div class="ig-avatar"><img src="mark.svg" alt="sentient"></div>
+            <div class="ig-user">
+              <div class="name">sentient</div>
+              <div class="meta">Remix • 1h</div>
+            </div>
+            <div class="ig-more"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          </div>
+          <div class="ig-media">
+            <img class="ph" src="https://images.pexels.com/photos/5952738/pexels-photo-5952738.jpeg?auto=compress&cs=tinysrgb&w=1920" alt="">
+          </div>
+          <div class="ig-actions">
+            <button class="btn" aria-label="Me gusta">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-4.35-9-7.35C1.5 12.15 1 9.5 3 7.5s5-2 7 0l2 2 2-2c2-2 5-2 7 0s1.5 4.65 0 6.15C18 16.65 12 21 12 21z"/></svg>
+            </button>
+            <button class="btn" aria-label="Comentar">
+              <svg viewBox="0 0 24 24"><path d="M21 12c0 4.418-4.477 8-10 8-1.392 0-2.711-.216-3.91-.61L3 21l1.699-3.398C3.644 16.386 3 14.764 3 13c0-4.418 4.477-8 10-8s8 3.582 8 7z"/></svg>
+            </button>
+            <div class="ig-likes">1,104 likes</div>
+          </div>
+          <div class="ig-caption">
+            <strong>sentient</strong> Marco pulido, iconos vectoriales neon y tipografía consistente para un mock creíble.
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- C -->
+    <div id="mC" class="mock" data-key="C">
+      <div class="wrap"><div id="cC" class="card">
+        <div class="ig">
+          <div class="ig-header">
+            <div class="ig-avatar"><img src="mark.svg" alt="sentient"></div>
+            <div class="ig-user">
+              <div class="name">sentient</div>
+              <div class="meta">Curated • 2h</div>
+            </div>
+            <div class="ig-more"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          </div>
+          <div class="ig-media">
+            <img class="ph" src="https://images.pexels.com/photos/17484901/pexels-photo-17484901.png?auto=compress&cs=tinysrgb&w=1920" alt="">
+          </div>
+          <div class="ig-actions">
+            <button class="btn" aria-label="Me gusta">
+              <svg viewBox="0 0 24 24"><path d="M12 21s-6-4.35-9-7.35C1.5 12.15 1 9.5 3 7.5s5-2 7 0l2 2 2-2c2-2 5-2 7 0s1.5 4.65 0 6.15C18 16.65 12 21 12 21z"/></svg>
+            </button>
+            <button class="btn" aria-label="Comentar">
+              <svg viewBox="0 0 24 24"><path d="M21 12c0 4.418-4.477 8-10 8-1.392 0-2.711-.216-3.91-.61L3 21l1.699-3.398C3.644 16.386 3 14.764 3 13c0-4.418 4.477-8 10-8s8 3.582 8 7z"/></svg>
+            </button>
+            <div class="ig-likes">987 likes</div>
+          </div>
+          <div class="ig-caption">
+            <strong>sentient</strong> Tres variantes homogéneas, listas para conectar a tu pipeline real.
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+  /* tiempos y física */
+  const API_MS_DEF  = 10000, ACCEL_MS=1900, EXP_MS=1400;
+  const BASE_G=2600, END_G_MULT=50.0, OMEGA_MIN=0.0002, OMEGA_MAX=0.0002, OMEGA_GAIN=15.0;
+  let canvasRemoved=false;
+
+  /* p5 partículas */
+  let sketch = new p5(p=>{
+    let W=0,H=0, COUNT=300;
+    let r,a,vr,x,y,done,vx,vy,w0;
+    const EPS=11, VMAX_R=3.2, VMAX_T=100.05;
+    let gravityStart=0, gravityEnd=0, mode='ambient', accel=false;
+    let explodeStart=0, explodeEnd=0, explodeResolve=null;
+
+    const center = ()=>({x: innerWidth/2, y: innerHeight/2});
+    const clamp01=t=>t<0?0:t>1?1:t;
+    const easeIn=t=>t*t;
+    const gProgress=()=>!gravityStart||!gravityEnd?0:clamp01((performance.now()-gravityStart)/(gravityEnd-gravityStart));
+
+    function alloc(){ r=new Float32Array(COUNT); a=new Float32Array(COUNT); vr=new Float32Array(COUNT);
+      w0=new Float32Array(COUNT); x=new Float32Array(COUNT); y=new Float32Array(COUNT);
+      done=new Uint8Array(COUNT); vx=new Float32Array(COUNT); vy=new Float32Array(COUNT); }
+    function reseed(){
+      const c=center(), Rmax=Math.hypot(W,H)*0.55;
+      for(let i=0;i<COUNT;i++){
+        const u=Math.random();
+        r[i]=Math.sqrt(u)*Rmax; a[i]=Math.random()*Math.PI*2;
+        w0[i]=OMEGA_MIN+Math.random()*(OMEGA_MAX-OMEGA_MIN);
+        vr[i]=0; done[i]=0;
+        x[i]=c.x + r[i]*Math.cos(a[i]); y[i]=c.y + r[i]*Math.sin(a[i]);
+        vx[i]=0; vy[i]=0;
+      }
+    }
+    function stepAmbient(i,dt){
+      a[i]+=w0[i]*dt; const c=center();
+      x[i]=c.x + r[i]*Math.cos(a[i]); y[i]=c.y + r[i]*Math.sin(a[i]);
+    }
+    function stepGravity(i,dt,t){
+      if(done[i]) return;
+      const c=center(), rr=Math.max(r[i],0.001);
+      const G=BASE_G*(1+END_G_MULT*easeIn(t))*(accel?4.0:1.0);
+      const ar=-G/(rr*rr+EPS*EPS);
+      vr[i]+=ar*dt; if(vr[i]<-VMAX_R) vr[i]=-VMAX_R;
+      let w=w0[i]*(1+OMEGA_GAIN*easeIn(t)); if(w>VMAX_T) w=VMAX_T;
+      a[i]+=w*dt; r[i]+=vr[i]*dt;
+      if(r[i]<=0.8){ r[i]=0; done[i]=1; const cc=center(); x[i]=cc.x; y[i]=cc.y; return }
+      x[i]=c.x + r[i]*Math.cos(a[i]); y[i]=c.y + r[i]*Math.sin(a[i]);
+    }
+    function stepExplode(i,dt){ x[i]+=vx[i]*dt; y[i]+=vy[i]*dt; vx[i]*=0.992; vy[i]*=0.992 }
+
+    p.setup=()=>{
+      const host=document.getElementById('particles');
+      const cnv=p.createCanvas(innerWidth,innerHeight); cnv.parent(host||document.body);
+      p.pixelDensity(1); W=p.width; H=p.height; alloc(); reseed(); p.clear();
+    };
+    p.windowResized=()=>{
+      if(canvasRemoved) return;
+      p.resizeCanvas(innerWidth,innerHeight); W=p.width; H=p.height; p.clear();
+      const c=center(); for(let i=0;i<COUNT;i++){ x[i]=c.x + r[i]*Math.cos(a[i]); y[i]=c.y + r[i]*Math.sin(a[i]) }
+    };
+
+    let last=performance.now();
+    p.draw=()=>{
+      if(canvasRemoved){ p.noLoop(); return }
+      const now=performance.now();
+      let dt=(now-last)/16.6667; if(dt>3) dt=3; if(dt<0.5) dt=0.5; last=now;
+      p.clear(); const t=gProgress();
+
+      if(mode==='ambient' || mode==='gravity'){
+        p.noStroke(); p.fill(204,255,0,190);
+        for(let i=0;i<COUNT;i++){
+          if(mode==='ambient') stepAmbient(i,dt); else stepGravity(i,dt,t);
+          p.circle(x[i],y[i],3.2);
+        }
+      }else if(mode==='explode'){
+        const k=(now-explodeStart)/(explodeEnd-explodeStart), alpha=1-Math.max(0,Math.min(1,k));
+        p.noStroke(); p.fill(204,255,0,Math.floor(190*alpha));
+        for(let i=0;i<COUNT;i++){ stepExplode(i,dt); p.circle(x[i],y[i],3.2) }
+        if(now>=explodeEnd){ mode='dead'; if(explodeResolve){ const r=explodeResolve; explodeResolve=null; r() } }
+      }
+    };
+
+    p.setAmbient=()=>{ mode='ambient' };
+    p.startGravity=ms=>{ gravityStart=performance.now(); gravityEnd=gravityStart+ms; mode='gravity'; accel=false };
+    p.accelerate=()=>{ accel=true; const now=performance.now(); const prog=(now-gravityStart)/(gravityEnd-gravityStart); gravityStart=now-prog*ACCEL_MS; gravityEnd=now+ACCEL_MS };
+    p.explode=ms=>{
+      const c=center();
+      for(let i=0;i<COUNT;i++){
+        x[i]=c.x; y[i]=c.y; r[i]=0; done[i]=1;
+        const ang=Math.random()*Math.PI*2, spd=6+Math.random()*12;
+        vx[i]=Math.cos(ang)*spd; vy[i]=Math.sin(ang)*spd;
+      }
+      explodeStart=performance.now(); explodeEnd=explodeStart+ms; mode='explode';
+      return new Promise(res=>{ explodeResolve=res });
+    };
+    p.killNow=()=>{ p.noLoop(); try{ p.remove() }catch{} };
+  });
+
+  function particlesAmbient(){ sketch.setAmbient() }
+  function particlesStartGravity(ms){ sketch.startGravity(ms) }
+  function particlesAccelerate(){ sketch.accelerate() }
+  function particlesExplodeThenKill(ms){
+    const pill=document.getElementById('morphPill'); if(pill){ pill.style.opacity='0' }
+    return sketch.explode(ms).then(()=>{
+      if(canvasRemoved) return;
+      sketch.killNow(); const host=document.getElementById('particles'); if(host) host.innerHTML='';
+      canvasRemoved=true; if(pill){ pill.style.display='none' }
+    });
+  }
+
+  /* utils */
+  const $=id=>document.getElementById(id);
+  const rect=el=>{ const r=el.getBoundingClientRect(); return {left:r.left,top:r.top,width:r.width,height:r.height} };
+  const hostFrom=seed=>{ try{ return new URL(seed).host||seed }catch{ return seed } };
+
+  const state={ started:false, apiEnd:0 };
+
+  function fit(){
+    ['A','B','C'].forEach(k=>{
+      const m=$('m'+k), wrap=m&&m.querySelector('.wrap'), card=$('c'+k);
+      if(!wrap||!card) return;
+      const s=Math.min(wrap.clientWidth/1080, wrap.clientHeight/1350);
+      card.style.transform=`scale(${s})`;
+    });
+  }
+
+  function revealSequence(){
+    const seq=['A','B','C']; let i=0;
+    return new Promise(resolve=>{
+      (function step(){
+        if(i>=seq.length){ resolve(); return }
+        const k=seq[i++], el=$('m'+k);
+        if(!el){ step(); return }
+        el.style.willChange='transform, opacity';
+        requestAnimationFrame(()=>{ el.classList.add('visible'); setTimeout(()=>{ el.style.willChange='auto' }, 600) });
+        setTimeout(step,220);
+      })();
+    });
+  }
+
+  /* Ícono único: vuela y se ancla dentro del círculo */
+  function createAndFlyIcon(src, fromRect, targetSizePx, pill){
+    const img=document.createElement('img');
+    img.id='flyMark'; img.src=src; img.alt='';
+    document.body.appendChild(img);
+
+    const startW=36, startH=36;
+    img.style.left=(fromRect.left + fromRect.width/2 - startW/2)+'px';
+    img.style.top =(fromRect.top  + fromRect.height/2 - startH/2)+'px';
+    img.style.width=startW+'px'; img.style.height=startH+'px';
+
+    void img.offsetWidth;
+
+    const vw=innerWidth, vh=innerHeight;
+    const targetLeft = vw/2 - targetSizePx/2;
+    const targetTop  = vh/2 - targetSizePx/2;
+
+    img.style.left = targetLeft+'px';
+    img.style.top  = targetTop +'px';
+    img.style.width= targetSizePx+'px';
+    img.style.height=targetSizePx+'px';
+
+    return new Promise(res=>{
+      img.addEventListener('transitionend', ()=>{
+        pill.appendChild(img);
+        img.classList.add('asEmbed');
+        res(img);
+      }, {once:true});
+    });
+  }
+
+  async function runMorph(seed){
+    const pill=$('morphPill'), fusion=$('fusion'); if(!pill||!fusion) return;
+
+    // desvanecer logo y preparar pill
+    const logo=$('logo'); if(logo){ logo.style.opacity='0' }
+    const r=rect(fusion);
+    pill.style.display='flex';
+    pill.style.width = r.width+'px';
+    pill.style.height= r.height+'px';
+    pill.style.borderRadius = (r.height/2)+'px';
+    pill.style.transform = 'translate(-50%,-50%) scale(1)';
+    pill.style.aspectRatio='1/1';
+
+    particlesAmbient();
+
+    // Ícono único desde el botón
+    const btnIcon=$('btnMark'); const btnRect=btnIcon?btnIcon.getBoundingClientRect():rect($('magic')||fusion);
+    const targetSize=r.height; const flyPromise=createAndFlyIcon('mark.svg', btnRect, targetSize, pill);
+
+    fusion.style.visibility='hidden';
+
+    // física timeline
+    const now=performance.now(); state.apiEnd = now + API_MS_DEF; particlesStartGravity(API_MS_DEF);
+
+    // morph a círculo
+    void pill.offsetWidth;
+    const circleDone=new Promise(res=>{
+      const onEnd=(ev)=>{ if(ev.propertyName==='width' || ev.propertyName==='height'){ pill.removeEventListener('transitionend', onEnd); res() } };
+      pill.addEventListener('transitionend', onEnd);
+    });
+    pill.style.width = r.height+'px';
+    pill.style.height= r.height+'px';
+    pill.style.borderRadius=(r.height/2)+'px';
+
+    await Promise.all([circleDone, flyPromise]);
+
+    // esperar “API”
+    const remaining=Math.max(300, state.apiEnd - performance.now());
+    await new Promise(res=>setTimeout(res, remaining));
+
+    // explosión y cleanup
+    await particlesExplodeThenKill(EXP_MS);
+
+    // URL centrada en top
+    const seedHost=hostFrom(seed);
+    const hostLabel=$('host'); hostLabel.textContent=seedHost; hostLabel.style.opacity='1'; hostLabel.style.transform='translateY(0)';
+
+    // ocultar landing
+    const landing=$('landing'); if(landing){ landing.style.opacity='0'; landing.style.pointerEvents='none'; setTimeout(()=>{ landing.style.display='none' },320) }
+
+    // mostrar cards
+    await revealSequence();
+    fit();
+  }
+
+  function start(){
+    if(state.started) return;
+    state.started=true;
+    const seed=($('url')?.value||'https://example.org/demo').trim();
+    runMorph(seed);
+  }
+
+  function finishNow(){
+    if(!state.started) return;
+    const now=performance.now();
+    const left = Math.max(0, state.apiEnd - now);
+    if(left <= ACCEL_MS) return;
+    state.apiEnd = now + ACCEL_MS; particlesAccelerate();
+  }
+  window.finishNow = finishNow;
+
+  /* Listeners */
+  $('magic')?.addEventListener('click', start);
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'url') start();
+    if (e.key==='f' || e.key==='F') finishNow();
+  });
+  window.addEventListener('resize', fit, {passive:true});
+  fit();
+});
+</script>
+</body>
+</html>
