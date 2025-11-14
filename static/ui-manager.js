@@ -90,7 +90,7 @@ export const UIManager = {
     // Fondo (Aplica para A, B, C, D)
     const imgEl = c.querySelector('.card-bg');
     if (d.bg && d.bg.length > 0) {
-      // CORRECCIÓN: Volver a usar el proxy local (/api/proxy_image) para mayor estabilidad de carga.
+      // Usar el proxy local para mayor estabilidad de carga.
       const proxyUrl = `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
       imgEl.src = d.bg.startsWith('data:') ? d.bg : proxyUrl;
     } else {

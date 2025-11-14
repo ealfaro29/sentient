@@ -40,46 +40,7 @@ export const DataHandler = {
     }
   },
   
-  // FUNCIÓN NUEVA: Obtener prompt detallado de ChatGPT (Backend)
-  async _fetchImagePrompt(title, subtitle) {
-    console.log(`[Frontend: Prompt] Llamando a /api/generate_prompt para Title: ${title}`);
-    if (!title) return '';
-    try {
-      const res = await fetch('/api/generate_prompt', {
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, subtitle })
-      });
-      if (!res.ok) throw new Error(`Prompt generation failed with status ${res.status}.`);
-      const data = await res.json();
-      console.log(`[Frontend: Prompt] Prompt recibido: ${data.prompt.substring(0, 50)}...`);
-      return data.prompt || ''; 
-    } catch (e) {
-      console.error('[Prompt generation error]', e);
-      return '';
-    }
-  },
-  
-  // FUNCIÓN EXISTENTE: Generación de imágenes para la Card D
-  async _fetchGeminiImage(prompt) {
-    console.log(`[Frontend: Gemini] Llamando a /api/generate_image con prompt: ${prompt.substring(0, 50)}...`);
-    if (!prompt) return '';
-    try {
-      const res = await fetch('/api/generate_image', {
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-      if (!res.ok) throw new Error(`Gemini image generation failed with status ${res.status}.`);
-      const data = await res.json();
-      const imageUrl = data.imageUrl;
-      console.log(`[Frontend: Gemini] URL final de Gemini recibida (vacía si falló): ${imageUrl || 'NONE'}`);
-      return imageUrl || ''; 
-    } catch (e) {
-      console.error('[Gemini image error]', e);
-      return '';
-    }
-  },
+  // FUNCIONES DE GENERACIÓN DE IMAGEN ELIMINADAS
   
   finalizeUi: async function(app, url, data) {
     
@@ -93,31 +54,15 @@ export const DataHandler = {
     const keywords = data.ai_content?.image_keywords;
     const fallbackQuery = (Array.isArray(keywords) && keywords.length > 0 ? keywords.join(' ') : articleTitle) || 'latest news';
     
-    // 1. Preparar el prompt para la imagen generativa de Card D (Nerd)
-    const d_variant = variantsData?.D || { title: articleTitle, subtitle: '' }; 
-    const promptTitle = d_variant.title;
-    const promptSubtitle = d_variant.subtitle;
-    
-    // 2. Ejecutar tareas asíncronas en paralelo (Generar Prompt + Buscar Pexels)
-    const detailedPromptPromise = this._fetchImagePrompt(promptTitle, promptSubtitle);
-    const pexelsUrlsPromise = this._fetchPexelsImage(fallbackQuery, 3);
-    
-    // Esperamos ambas tareas
-    const [prompt, pexelsUrls] = await Promise.all([detailedPromptPromise, pexelsUrlsPromise]);
-
-    // 3. Generación de Imagen (Solo si el prompt fue exitoso)
-    let generatedUrl = '';
-    if (prompt) {
-        generatedUrl = await this._fetchGeminiImage(prompt);
-    } else {
-        console.warn("[Frontend: Gemini] No se generó prompt, saltando _fetchGeminiImage.");
-    }
+    // 1. Ejecutar tareas asíncronas para obtener 3 imágenes de Pexels (B, C, D)
+    const pexelsUrls = await this._fetchPexelsImage(fallbackQuery, 3);
     
     // Asignación de imágenes de Pexels
     const pexelImg1 = pexelsUrls[0];
-    const pexelImg2 = pexelsUrls[1] || pexelImg1; // Respaldo para C
+    const pexelImg2 = pexelsUrls[1] || pexelImg1; 
+    const pexelImg3 = pexelsUrls[2] || pexelImg1; // Imagen para D
     
-    // 4. Lógica de Asignación de Imágenes
+    // 2. Lógica de Asignación de Imágenes (A, B, C, D usan Pexels/Artículo)
     
     // Card A: Primaria o PexelsImg1
     if (primaryImageUrl) {
@@ -140,15 +85,12 @@ export const DataHandler = {
         console.log("[Frontend: FINAL] Card C: Usando PexelsImg2.");
     }
     
-    // Card D: ¡IMAGEN GENERADA! (con PexelsImg1 como respaldo)
-    if (generatedUrl) {
-        app.state.data.D.bg = generatedUrl;
-        console.log("[Frontend: FINAL] Card D: Usando imagen generada por Gemini.");
-    } else if (pexelImg1) {
-        app.state.data.D.bg = pexelImg1;
-        console.log("[Frontend: FINAL] Card D: Usando PexelsImg1 como respaldo.");
+    // Card D: PexelsImg3 (Igual que B y C)
+    if (pexelImg3) {
+        app.state.data.D.bg = pexelImg3;
+        console.log("[Frontend: FINAL] Card D: Usando PexelsImg3.");
     } else {
-        console.log("[Frontend: FINAL] Card D: No hay imagen generada ni respaldo de Pexels.");
+        console.log("[Frontend: FINAL] Card D: No hay respaldo de Pexels para D.");
     }
     
     // Poblar títulos y subtítulos
