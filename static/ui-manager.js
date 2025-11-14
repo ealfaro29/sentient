@@ -213,28 +213,9 @@ export const UIManager = {
       if (el) el.onclick = () => app.switchVar(v);
     });
 
-    const up = () => this.renderCard(app, app.state.active);
+    // --- EVENTOS DE CONTROLES (blur, contrast, iUrl, iFile) ELIMINADOS ---
 
-    // Controles... (rest of controls logic remains the same)
-
-    if (app.els.iUrl) app.els.iUrl.oninput = (e) => { app.state.data[app.state.active].bg = e.target.value; up(); };
-    if (app.els.blur) app.els.blur.oninput = (e) => { app.state.data[app.state.active].blur = e.target.value; up(); };
-    if (app.els.contrast) app.els.contrast.oninput = (e) => { app.state.data[app.state.active].contrast = e.target.value; up(); };
-
-    if (app.els.iFile) {
-      app.els.iFile.onchange = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          app.state.data[app.state.active].bg = reader.result;
-          up();
-        };
-        reader.readAsDataURL(file);
-      };
-    }
-
-    // LÓGICA DEL CONTROL DE COLOR
+    // LÓGICA DEL CONTROL DE COLOR (SE MANTIENE)
     
     // 1. Crear el elemento UNA VEZ
     if (!app.els.colorPickerDot) {

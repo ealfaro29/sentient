@@ -6,22 +6,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 export const DataHandler = {
   
-  async loadInitialPlaceholders(app) {
-    try {
-      const res = await fetch('/api/initial_images');
-      if (!res.ok) throw new Error('Failed /api/initial_images');
-      const data = await res.json();
-      if (data.A) app.state.data.A.bg = data.A;
-      if (data.B) app.state.data.B.bg = data.B;
-      if (data.C) app.state.data.C.bg = data.C;
-      if (data.D) app.state.data.D.bg = data.D; 
-    } catch (e) {
-      console.error('[init placeholders]', e);
-    }
-  },
-
-  // Función para obtener imágenes de Pexels
   async _fetchPexelsImage(query, count = 1) {
+    // (Esta función no cambia)
     console.log(`[Frontend: Pexels] Solicitando ${count} imágenes para query: ${query}`);
     if (!query) return [];
     try {
@@ -40,8 +26,6 @@ export const DataHandler = {
     }
   },
   
-  // FUNCIONES DE GENERACIÓN DE IMAGEN ELIMINADAS
-  
   finalizeUi: async function(app, url, data) {
     
     app.setAppState('APP'); 
@@ -50,50 +34,28 @@ export const DataHandler = {
     const primaryImageUrl = data.images?.a;
     const variantsData = data.ai_content?.variants; 
 
-    // Usar las palabras clave refinadas de la IA si están disponibles, sino el título
     const keywords = data.ai_content?.image_keywords;
     const fallbackQuery = (Array.isArray(keywords) && keywords.length > 0 ? keywords.join(' ') : articleTitle) || 'latest news';
     
-    // 1. Ejecutar tareas asíncronas para obtener 3 imágenes de Pexels (B, C, D)
-    const pexelsUrls = await this._fetchPexelsImage(fallbackQuery, 3);
+    const pexelsUrls = await this._fetchPexelsImage(fallbackQuery, 4);
     
-    // Asignación de imágenes de Pexels
-    const pexelImg1 = pexelsUrls[0];
+    const pexelImg1 = pexelsUrls[0] || '';
     const pexelImg2 = pexelsUrls[1] || pexelImg1; 
-    const pexelImg3 = pexelsUrls[2] || pexelImg1; // Imagen para D
+    const pexelImg3 = pexelsUrls[2] || pexelImg1; 
+    const pexelImg4 = pexelsUrls[3] || pexelImg1; 
     
-    // 2. Lógica de Asignación de Imágenes (A, B, C, D usan Pexels/Artículo)
-    
-    // Card A: Primaria o PexelsImg1
     if (primaryImageUrl) {
         app.state.data.A.bg = primaryImageUrl;
         console.log("[Frontend: FINAL] Card A: Usando imagen primaria del artículo.");
-    } else if (pexelImg1) { 
+    } else { 
         app.state.data.A.bg = pexelImg1; 
         console.log("[Frontend: FINAL] Card A: Usando PexelsImg1 como respaldo.");
     } 
 
-    // Card B: PexelsImg1
-    if (pexelImg1) {
-        app.state.data.B.bg = pexelImg1; 
-        console.log("[Frontend: FINAL] Card B: Usando PexelsImg1.");
-    }
+    app.state.data.B.bg = pexelImg2; 
+    app.state.data.C.bg = pexelImg3;
+    app.state.data.D.bg = pexelImg4;
     
-    // Card C: PexelsImg2
-    if (pexelImg2) {
-        app.state.data.C.bg = pexelImg2;
-        console.log("[Frontend: FINAL] Card C: Usando PexelsImg2.");
-    }
-    
-    // Card D: PexelsImg3 (Igual que B y C)
-    if (pexelImg3) {
-        app.state.data.D.bg = pexelImg3;
-        console.log("[Frontend: FINAL] Card D: Usando PexelsImg3.");
-    } else {
-        console.log("[Frontend: FINAL] Card D: No hay respaldo de Pexels para D.");
-    }
-    
-    // Poblar títulos y subtítulos
     const variants = variantsData || { 
       A: { title: data.original?.title || 'UNTITLED', subtitle: data.original?.subtitle || '' },
       B: { title: data.original?.title || 'UNTITLED', subtitle: data.original?.subtitle || '' },
@@ -108,7 +70,6 @@ export const DataHandler = {
     
     app.state.data.D.isPlaceholder = false;
 
-    // Renderizar tarjetas antes de la animación de revelación
     ['A','B','C','D'].forEach(v => { 
       const cardData = app.state.data[v];
       
@@ -118,19 +79,31 @@ export const DataHandler = {
       app.renderCard(v);
     });
 
+    // --- INICIO DE MODIFICACIÓN ---
+    // 1. Hacer visibles los breadcrumbs, el botón Next Y el enlace #host
+    app.els.breadcrumbs?.classList.add('visible');
+    app.els.nextBtn?.classList.add('visible');
+    app.els.host?.classList.add('visible');
+    // --- FIN DE MODIFICACIÓN ---
+
     // Secuencia visible A→B→C→D (Reveal animation)
     await this._reveal(app, 'A');
     await this._reveal(app, 'B');
     await this._reveal(app, 'C');
     await this._reveal(app, 'D'); 
 
-    app.updateTopControlBar(url, app.downloadHD.bind(app));
-    app.switchVar('A');
-
-    toast('Content processed successfully!');
+    app.updateTopControlBar(url); 
+    
+    // (Llamada a switchVar eliminada)
+    
+    // (Toast de éxito eliminado)
+    if (data.ai_error) {
+         toast(`Scrape OK, but AI failed: ${data.ai_error}`, 'warn');
+    }
   },
 
   async scrapeContent(app, url) {
+    // (Esta función no cambia)
     const res = await fetch('/api/scrape', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url })
@@ -142,77 +115,11 @@ export const DataHandler = {
   },
 
   async _reveal(app, v) {
+    // (Esta función no cambia)
     const mock = $(`mock${v}`);
     if (!mock) { console.warn('[reveal] missing', v); return; }
     mock.classList.add('visible-card');
     await sleep(160);
-  },
-
-  async _failToLanding(app, failedUrl, msg) {
-    toast(msg || 'Failed.', 'error');
-    
-    try { 
-      await this.showFallback(app, failedUrl); 
-    } catch (e) {
-      console.error("Error al mostrar fallback:", e);
-      app.setAppState('LANDING'); 
-    }
-  },
-
-  async showFallback(app, failedUrl) {
-    app.els.topControlBar?.classList.add('hidden');
-    
-    app.els.fbModal?.classList.remove('hidden'); 
-
-    if (app.els.fbMsg)   app.els.fbMsg.innerHTML = 'Scraping failed. Analyzing URL to find similar sources...';
-    if (app.els.fbList)  app.els.fbList.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-dim);"><i data-lucide="loader-2" class="spin" style="width:32px; height:32px; opacity:0.5;"></i></div>';
-    window.lucide?.createIcons?.();
-
-    try {
-      const res = await fetch('/api/search_alternatives', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: failedUrl })
-      });
-      const data = await res.json();
-      const q = data.query || 'latest news';
-      if (app.els.fbGoogle) app.els.fbGoogle.href = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
-
-      if (!data.results || data.results.length === 0) {
-        if (app.els.fbMsg) app.els.fbMsg.innerHTML = `Couldn't find direct alternatives for <b>"${q}"</b>. Try the Google button below.`;
-        if (app.els.fbList) app.els.fbList.innerHTML = '<div style="text-align:center; padding:20px; opacity:0.6; font-style:italic;">No matches found.</div>';
-        return;
-      }
-
-      if (app.els.fbMsg) app.els.fbMsg.innerHTML = `Source blocked. Here are similar articles for: <b style="color:var(--brand)">"${q}"</b>`;
-      
-      if (app.els.fbList) {
-        app.els.fbList.innerHTML = ''; 
-        
-        data.results.forEach(r => {
-          const item = document.createElement('button'); 
-          item.className = 'fallback-item fallback-button'; 
-          item.innerHTML = `
-            <div class="text-sm font-bold mb-1 text-left">${r.title || 'No title'}</div>
-            <div class="text-xs opacity-70 mb-2 text-left">${r.snippet || ''}</div>
-            <div class="text-xs text-left underline">Use this source</div>
-          `;
-          
-          item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const newUrl = r.url;
-            if (newUrl) {
-                app.restartWithUrl(newUrl);
-            }
-          });
-          
-          app.els.fbList.appendChild(item);
-        });
-      }
-
-    } catch (err) {
-      console.error('[fallback] error', err);
-      if (app.els.fbMsg)  app.els.fbMsg.innerHTML = 'Could not build alternatives. Try Google.';
-      if (app.els.fbList) app.els.fbList.innerHTML = '';
-    }
   }
+  
 };

@@ -9,7 +9,65 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 
 /* Top bar */
 #topControlBar { gap: 12px; }
-#dlBtn { display: none; height: 34px; align-items: center; justify-content: center; padding: 0 10px; border-radius: 8px; } /* Se asegura que el botón DL esté oculto */
+
+/* --- INICIO DE MODIFICACIÓN --- */
+/* Estilos de Breadcrumbs */
+#breadcrumbs {
+  font-weight: 500;
+  user-select: none;
+  opacity: 0; 
+  transition: opacity 0.5s ease-out;
+}
+#breadcrumbs.visible {
+  opacity: 1;
+}
+
+.breadcrumb-separator {
+  color: var(--text-dim);
+  opacity: 0.5;
+  margin: 0 -4px;
+}
+.breadcrumb-step {
+  color: var(--text-dim);
+  opacity: 0.5;
+  transition: all 0.2s ease;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+.breadcrumb-step.active {
+  color: var(--brand);
+  font-weight: 700;
+  opacity: 1;
+  background-color: rgba(204, 255, 0, 0.1);
+}
+
+/* Estilos para el nuevo botón Next */
+#nextBtn {
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+#nextBtn.visible {
+  opacity: 1;
+}
+
+
+
+
+/* 1. Regla de #host actualizada. Se eliminó 'position: fixed' */
+#host {
+  max-width: min(300px, 80vw); 
+  /* 2. Añadida opacidad y transición */
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+  /* El margen se aplica con Tailwind ('mr-24') en el HTML */
+}
+/* 3. Añadida clase .visible para #host */
+#host.visible {
+  opacity: 1;
+}
+/* --- FIN DE MODIFICACIÓN --- */
+
 
 /* Mockups + canvas */
 .canvas-wrapper { aspect-ratio: 4/5; width: 100%; height: auto; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; background: #111; }
@@ -18,6 +76,7 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .card-overlay { position: absolute; inset: 0; }
 .card-content { position: absolute; inset: 0; padding: 80px; display: flex; flex-direction: column; z-index: 2; }
 
+/* (El resto de .css no cambia) */
 .layout-standard { justify-content: flex-end; text-align: left; }
 .layout-centered { justify-content: center; align-items: center; text-align: center; }
 .layout-bold { justify-content: flex-start; padding-top: 160px; text-align: left; }
@@ -35,11 +94,10 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .layout-bold .c-title { font-size: 110px; line-height: 0.95; }
 .layout-bold .c-subtitle { font-size: 34px; }
 
-/* ESTILOS CORREGIDOS (TEXTO EDITABLE Y PLACEHOLDER) */
 [contenteditable="true"] { 
   user-select: text; 
   cursor: text; 
-  min-width: 50px; /* Asegura que se pueda hacer clic incluso si está vacío */
+  min-width: 50px; 
 }
 [contenteditable="true"]:focus { 
   outline: 3px solid var(--brand); 
@@ -49,39 +107,35 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   caret-color: var(--brand); 
   padding: 2px 5px; 
 }
-/* Estilo de foco para el Tag/Pill */
 .c-pill[contenteditable="true"] {
-  min-width: 150px; /* Ancho mínimo para el tag editable */
+  min-width: 150px; 
 }
 .c-pill[contenteditable="true"]:focus {
   outline-offset: 4px;
-  padding: 16px 48px; /* Asegura que el padding no cambie */
-  background: var(--brand); /* Mantiene el fondo */
+  padding: 16px 48px; 
+  background: var(--brand); 
 }
 
-/* Lógica de placeholder usando CSS :empty y data-attributes */
 [contenteditable="true"]:empty::before {
-  content: attr(data-placeholder); /* Muestra el texto del atributo */
+  content: attr(data-placeholder); 
   opacity: 0.5;
   font-style: italic;
-  pointer-events: none; /* Permite hacer clic "a través" del placeholder */
-  user-select: none; /* Evita que el placeholder sea seleccionado */
+  pointer-events: none; 
+  user-select: none; 
 }
 
-/* ESTILOS DE LA BOLITA DE CONTROL DE COLOR */
 #colorPickerDot {
   position: absolute;
   width: 20px;
   height: 20px;
   border-radius: 50%;
   cursor: pointer;
-  z-index: 80; /* Asegura que esté por encima de todo */
+  z-index: 80; 
   transition: all 0.2s ease-in-out;
-  border: 3px solid var(--bg-panel); /* Borde para contrastar */
+  border: 3px solid var(--bg-panel); 
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
-/* Colores dinámicos basados en data-color */
 #colorPickerDot[data-color="brand"] {
   background-color: var(--brand);
 }
@@ -106,7 +160,6 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .mockup.no-insta .insta-header, .mockup.no-insta .insta-footer { display: none !important; }
 .mockup.no-insta .canvas-wrapper { aspect-ratio: auto; flex-grow: 1; }
 
-/* Controles menos invasivos: barra inferior fija y discreta */
 .controls-grid-position {
   position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
   background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
@@ -121,7 +174,6 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   transform: translateX(-50%);
 }
 
-/* ===== ESTILOS PARA AVATAR UNIFICADO (FRAMES) ===== */
 .insta-avatar {
   width: 32px;
   height: 32px;
@@ -129,7 +181,7 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   margin-right: 0.75rem; 
   flex-shrink: 0;
   background: var(--bg-main); 
-  border: 2px solid var(--brand); /* Borde de acento sólido */
+  border: 2px solid var(--brand); 
   padding: 2px;
   overflow: hidden;
 }
@@ -140,23 +192,14 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
     background-size: 80%;
     background-position: center;
     background-repeat: no-repeat;
-    background-color: var(--brand); /* Fondo de acento sólido para el SVG */
+    background-color: var(--brand); 
     border-radius: 50%;
 }
-/* ===== FIN ESTILOS PARA AVATAR UNIFICADO ===== */
 
-
-/* ===== INICIO DE ESTILOS AÑADIDOS DE 'Fixed Visuals to use.html' (Landing) ===== */
-
-  /* Top bar con URL centrada (modificado para #topControlBar #host) */
-  #topControlBar #host{
-    font-weight:900;color:#fff;opacity:0;transform:translateY(-4px);
-    transition:opacity .6s ease, transform .6s ease;letter-spacing:.2px
-  }
+ 
 
   #particles{position:fixed;inset:0;z-index:40;pointer-events:none}
 
-  /* Logo (400px, se desvanece al submit) */
   #logo{
     position:fixed;left:50%;top:calc(50% - 120px);
     transform:translate(-50%,-50%);
@@ -165,9 +208,8 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
     pointer-events:none;user-select:none
   }
 
-  /* Landing */
   #landing{position:fixed;inset:0;z-index:50;background:transparent;opacity:1;pointer-events:auto; display: flex; align-items: center; justify-content: center;}
-  #fusion{position:relative;display:flex;align-items:center;height:60px;gap:0;z-index:55} /* Ajustado position y transform */
+  #fusion{position:relative;display:flex;align-items:center;height:60px;gap:0;z-index:55} 
   #url{width:min(520px,56vw);height:60px;background:#000;border:1px solid var(--brand);color:#fff;border-radius:999px 0 0 999px;padding:0 16px;font-size:16px;outline:none}
   #magic{
     height:60px;min-width:68px;display:inline-flex;align-items:center;justify-content:center;
@@ -177,7 +219,6 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   #magic:active{transform:translateY(1px)}
   #magic img{width:36px;height:36px;display:block;pointer-events:none;user-select:none}
 
-  /* Círculo morph */
   #morphPill{
     position:fixed;z-index:70;display:none;align-items:center;justify-content:center;
     background:var(--brand);color:#000;font-weight:900;letter-spacing:.2px;border:1px solid var(--brand);
@@ -190,7 +231,6 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
     border-radius:999px
   }
 
-  /* Ícono único que viaja y luego se ancla dentro del círculo */
   #flyMark{
     position:fixed;z-index:71;left:0;top:0;width:36px;height:36px;pointer-events:none;user-select:none;
     transform-origin:center center;
@@ -202,9 +242,7 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
     width:100% !important; height:100% !important; object-fit:contain !important;
     left:auto !important; top:auto !important; transition:none !important;
   }
-/* ===== FIN DE ESTILOS AÑADIDOS ===== */
 
-/* ===== ESTILOS PARA FALLBACK MODAL (MODIFICADOS PARA ASPECTO DE BOTÓN) ===== */
 .fallback-item {
   padding: 12px; 
   border-bottom: 1px solid var(--border);
@@ -237,11 +275,8 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-/* ===== FIN ESTILOS PARA FALLBACK MODAL ===== */
 
-/* ===== INICIO ESTILOS PULSO (NUEVO) ===== */
 .is-pulsing {
-  /* El transform original es: translate(-50%, -50%) scale(1) */
   animation: pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -255,4 +290,3 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
     opacity: 0.8;
   }
 }
-/* ===== FIN ESTILOS PULSO ===== */

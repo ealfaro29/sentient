@@ -32,14 +32,13 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 # Claves
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
-PEXELS_API_KEY = os.getenv("PEXELS_API_KEY") 
+PEXELS_API_KEY = os.getenv("PEXELS_API_KEY") # Clave de Pexels (NECESARIA)
 GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
 GOOGLE_SEARCH_CX = os.getenv("GOOGLE_SEARCH_CX")
 SCRAPE_DO_KEY = os.getenv("SCRAPE_DO_KEY")  # Clave de Scrape.do
 
 # --- CONFIGURACIÓN DE GOOGLE LIMPIA ---
-# La lógica de Vertex AI (GEMINI_API_KEY, VERTEX_CREDENTIALS) ha sido eliminada.
-SERVICE_ACCOUNT_FILE = 'service-account-key.json' # Se mantiene la referencia pero sin la lógica de carga para evitar errores de archivo faltante.
+SERVICE_ACCOUNT_FILE = 'service-account-key.json' 
 
 if OPENAI_API_KEY and OpenAI is not None:
     try:
@@ -63,6 +62,8 @@ BROWSER_HEADERS = {
 # --------------------------------------------------------------------
 # Utilidades
 # --------------------------------------------------------------------
+
+# --- FUNCIONES DE PEXELS (RESTAURADAS) ---
 def clean_pexels_query(query: str) -> str:
     stop_words = set([
         'the', 'a', 'an', 'is', 'are', 'was', 'were', 'by', 'of', 'in',
@@ -95,27 +96,47 @@ def get_pexels_images(query: str, count: int = 4):
 
 # Funciones generate_detailed_image_prompt y generate_gemini_image han sido ELIMINADAS.
 
-def get_ai_data(title: str, text: str, source: str):
+def get_ai_data(title: str = None, text: str = None, source: str = None, keywords: str = None):
     if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
         return None, "Faltan credenciales OpenAI"
+    
     try:
-        # Prompt actualizado para pedir 4 variantes incluyendo la Nerd
-        prompt_content = f"""
-        Article data:
-        TITLE: {title}
-        SOURCE: {source}
-        TEXT: {text[:3000]}
-        
-        Task:
-        Return a JSON object with three keys:
-        1. "variants": An object with 4 variations (A, B, C, D) for social media posts.
-           - A: Standard News
-           - B: Storytelling
-           - C: Breaking News
-           - D: Nerd / Technical / Deep Dive (Focus on specs, numbers, analysis)
-        2. "common_caption": A general, engaging caption for the post.
-        3. "image_keywords": A JSON list of 3-5 specific, relevant keywords from the text for searching stock photos (e.g., ["solar storm", "aurora", "sun"]).
-        """
+        if keywords:
+            # --- NUEVO PROMPT DE FALLBACK (BASADO EN KEYWORDS) ---
+            prompt_content = f"""
+            Context: The original article scrape failed.
+            Keywords from URL: {keywords}
+            SOURCE: {source or 'Unknown'}
+            
+            Task:
+            Generate content based *only* on the keywords.
+            Return a JSON object with three keys:
+            1. "variants": An object with 4 variations (A, B, C, D) for social media posts.
+               - A: Standard News
+               - B: Storytelling
+               - C: Breaking News
+               - D: Nerd / Technical / Deep Dive
+            2. "common_caption": A general, engaging caption for the post.
+            3. "image_keywords": A JSON list of 3-5 specific, relevant keywords from the context (e.g., ["solar storm", "aurora", "sun"]).
+            """
+        else:
+            # --- PROMPT ORIGINAL (BASADO EN ARTÍCULO) ---
+            prompt_content = f"""
+            Article data:
+            TITLE: {title}
+            SOURCE: {source}
+            TEXT: {text[:3000]}
+            
+            Task:
+            Return a JSON object with three keys:
+            1. "variants": An object with 4 variations (A, B, C, D) for social media posts.
+               - A: Standard News
+               - B: Storytelling
+               - C: Breaking News
+               - D: Nerd / Technical / Deep Dive (Focus on specs, numbers, analysis)
+            2. "common_caption": A general, engaging caption for the post.
+            3. "image_keywords": A JSON list of 3-5 specific, relevant keywords from the text for searching stock photos (e.g., ["solar storm", "aurora", "sun"]).
+            """
 
         run = OPENAI_CLIENT.beta.threads.create_and_run_poll(
             assistant_id=OPENAI_ASSISTANT_ID,
@@ -133,10 +154,18 @@ def get_ai_data(title: str, text: str, source: str):
         if run.status == 'completed':
             msgs = OPENAI_CLIENT.beta.threads.messages.list(thread_id=run.thread_id)
             try:
-                payload = json.loads(msgs.data[0].content[0].text.value)
+                # Limpiar el JSON de posibles bloques de código
+                text_response = msgs.data[0].content[0].text.value
+                json_match = re.search(r'```json\s*([\s\S]+?)\s*```', text_response)
+                if json_match:
+                    payload_str = json_match.group(1)
+                else:
+                    payload_str = text_response
+                
+                payload = json.loads(payload_str)
                 return payload, None
             except Exception as e:
-                return None, f"AI JSON parse error: {e}"
+                return None, f"AI JSON parse error: {e} | Response was: {msgs.data[0].content[0].text.value[:200]}"
         else:
             return None, f"Estado IA no completado: {run.status}"
     except Exception as e:
@@ -173,7 +202,8 @@ def infer_search_info(url: str):
 
 def perform_google_search(query: str, max_results: int = 5):
     if not GOOGLE_SEARCH_API_KEY or not GOOGLE_SEARCH_CX:
-        return perform_ddg_search_fallback(query, max_results)
+        # Fallback de DDG eliminado
+        return []
     try:
         url = "https://www.googleapis.com/customsearch/v1"
         params = {
@@ -184,11 +214,10 @@ def perform_google_search(query: str, max_results: int = 5):
             'fields': 'items(title,link,snippet)'
         }
         r = requests.get(url, params=params, timeout=8)
-        if r.headers.get('Content-Type', '').startswith('application/json'):
-            data = r.json()
-        else:
-            return perform_ddg_search_fallback(query, max_results)
+        if not r.headers.get('Content-Type', '').startswith('application/json'):
+             return []
 
+        data = r.json()
         results = []
         for item in data.get('items', []):
             results.append({
@@ -198,42 +227,9 @@ def perform_google_search(query: str, max_results: int = 5):
             })
         return results
     except Exception:
-        return perform_ddg_search_fallback(query, max_results)
+         return []
 
-
-def perform_ddg_search_fallback(query: str, max_results: int = 5):
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0',
-            'Referer': 'https://html.duckduckgo.com/'
-        }
-        url = f"https://html.duckduckgo.com/html/?q={quote_plus(query)}"
-        res = requests.get(url, headers=headers, timeout=8)
-        if res.status_code != 200:
-            return []
-        soup = BeautifulSoup(res.text, 'html.parser')
-        results = []
-        for result in soup.select('.result'):
-            link_tag = result.select_one('.result__a')
-            snippet_tag = result.select_one('.result__snippet')
-            if link_tag and link_tag.get('href'):
-                url_res = link_tag['href']
-                if url_res.startswith('/l/?'):
-                    try:
-                        url_res = parse_qs(urlparse(url_res).query)['uddg'][0]
-                    except Exception:
-                        pass
-                if url_res.startswith('http'):
-                    results.append({
-                        'title': link_tag.get_text(strip=True),
-                        'url': url_res,
-                        'snippet': snippet_tag.get_text(strip=True) if snippet_tag else ""
-                    })
-                    if len(results) >= max_results:
-                        break
-        return results
-    except Exception:
-        return []
+# --- perform_ddg_search_fallback ELIMINADO ---
 
 
 def domain_of(url: str) -> str:
@@ -251,21 +247,10 @@ def home():
     return app.send_static_file('index.html')
 
 
-@app.route('/api/initial_images', methods=['GET'])
-def initial_images():
-    # Consulta base para 4 imágenes de Pexels
-    images = get_pexels_images('technology AI', count=4)
-
-    # Solo usamos imágenes de Pexels. Si no hay suficientes, devolvemos cadenas vacías.
-    img_a = images[0] if len(images) >= 1 else ''
-    img_b = images[1] if len(images) >= 2 else ''
-    img_c = images[2] if len(images) >= 3 else ''
-    img_d = images[3] if len(images) >= 4 else ''
-
-    # Devolvemos A, B, C y D
-    return jsonify({"A": img_a, "B": img_b, "C": img_c, "D": img_d})
+# --- /api/initial_images ELIMINADO ---
 
 
+# --- /api/search_image (RESTAURADO) ---
 @app.route('/api/search_image', methods=['POST'])
 def search_image():
     """Endpoint para buscar una imagen en Pexels y devolver una lista de URLs."""
@@ -282,31 +267,10 @@ def search_image():
     return jsonify({'imageUrls': images}), 200
 
 
-# RUTAS DE GENERACIÓN DE IMAGEN Y PROMPT ELIMINADAS: /api/generate_prompt y /api/generate_image
+# --- RUTAS DE GENERACIÓN DE IMAGEN Y PROMPT ELIMINADAS: /api/generate_prompt y /api/generate_image ---
 
 
-@app.route('/api/search_alternatives', methods=['POST'])
-def search_alternatives():
-    payload = request.get_json(silent=True) or {}
-    failed_url = payload.get('url')
-    if not failed_url:
-        return jsonify({"error": "No URL provided"}), 400
-
-    domain, year, keywords = infer_search_info(failed_url)
-
-    if len(keywords.split()) < 3:
-        query = f"{domain} news".strip()
-        return jsonify({'query': query, 'results': perform_google_search(query)})
-
-    query1 = f"{keywords} {year}".strip()
-    results = perform_google_search(query1, max_results=6)
-
-    if not results:
-        query2 = f"{domain} {keywords}".strip()
-        results = perform_google_search(query2, max_results=6)
-        return jsonify({'query': query2, 'results': results})
-
-    return jsonify({'query': query1, 'results': results})
+# --- /api/search_alternatives ELIMINADO ---
 
 
 @app.route('/api/scrape', methods=['POST'])
@@ -320,25 +284,24 @@ def scrape():
     now = time.time()
     if url in SCRAPE_CACHE:
         cached = SCRAPE_CACHE[url]
-        if now - cached['ts'] < CACHE_DURATION:
-            return jsonify(cached['data'])
+        #   if now - cached['ts'] < CACHE_DURATION:
+        print("✅ [MODO TEST] Devolviendo resultado desde caché.")
+        return jsonify(cached['data'])
 
     try:
-        # ===== INTEGRACIÓN SCRAPE.DO =====
-        if SCRAPE_DO_KEY:
-            target_url_encoded = quote_plus(url)
-            scrape_do_url = f"http://api.scrape.do/?token={SCRAPE_DO_KEY}&url={target_url_encoded}"
-            
-            response = requests.get(scrape_do_url, timeout=60)
-            
-            if not response.ok:
-                raise RuntimeError(f"Scrape.do failed: {response.status_code} - {response.text[:200]}")
-            
-            html_content = response.text
-        else:
-            response = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
-            response.raise_for_status()
-            html_content = response.text
+        # ===== INTEGRACIÓN SCRAPE.DO (ÚNICA OPCIÓN) =====
+        if not SCRAPE_DO_KEY:
+             raise RuntimeError("Scrape.do API key (SCRAPE_DO_KEY) is not configured.")
+
+        target_url_encoded = quote_plus(url)
+        scrape_do_url = f"http://api.scrape.do/?token={SCRAPE_DO_KEY}&url={target_url_encoded}"
+        
+        response = requests.get(scrape_do_url, timeout=60)
+        
+        if not response.ok:
+            raise RuntimeError(f"Scrape.do failed: {response.status_code} - {response.text[:200]}")
+        
+        html_content = response.text
 
         if not html_content:
             raise RuntimeError("Downloaded HTML is empty")
@@ -370,7 +333,6 @@ def scrape():
         summary = art.summary if art.summary else original["subtitle"]
 
         # --- IA CALL ---
-        # Esta llamada ya devuelve 'image_keywords', que se usarán en el frontend para Pexels.
         ai_payload, ai_err = get_ai_data(title=original["title"], text=text, source=source)
         
         # --- KEYWORDS DE IMAGEN ---
@@ -380,17 +342,17 @@ def scrape():
             if isinstance(keywords, list) and len(keywords) > 0:
                 search_query = " ".join(keywords)
         
-        if not search_query:
-            search_query = clean_pexels_query(original["title"])
+        if not search_query and original["title"] != 'UNTITLED':
+            # Si la IA falla en keywords, usamos el título (limpieza simple)
+            search_query = re.sub(r'[^\w\s]', '', original["title"] or '').lower()
+
 
         # --- OBTENCIÓN DE IMÁGENES ---
-        # Solo devolvemos la imagen del artículo, el cliente gestiona los respaldos de Pexels.
         images = {}
         if top_image:
             images["a"] = top_image
         
         # --- CONSTRUCCIÓN DEL CONTENIDO FINAL ---
-        # Definimos variantes por defecto (fallback)
         fallback_variant_d = {
             "title": f"[Analysis] {original['title']}", 
             "subtitle": summary
@@ -423,7 +385,7 @@ def scrape():
         result = {
             "source": source.upper() if source else "UNKNOWN",
             "original": original,
-            "images": images,
+            "images": images, # Solo contiene 'a' si se encontró top_image
             "ai_content": {
                 "variants": final_variants,
                 "common_caption": common_caption,
@@ -436,7 +398,37 @@ def scrape():
         return jsonify(result)
 
     except Exception as e:
-        return jsonify({'error': f'scrape failed: {str(e)}'}), 500
+        # --- ¡NUEVO FLUJO DE FALLBACK! ---
+        print(f'Scrape failed: {str(e)}')
+        
+        domain, year, keywords = infer_search_info(url)
+        fallback_query = f"{domain} {keywords} {year}".strip()
+        source = domain_of(url) or 'UNKNOWN'
+
+        # Llamar a IA solo con keywords
+        ai_payload, ai_err = get_ai_data(source=source, keywords=fallback_query)
+
+        if not ai_payload:
+            # Si la IA también falla, devolver un error definitivo
+            return jsonify({'error': f'Scrape failed and AI fallback failed: {ai_err}'}), 500
+
+        # Construir una respuesta de fallback
+        fallback_title = " ".join(keywords.split()[:5])
+        fallback_subtitle = ai_payload.get('common_caption', 'Could not scrape article.')
+
+        result = {
+            "source": source.upper(),
+            "original": { "title": fallback_title, "subtitle": fallback_subtitle },
+            "images": {"a": ""}, # Sin top_image
+            "ai_content": {
+                "variants": ai_payload.get('variants', {}),
+                "common_caption": ai_payload.get('common_caption', fallback_subtitle),
+                "image_keywords": ai_payload.get('image_keywords', fallback_query.split())
+            },
+            "ai_error": ai_err # Podría ser None si la IA funcionó
+        }
+        # No guardar en caché los fallos
+        return jsonify(result)
 
 
 @app.route('/api/proxy_image', methods=['GET'])
