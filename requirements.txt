@@ -8,3 +8,4 @@ lxml_html_clean
 pillow
 playwright
 Flask-Cors
+google-auth

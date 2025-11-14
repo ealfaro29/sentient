@@ -9,6 +9,10 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, Response
 
+# --- NUEVAS IMPORTACIONES DE AUTENTICACIÓN DE GOOGLE ---
+from google.oauth2 import service_account
+from google.auth.transport.requests import Request as GoogleAuthRequest
+
 # --- IA / OpenAI ---
 OPENAI_CLIENT = None
 try:
@@ -30,10 +34,27 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 # Claves
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_ASSISTANT_ID = os.getenv("OPENAI_ASSISTANT_ID")
-PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
+PEXELS_API_KEY = os.getenv("PEXELS_API_KEY") 
 GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
 GOOGLE_SEARCH_CX = os.getenv("GOOGLE_SEARCH_CX")
 SCRAPE_DO_KEY = os.getenv("SCRAPE_DO_KEY")  # Clave de Scrape.do
+# GEMINI_API_KEY ya no se usa para la generación de imágenes con Vertex AI
+
+# --- CONFIGURACIÓN DE LA CUENTA DE SERVICIO ---
+SERVICE_ACCOUNT_FILE = 'service-account-key.json'
+VERTEX_AI_SCOPES = ['https://www.googleapis.com/auth/cloud-platform']
+VERTEX_CREDENTIALS = None
+
+if os.path.exists(SERVICE_ACCOUNT_FILE):
+    try:
+        VERTEX_CREDENTIALS = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE, scopes=VERTEX_AI_SCOPES)
+        print("✅ Autenticación (Vertex AI): Credenciales de Cuenta de Servicio cargadas.")
+    except Exception as e:
+        print(f"⚠️ ERROR: No se pudo cargar la Cuenta de Servicio (service-account-key.json): {e}")
+else:
+    print(f"❌ ERROR: El archivo '{SERVICE_ACCOUNT_FILE}' no se encontró. La generación de imágenes de Google fallará.")
+
 
 if OPENAI_API_KEY and OpenAI is not None:
     try:
@@ -42,17 +63,15 @@ if OPENAI_API_KEY and OpenAI is not None:
     except Exception as e:
         print(f"⚠️ ERROR: No se pudo iniciar el cliente OpenAI: {e}")
 
-# Caché simple en memoria para resultados de scrape
-SCRAPE_CACHE = {}
-CACHE_DURATION = 60 * 60 * 24  # 24 horas
-
-# Headers para simular navegador (Usado en proxy de imágenes)
+# ... (El resto de las configuraciones de Caché y Headers permanecen igual) ...
 BROWSER_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
     'Referer': 'https://www.google.com/',
     'Accept-Language': 'en-US,en;q=0.9',
 }
+SCRAPE_CACHE = {}
+CACHE_DURATION = 60 * 60 * 24
 
 # --------------------------------------------------------------------
 # Utilidades
@@ -76,14 +95,140 @@ def get_pexels_images(query: str, count: int = 4):
         return []
     try:
         headers = {'Authorization': PEXELS_API_KEY}
+        # Uso de la API de Pexels
         url = f'https://api.pexels.com/v1/search?query={quote_plus(search_query)}&per_page={count}&orientation=portrait'
         r = requests.get(url, headers=headers, timeout=8)
         if r.status_code == 200 and r.headers.get('content-type', '').startswith('application/json'):
             data = r.json()
+            # Extraemos la URL 'large2x' de Pexels
             return [p['src']['large2x'] for p in data.get('photos', [])]
         return []
     except Exception:
         return []
+
+# NUEVA FUNCIÓN: Generación de prompt detallado con ChatGPT
+def generate_detailed_image_prompt(title: str, subtitle: str):
+    if not OPENAI_CLIENT:
+        print("⚠️ LOG: OPENAI_CLIENT no activo para generar prompt, usando fallback.")
+        return f"A highly detailed, cinematic, photorealistic image of {title}, symbolizing {subtitle}. Digital art, 4k."
+    
+    prompt_content = f"""
+    TASK: You are an expert image prompt generator. Your goal is to create a single, highly detailed, cinematic, photorealistic prompt for an AI image generator (like Imagen or DALL-E) based on the provided technical summary. 
+    The image should be a dramatic, visual representation of the deep dive/nerd content.
+    
+    TECHNICAL SUMMARY: {title}. {subtitle}
+    
+    STYLE: Cinematic, 4K, high detail, volumetric lighting, photorealistic, metaphoric. Aspect ratio 4:5.
+    
+    OUTPUT: Return only the finalized prompt string, nothing else.
+    """
+    
+    try:
+        print(f"🚀 LOG: Solicitando prompt detallado a OpenAI para Title: {title[:30]}...")
+        # Usando un modelo de chat para refinamiento de prompt
+        response = OPENAI_CLIENT.chat.completions.create(
+            model="gpt-3.5-turbo", # Modelo rápido
+            messages=[
+                {"role": "user", "content": prompt_content}
+            ],
+            max_tokens=200,
+            temperature=0.7
+        )
+        final_prompt = response.choices[0].message.content.strip()
+        print(f"✅ LOG: Prompt generado exitosamente: {final_prompt[:80]}...")
+        return final_prompt
+    except Exception as e:
+        print(f"❌ ERROR: Falló la generación de prompt con OpenAI: {e}")
+        # Fallback a un prompt simple si falla la IA
+        return f"A highly detailed, cinematic, photorealistic image of {title}, symbolizing {subtitle}. Digital art, 4k."
+
+
+# FUNCIÓN CORREGIDA: Generación de imágenes con Vertex AI (Gemini/Imagen)
+def generate_gemini_image(prompt: str):
+    if not VERTEX_CREDENTIALS:
+        print("❌ ERROR: CREDENCIALES DE VERTEX AI (service-account-key.json) no están cargadas.")
+        return None
+
+    # Usamos el Project ID de tus logs
+    PROJECT_ID = "gen-lang-client-0218669781" 
+    MODEL_ID = "imagen-3.0-generate-002" 
+    
+    # CORRECCIÓN FINAL: El método de Vertex AI es ':predict', no ':generateImages'
+    API_ENDPOINT = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{PROJECT_ID}/locations/us-central1/publishers/google/models/{MODEL_ID}:predict"
+    
+    print(f"\n🚀 LOG: Llamando a Vertex AI en URL: {API_ENDPOINT[:80]}...")
+    print(f"⚙️ LOG: Prompt usado para Vertex AI: {prompt[:80]}...")
+    
+    # --- LÓGICA DE AUTENTICACIÓN OAUTH ---
+    try:
+        # Refrescar el token de acceso
+        VERTEX_CREDENTIALS.refresh(GoogleAuthRequest())
+        ACCESS_TOKEN = VERTEX_CREDENTIALS.token
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {ACCESS_TOKEN}" # Usamos el Token, no la Clave API
+        }
+        
+        # El payload de Vertex AI usa 'instances' y 'parameters'
+        payload = {
+            "instances": [
+                {
+                    "prompt": prompt 
+                }
+            ],
+            "parameters": {
+                "sampleCount": 1,
+                "aspectRatio": "4:5"
+            }
+        }
+    
+        r = requests.post(API_ENDPOINT, headers=headers, json=payload, timeout=45)
+        
+        print(f"ℹ️ LOG: Respuesta de Vertex AI - Status Code: {r.status_code}")
+        
+        r.raise_for_status() # Lanza error si status >= 400
+        
+        data = r.json()
+        
+        print(f"📜 LOG: Respuesta JSON parcial de Vertex AI: {json.dumps(data, indent=2)[:200]}...")
+        
+        # La respuesta de Vertex AI (método predict) es diferente:
+        # Busca 'base64Image' o 'url' dentro de 'predictions'
+        
+        if data and data.get("predictions") and len(data["predictions"]) > 0:
+            prediction = data["predictions"][0]
+            
+            # NOTA: Vertex AI devuelve la imagen como Base64.
+            # NO PODEMOS usarla directamente en el frontend.
+            # Debemos guardarla o hacer un proxy de datos Base64.
+            # Por ahora, asumiremos que devuelve una URL (aunque esto puede fallar si no es así).
+            
+            if prediction.get("url"): # Ideal si devuelve una URL temporal
+                 image_url = prediction.get("url")
+                 print(f"✅ LOG: URL de imagen de Vertex AI obtenida: {image_url}")
+                 return image_url
+            elif prediction.get("base64Image"):
+                # Si devuelve Base64, necesitamos un proxy o guardado.
+                # ESTO FALLARÁ si el frontend no sabe manejar Base64.
+                print("✅ LOG: Vertex AI devolvió imagen Base64 (falta manejo de proxy).")
+                # Devolvemos un identificador o la data URI (aunque puede ser muy grande)
+                # Por simplicidad de la guía, devolvemos None, forzando el fallback a Pexels
+                # hasta que el proxy de Base64 esté implementado.
+                print("❌ ERROR: El servidor recibió Base64 pero no está configurado para servirla. Usando fallback.")
+                return None
+
+        print("❌ ERROR: Vertex AI devolvió 200, pero no se encontró 'predictions' o 'imageUri'/'base64Image'.")
+        return None
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ ERROR: Fallo de HTTP/conexión con Vertex AI: {e}")
+        if hasattr(e.response, 'text'):
+             print(f"❌ ERROR DETALLE: Respuesta de Vertex AI: {e.response.text[:200]}")
+        return None
+    except Exception as e:
+        print(f"❌ ERROR inesperado en generate_gemini_image: {e}")
+        return None
 
 
 def get_ai_data(title: str, text: str, source: str):
@@ -244,38 +389,65 @@ def home():
 
 @app.route('/api/initial_images', methods=['GET'])
 def initial_images():
-    # Consulta base para 4 imágenes
+    # Consulta base para 4 imágenes de Pexels
     images = get_pexels_images('technology AI', count=4)
 
-    # Fallbacks
-    fallback_imgs = [
-        "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1080",
-        "https://images.unsplash.com/photo-1555212697-c20e29b10636?q=80&w=1080",
-        "https://images.unsplash.com/photo-1511376770913-2d2f1f510793?q=80&w=1080",
-        "https://images.unsplash.com/photo-1550745165-9bc0b252726c?w=1080"
-    ]
-
-    unique = []
-    seen = set()
-    for img in images:
-        if img not in seen:
-            unique.append(img)
-            seen.add(img)
-    for img in fallback_imgs:
-        if len(unique) >= 4:
-            break
-        if img not in seen:
-            unique.append(img)
-            seen.add(img)
-
-    default_img = "https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080"
-    img_a = unique[0] if len(unique) >= 1 else default_img
-    img_b = unique[1] if len(unique) >= 2 else default_img
-    img_c = unique[2] if len(unique) >= 3 else default_img
-    img_d = unique[3] if len(unique) >= 4 else default_img
+    # Solo usamos imágenes de Pexels. Si no hay suficientes, devolvemos cadenas vacías.
+    img_a = images[0] if len(images) >= 1 else ''
+    img_b = images[1] if len(images) >= 2 else ''
+    img_c = images[2] if len(images) >= 3 else ''
+    img_d = images[3] if len(images) >= 4 else ''
 
     # Devolvemos A, B, C y D
     return jsonify({"A": img_a, "B": img_b, "C": img_c, "D": img_d})
+
+
+@app.route('/api/search_image', methods=['POST'])
+def search_image():
+    """Endpoint para buscar una imagen en Pexels y devolver una lista de URLs."""
+    payload = request.get_json(silent=True) or {}
+    query = payload.get('query', '').strip()
+    count = payload.get('count', 1) # Permitir al cliente especificar el conteo
+    if not query:
+        return jsonify({'error': 'Missing query'}), 400
+
+    # Obtenemos el número de imágenes solicitado
+    images = get_pexels_images(query, count=count)
+    
+    # Devolvemos la lista de URLs
+    return jsonify({'imageUrls': images}), 200
+
+
+# RUTA NUEVA: Generar el prompt para la Card D usando ChatGPT
+@app.route('/api/generate_prompt', methods=['POST'])
+def generate_prompt():
+    payload = request.get_json(silent=True) or {}
+    title = payload.get('title', '').strip()
+    subtitle = payload.get('subtitle', '').strip()
+
+    if not title:
+        return jsonify({'error': 'Missing title'}), 400
+
+    detailed_prompt = generate_detailed_image_prompt(title, subtitle)
+    
+    return jsonify({'prompt': detailed_prompt}), 200
+
+
+# RUTA EXISTENTE: Generar la imagen final para la Card D
+@app.route('/api/generate_image', methods=['POST'])
+def generate_image():
+    payload = request.get_json(silent=True) or {}
+    prompt = payload.get('prompt', '').strip()
+    if not prompt:
+        return jsonify({'error': 'Missing prompt'}), 400
+
+    image_url = generate_gemini_image(prompt)
+    
+    if image_url:
+        return jsonify({'imageUrl': image_url}), 200
+    else:
+        # Devuelve una URL vacía o una de fallback genérica si la generación falla.
+        return jsonify({'imageUrl': ''}), 200
 
 
 @app.route('/api/search_alternatives', methods=['POST'])
@@ -318,24 +490,17 @@ def scrape():
 
     try:
         # ===== INTEGRACIÓN SCRAPE.DO =====
-        # Usamos scrape.do para obtener el HTML y saltarnos bloqueos
         if SCRAPE_DO_KEY:
-            # Construimos la URL proxy de scrape.do
             target_url_encoded = quote_plus(url)
-            # Usamos &render=true para sitios con JS fuerte, opcionalmente puedes quitarlo si es muy lento
             scrape_do_url = f"http://api.scrape.do/?token={SCRAPE_DO_KEY}&url={target_url_encoded}"
             
-            # Petición al proxy con timeout generoso
             response = requests.get(scrape_do_url, timeout=60)
             
             if not response.ok:
-                # Si scrape.do falla (ej. timeout o error del target), lanzamos error
                 raise RuntimeError(f"Scrape.do failed: {response.status_code} - {response.text[:200]}")
             
             html_content = response.text
         else:
-            # Fallback si no hay key (aunque deberíamos tenerla)
-            # Usamos requests directos con headers
             response = requests.get(url, headers=BROWSER_HEADERS, timeout=15)
             response.raise_for_status()
             html_content = response.text
@@ -370,10 +535,10 @@ def scrape():
         summary = art.summary if art.summary else original["subtitle"]
 
         # --- IA CALL ---
+        # Esta llamada ya devuelve 'image_keywords', que se usarán en el frontend para Pexels.
         ai_payload, ai_err = get_ai_data(title=original["title"], text=text, source=source)
         
         # --- KEYWORDS DE IMAGEN ---
-        # Intentamos sacar keywords de la IA, si no, usamos el título
         search_query = ""
         if ai_payload and 'image_keywords' in ai_payload:
             keywords = ai_payload.get('image_keywords', [])
@@ -384,28 +549,11 @@ def scrape():
             search_query = clean_pexels_query(original["title"])
 
         # --- OBTENCIÓN DE IMÁGENES ---
-        # Si tenemos top_image, necesitamos 3 de pexels. Si no, 4.
-        num_pexels_needed = 3 if top_image else 4
-        imgs = get_pexels_images(search_query, count=num_pexels_needed)
-        
-        # Rellenar si faltan
-        default_fallback = "https://images.unsplash.com/photo-1517430488-b4c480a45719?w=1080"
-        while len(imgs) < num_pexels_needed:
-            imgs.append(default_fallback)
-
-        # Asignar imágenes a variantes
+        # Solo devolvemos la imagen del artículo, el cliente gestiona los respaldos de Pexels.
         images = {}
         if top_image:
             images["a"] = top_image
-            images["b"] = imgs[0]
-            images["c"] = imgs[1]
-            images["d"] = imgs[2]
-        else:
-            images["a"] = imgs[0]
-            images["b"] = imgs[1]
-            images["c"] = imgs[2]
-            images["d"] = imgs[3]
-
+        
         # --- CONSTRUCCIÓN DEL CONTENIDO FINAL ---
         # Definimos variantes por defecto (fallback)
         fallback_variant_d = {
@@ -444,7 +592,7 @@ def scrape():
             "ai_content": {
                 "variants": final_variants,
                 "common_caption": common_caption,
-                "image_keywords": search_query.split()
+                "image_keywords": ai_payload.get('image_keywords', search_query.split()) if ai_payload else search_query.split()
             },
             "ai_error": ai_err
         }
@@ -458,6 +606,7 @@ def scrape():
 
 @app.route('/api/proxy_image', methods=['GET'])
 def proxy_image():
+    # Esta ruta se usa para cargar imágenes de forma confiable.
     img_url = request.args.get('url', '').strip()
     if not img_url:
         return jsonify({'error': 'Missing url'}), 400

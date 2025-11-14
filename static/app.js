@@ -31,10 +31,10 @@ const App = {
     theme: {},
     url: '', 
     data: {
-      A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...', defaultTag: 'NEWS' },
-      B: { title: 'SET',   subtitle: 'Choose variant...',       bg: '', tag: 'STORY',    layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'SET',   defaultSubtitle: 'Choose variant...', defaultTag: 'STORY' },
-      C: { title: 'GO',    subtitle: 'Customize & export.',     bg: '', tag: 'BREAKING', layout: 'layout-bold',     caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO',    defaultSubtitle: 'Customize & export.', defaultTag: 'BREAKING' },
-      D: { title: 'GIGA', subtitle: 'Analyze & Synthesize.', bg: '', tag: 'NERD',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GIGA', defaultSubtitle: 'Analyze & Synthesize.', defaultTag: 'NERD' } 
+      A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...', defaultTag: 'NEWS', titleColor: 'brand', subtitleColor: 'white' },
+      B: { title: 'SET',   subtitle: 'Choose variant...',       bg: '', tag: 'STORY',    layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'SET',   defaultSubtitle: 'Choose variant...', defaultTag: 'STORY', titleColor: 'brand', subtitleColor: 'white' },
+      C: { title: 'GO',    subtitle: 'Customize & export.',     bg: '', tag: 'BREAKING', layout: 'layout-bold',     caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO',    defaultSubtitle: 'Customize & export.', defaultTag: 'BREAKING', titleColor: 'brand', subtitleColor: 'white' },
+      D: { title: 'GIGA', subtitle: 'Analyze & Synthesize.', bg: '', tag: 'NERD',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GIGA', defaultSubtitle: 'Analyze & Synthesize.', defaultTag: 'NERD', titleColor: 'brand', subtitleColor: 'white' } 
     }
   },
 
@@ -122,6 +122,9 @@ const App = {
       fbMsg: $('fbMsg'),
       fbGoogle: $('googleFallbackBtn'),
       closeFallbackBtn: $('closeFallbackBtn'), 
+      
+      // Nuevo Elemento para el control de color
+      colorPickerDot: $('colorPickerDot'),
     };
   },
 
@@ -203,7 +206,15 @@ const App = {
     if (typeof onDownload === 'function') this.els?.dl && (this.els.dl.onclick = onDownload);
   },
 
-  // ===== INICIO DE LA CORRECCIÓN =====
+  // Nueva función para actualizar el color
+  updateCardColor(cardId, field, newColor) {
+    const colorField = field + 'Color';
+    if (this.state.data[cardId] && this.state.data[cardId][colorField] !== undefined) {
+      this.state.data[cardId][colorField] = newColor;
+      UIManager.renderCard(this, cardId); // Re-renderizar para aplicar el color
+    }
+  },
+
   // Esta es la *única* función que UIManager llamará para guardar datos.
   updateCardData(cardId, field, newText) {
     if (this.state.data[cardId]) {
@@ -218,7 +229,6 @@ const App = {
       }
     }
   },
-  // ===== FIN DE LA CORRECCIÓN =====
 
   renderCard(v) { UIManager.renderCard(this, v, `card${v}`); },
   renderAll() { UIManager.renderAll(this); },

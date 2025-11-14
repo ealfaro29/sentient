@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 6242 601" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g transform="matrix(1,0,0,1,-163.15,-97.3536)">
-        <g transform="matrix(1.4484,0,0,1.4484,20.9933,-163.913)">
-            <text x="72px" y="586.5px" style="font-family:'LoveloBlack', 'Lovelo';font-weight:900;font-size:556.324px;fill:rgb(204,255,0);">S<tspan x="321.79px 552.108px 910.381px 1175.75px 1294.8px 1530.68px 1894.52px " y="586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px ">ENTIENT</tspan></text>
-            <g transform="matrix(409.751,0,0,409.751,4439.9,586.5)">
+<svg width="100%" height="100%" viewBox="0 0 6348 595" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g id="Artboard1" transform="matrix(1.86377,0,0,1,0,0)">
+        <rect x="0" y="0" width="3406" height="595" style="fill:none;"/>
+        <g transform="matrix(0.787393,0,0,1.46752,-1180.74,-722.833)">
+            <g>
+                <g>
+                    <path d="M1499.56,864.487C1552.3,891.675 1600.7,894.394 1622.45,892.763C1695.31,888.956 1739.9,839.474 1739.9,774.767C1739.9,712.778 1687.7,677.977 1627.34,655.683C1605.05,648.071 1586.02,638.283 1583.84,616.532C1582.21,594.782 1594.72,574.663 1622.45,573.032C1634.41,572.488 1658.88,571.944 1701.84,589.344L1711.62,514.306C1661.6,496.905 1634.95,496.905 1614.83,497.993C1550.13,501.255 1504.99,551.281 1504.99,616.532C1504.99,681.784 1559.37,712.778 1620.27,735.072C1642.02,742.685 1658.88,752.472 1660.51,774.767C1662.68,795.973 1643.11,812.286 1620.27,813.917C1602.33,815.549 1553.93,814.461 1509.34,782.923L1499.56,864.487Z" style="fill:rgb(198,247,0);fill-rule:nonzero;"/>
+                    <path d="M2006.34,889.5L2006.34,811.742L1882.91,811.742L1882.91,733.985L1985.13,733.985L1985.13,656.227L1882.91,656.227L1882.91,578.469L1999.82,578.469L1999.82,500.712L1805.15,500.712L1805.15,889.5L2006.34,889.5Z" style="fill:rgb(198,247,0);fill-rule:nonzero;"/>
+                    <path d="M2156.96,677.977L2353.8,897.656L2374.47,897.656L2374.47,501.255L2296.16,501.255L2296.16,720.934L2099.87,492.555L2079.2,492.555L2079.2,889.5L2156.96,889.5L2156.96,677.977Z" style="fill:rgb(198,247,0);fill-rule:nonzero;"/>
+                    <path d="M2603.93,889.5L2603.93,578.469L2700.72,578.469L2700.72,501.255L2429.39,501.255L2429.39,578.469L2526.18,578.469L2526.18,889.5L2603.93,889.5Z" style="fill:rgb(198,247,0);fill-rule:nonzero;"/>
+                    <rect x="2759.45" y="500.712" width="77.758" height="388.788" style="fill:rgb(198,247,0);"/>
+                    <path d="M3125.94,889.5L3125.94,811.742L3002.51,811.742L3002.51,733.985L3104.74,733.985L3104.74,656.227L3002.51,656.227L3002.51,578.469L3119.42,578.469L3119.42,500.712L2924.75,500.712L2924.75,889.5L3125.94,889.5Z" style="fill:rgb(198,247,0);fill-rule:nonzero;"/>
+                    <path d="M3276.57,677.977L3473.41,897.656L3494.07,897.656L3494.07,501.255L3415.77,501.255L3415.77,720.934L3219.47,492.555L3198.81,492.555L3198.81,889.5L3276.57,889.5L3276.57,677.977Z" style="fill:rgb(198,247,0);fill-rule:nonzero;"/>
+                    <path d="M3723.53,889.5L3723.53,578.469L3820.33,578.469L3820.33,501.255L3548.99,501.255L3548.99,578.469L3645.78,578.469L3645.78,889.5L3723.53,889.5Z" style="fill:rgb(198,247,0);fill-rule:nonzero;"/>
+                </g>
             </g>
-            <text x="2267.81px" y="586.5px" style="font-family:'Geomanist';font-size:409.751px;fill:white;">S<tspan x="2434.17px 2721.41px 2957.42px 3014.38px 3240.15px 3391.35px 3491.33px 3673.26px 3872.81px 4094.48px 4151.44px " y="586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px 586.5px ">OCIAL BRAIN</tspan></text>
+        </g>
+        <g transform="matrix(0.563195,0,0,1.04967,-91.2562,-52.343)">
+            <g transform="matrix(390.6,0,0,390.6,6225.74,470)">
+            </g>
+            <text x="3572px" y="470px" style="font-family:'LufthansaOfficeHead', 'Lufthansa Office Head', sans-serif;font-weight:300;font-size:390.6px;fill:white;">SOCIAL BRAIN</text>
         </g>
     </g>
 </svg>

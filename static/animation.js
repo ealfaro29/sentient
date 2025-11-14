@@ -23,16 +23,16 @@ const Animation = {
 
   // --- Lógica de P5 (partículas) ---
   initSketch: function() {
-    const { BASE_G=2600, END_G_MULT=50.0, OMEGA_MIN=0.0002, OMEGA_MAX=0.0002, OMEGA_GAIN=15.0, ACCEL_MS } = this;
+    const { BASE_G=2000, END_G_MULT=50.0, OMEGA_MIN=0.0002, OMEGA_MAX=0.0002, OMEGA_GAIN=15.0, ACCEL_MS } = this;
     let canvasRemoved = false; 
     
     const sketchHost = document.getElementById('particles');
     if (!sketchHost) return; 
     
     this.sketch = new p5(p => {
-      let W=0,H=0, COUNT=300;
+      let W=0,H=0, COUNT=700;
       let r,a,vr,x,y,done,vx,vy,w0;
-      const EPS=11, VMAX_R=3.2, VMAX_T=100.05;
+      const EPS=8, VMAX_R=1.2, VMAX_T=50.0;
       let gravityStart=0, gravityEnd=0, mode='ambient', accel=false;
       let explodeStart=0, explodeEnd=0, explodeResolve=null;
 

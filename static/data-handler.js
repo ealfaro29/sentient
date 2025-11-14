@@ -20,21 +20,144 @@ export const DataHandler = {
     }
   },
 
+  // Función para obtener imágenes de Pexels
+  async _fetchPexelsImage(query, count = 1) {
+    console.log(`[Frontend: Pexels] Solicitando ${count} imágenes para query: ${query}`);
+    if (!query) return [];
+    try {
+      const res = await fetch('/api/search_image', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, count })
+      });
+      if (!res.ok) throw new Error(`Pexels search failed with status ${res.status}.`);
+      const data = await res.json();
+      console.log(`[Frontend: Pexels] Recibidas ${data.imageUrls.length} URLs de Pexels.`);
+      return data.imageUrls || []; 
+    } catch (e) {
+      console.error('[pexels search error]', e);
+      return [];
+    }
+  },
+  
+  // FUNCIÓN NUEVA: Obtener prompt detallado de ChatGPT (Backend)
+  async _fetchImagePrompt(title, subtitle) {
+    console.log(`[Frontend: Prompt] Llamando a /api/generate_prompt para Title: ${title}`);
+    if (!title) return '';
+    try {
+      const res = await fetch('/api/generate_prompt', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, subtitle })
+      });
+      if (!res.ok) throw new Error(`Prompt generation failed with status ${res.status}.`);
+      const data = await res.json();
+      console.log(`[Frontend: Prompt] Prompt recibido: ${data.prompt.substring(0, 50)}...`);
+      return data.prompt || ''; 
+    } catch (e) {
+      console.error('[Prompt generation error]', e);
+      return '';
+    }
+  },
+  
+  // FUNCIÓN EXISTENTE: Generación de imágenes para la Card D
+  async _fetchGeminiImage(prompt) {
+    console.log(`[Frontend: Gemini] Llamando a /api/generate_image con prompt: ${prompt.substring(0, 50)}...`);
+    if (!prompt) return '';
+    try {
+      const res = await fetch('/api/generate_image', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      if (!res.ok) throw new Error(`Gemini image generation failed with status ${res.status}.`);
+      const data = await res.json();
+      const imageUrl = data.imageUrl;
+      console.log(`[Frontend: Gemini] URL final de Gemini recibida (vacía si falló): ${imageUrl || 'NONE'}`);
+      return imageUrl || ''; 
+    } catch (e) {
+      console.error('[Gemini image error]', e);
+      return '';
+    }
+  },
+  
   finalizeUi: async function(app, url, data) {
     
     app.setAppState('APP'); 
 
-    // Poblar data 
-    const variants = data.ai_content?.variants || {
+    const articleTitle = data.original?.title || 'latest news';
+    const primaryImageUrl = data.images?.a;
+    const variantsData = data.ai_content?.variants; 
+
+    // Usar las palabras clave refinadas de la IA si están disponibles, sino el título
+    const keywords = data.ai_content?.image_keywords;
+    const fallbackQuery = (Array.isArray(keywords) && keywords.length > 0 ? keywords.join(' ') : articleTitle) || 'latest news';
+    
+    // 1. Preparar el prompt para la imagen generativa de Card D (Nerd)
+    const d_variant = variantsData?.D || { title: articleTitle, subtitle: '' }; 
+    const promptTitle = d_variant.title;
+    const promptSubtitle = d_variant.subtitle;
+    
+    // 2. Ejecutar tareas asíncronas en paralelo (Generar Prompt + Buscar Pexels)
+    const detailedPromptPromise = this._fetchImagePrompt(promptTitle, promptSubtitle);
+    const pexelsUrlsPromise = this._fetchPexelsImage(fallbackQuery, 3);
+    
+    // Esperamos ambas tareas
+    const [prompt, pexelsUrls] = await Promise.all([detailedPromptPromise, pexelsUrlsPromise]);
+
+    // 3. Generación de Imagen (Solo si el prompt fue exitoso)
+    let generatedUrl = '';
+    if (prompt) {
+        generatedUrl = await this._fetchGeminiImage(prompt);
+    } else {
+        console.warn("[Frontend: Gemini] No se generó prompt, saltando _fetchGeminiImage.");
+    }
+    
+    // Asignación de imágenes de Pexels
+    const pexelImg1 = pexelsUrls[0];
+    const pexelImg2 = pexelsUrls[1] || pexelImg1; // Respaldo para C
+    
+    // 4. Lógica de Asignación de Imágenes
+    
+    // Card A: Primaria o PexelsImg1
+    if (primaryImageUrl) {
+        app.state.data.A.bg = primaryImageUrl;
+        console.log("[Frontend: FINAL] Card A: Usando imagen primaria del artículo.");
+    } else if (pexelImg1) { 
+        app.state.data.A.bg = pexelImg1; 
+        console.log("[Frontend: FINAL] Card A: Usando PexelsImg1 como respaldo.");
+    } 
+
+    // Card B: PexelsImg1
+    if (pexelImg1) {
+        app.state.data.B.bg = pexelImg1; 
+        console.log("[Frontend: FINAL] Card B: Usando PexelsImg1.");
+    }
+    
+    // Card C: PexelsImg2
+    if (pexelImg2) {
+        app.state.data.C.bg = pexelImg2;
+        console.log("[Frontend: FINAL] Card C: Usando PexelsImg2.");
+    }
+    
+    // Card D: ¡IMAGEN GENERADA! (con PexelsImg1 como respaldo)
+    if (generatedUrl) {
+        app.state.data.D.bg = generatedUrl;
+        console.log("[Frontend: FINAL] Card D: Usando imagen generada por Gemini.");
+    } else if (pexelImg1) {
+        app.state.data.D.bg = pexelImg1;
+        console.log("[Frontend: FINAL] Card D: Usando PexelsImg1 como respaldo.");
+    } else {
+        console.log("[Frontend: FINAL] Card D: No hay imagen generada ni respaldo de Pexels.");
+    }
+    
+    // Poblar títulos y subtítulos
+    const variants = variantsData || { 
       A: { title: data.original?.title || 'UNTITLED', subtitle: data.original?.subtitle || '' },
       B: { title: data.original?.title || 'UNTITLED', subtitle: data.original?.subtitle || '' },
       C: { title: data.original?.title || 'UNTITLED', subtitle: data.original?.subtitle || '' },
       D: { title: data.original?.title || 'UNTITLED', subtitle: data.original?.subtitle || '' }
     };
-    app.state.data.A.bg = data.images?.a || app.state.data.A.bg;
-    app.state.data.B.bg = data.images?.b || app.state.data.B.bg;
-    app.state.data.C.bg = data.images?.c || app.state.data.C.bg;
-    app.state.data.D.bg = data.images?.d || data.images?.c || app.state.data.C.bg; 
     
     app.state.data.A.tag = 'NEWS';
     app.state.data.B.tag = 'STORY';
@@ -97,10 +220,7 @@ export const DataHandler = {
   async showFallback(app, failedUrl) {
     app.els.topControlBar?.classList.add('hidden');
     
-    // ===== INICIO DE LA CORRECCIÓN =====
-    // if (app.els.fbModal) app.els.fbModal.style.display = 'flex'; // <-- LÍNEA ELIMINADA (LA CAUSA DEL BUG)
-    app.els.fbModal?.classList.remove('hidden'); // <-- Esta línea es la única necesaria
-    // ===== FIN DE LA CORRECCIÓN =====
+    app.els.fbModal?.classList.remove('hidden'); 
 
     if (app.els.fbMsg)   app.els.fbMsg.innerHTML = 'Scraping failed. Analyzing URL to find similar sources...';
     if (app.els.fbList)  app.els.fbList.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-dim);"><i data-lucide="loader-2" class="spin" style="width:32px; height:32px; opacity:0.5;"></i></div>';
