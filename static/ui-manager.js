@@ -55,9 +55,30 @@ function getResolvedColor(d, stateColor) {
 }
 
 function getTextColor(d, element, defaultColor, stateColor) {
-    const isPlaceholder = (element.textContent === '' && element.dataset.placeholder);
+    // Busca el nodo de texto
+    const textNode = Array.from(element.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+    const text = textNode ? textNode.nodeValue : '';
+    const isPlaceholder = (text.trim() === '' && element.dataset.placeholder);
+    
     if (isPlaceholder) return defaultColor; 
     return getResolvedColor(d, stateColor);
+}
+
+// --- Helper de actualización de texto segura ---
+function safeUpdateText(el, newText) {
+    if (!el) return;
+    let textNode = null;
+    for (const node of el.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        textNode = node;
+        break;
+      }
+    }
+    if (textNode) {
+      textNode.nodeValue = newText;
+    } else {
+      el.prepend(document.createTextNode(newText));
+    }
 }
 
 // --- Helper para actualizar el estado desde los <select> de texto ---
@@ -71,9 +92,7 @@ function updateTextFromVariant(app, field, selectValue) {
     const cardEl = document.getElementById(`card${activeCardId}`);
     if (cardEl) {
         const textEl = cardEl.querySelector(field === 'title' ? '.c-title' : '.c-subtitle');
-        if (textEl) {
-            textEl.textContent = newText;
-        }
+        safeUpdateText(textEl, newText); // Usar la actualización segura
     }
     
     d.isPlaceholder = (d.title.trim() === '' && d.subtitle.trim() === '');
@@ -115,9 +134,14 @@ export const UIManager = {
     const t = c.querySelector('.c-title');
     const s = c.querySelector('.c-subtitle');
     
-    p.textContent = d.isPlaceholder ? '' : d.tag;
-    t.textContent = d.isPlaceholder ? '' : d.title;
-    s.textContent = d.isPlaceholder ? '' : d.subtitle;
+    // Limpiar contenido antiguo (incluyendo bolitas de color de un render anterior)
+    p.innerHTML = '';
+    t.innerHTML = '';
+    s.innerHTML = '';
+
+    p.appendChild(document.createTextNode(d.isPlaceholder ? '' : d.tag));
+    t.appendChild(document.createTextNode(d.isPlaceholder ? '' : d.title));
+    s.appendChild(document.createTextNode(d.isPlaceholder ? '' : d.subtitle));
 
     p.setAttribute('data-placeholder', d.defaultTag || 'TAG');
     t.setAttribute('data-placeholder', d.defaultTitle || 'TITLE');
@@ -169,9 +193,10 @@ export const UIManager = {
     const t = c.querySelector('.c-title');
     const s = c.querySelector('.c-subtitle');
 
-    if (document.activeElement !== p) p.textContent = d.isPlaceholder ? '' : d.tag;
-    if (document.activeElement !== t) t.textContent = d.isPlaceholder ? '' : d.title;
-    if (document.activeElement !== s) s.textContent = d.isPlaceholder ? '' : d.subtitle;
+    // Actualizar texto solo si no está enfocado
+    if (document.activeElement !== p) safeUpdateText(p, d.isPlaceholder ? '' : d.tag);
+    if (document.activeElement !== t) safeUpdateText(t, d.isPlaceholder ? '' : d.title);
+    if (document.activeElement !== s) safeUpdateText(s, d.isPlaceholder ? '' : d.subtitle);
 
     p.setAttribute('data-placeholder', d.defaultTag || 'TAG');
     t.setAttribute('data-placeholder', d.defaultTitle || 'TITLE');
@@ -191,7 +216,6 @@ export const UIManager = {
     t.style.fontSize = `${fs.title}px`; t.style.lineHeight = fs.titleLH;
     s.style.display = ''; s.style.fontSize = `${fs.subtitle}px`; s.style.lineHeight = fs.subLH;
     
-    // Actualizar los colores de las bolitas
     this.updateColorDots(app, c.closest('.mockup'));
   },
   
@@ -335,7 +359,10 @@ export const UIManager = {
   },
   
   updateTextFromCard(app, el, type) {
-    const newText = el.textContent; 
+    // Leer el texto del primer nodo de texto
+    const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+    const newText = textNode ? textNode.nodeValue : '';
+    
     let key;
     if (type === 'title') key = 'title';
     else if (type === 'subtitle') key = 'subtitle';
@@ -417,7 +444,7 @@ export const UIManager = {
       let type;
       if (el.classList.contains('c-title')) {
           type = 'title';
-          if (!el.querySelector('.colorPickerDot')) { // Evitar duplicados
+          if (!el.querySelector('.colorPickerDot')) { 
             el.appendChild(createDot('titleColor'));
           }
       }
@@ -435,7 +462,7 @@ export const UIManager = {
           }
       }
       
-      el.onfocus = null; // Obsoleto
+      el.onfocus = null; 
       el.onblur = () => {
         this.updateTextFromCard(app, el, type);
       };
@@ -583,6 +610,9 @@ export const UIManager = {
       el.onblur = null;
       el.onkeydown = null;
       el.onpaste = null;
+      
+      // Limpiar el contenido para que solo quede el nodo de texto
+      safeUpdateText(el, el.textContent.trim());
     });
     
     // Limpiar dropdowns para la próxima vez

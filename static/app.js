@@ -157,7 +157,7 @@ const App = {
     root.style.setProperty('--font-headline-weight', t.fontConfig.fontWeight);
   },
 
-  // --- NUEVA FUNCIÓN: Vincular el botón "Back" ---
+  // --- FUNCIÓN DEL BOTÓN "BACK" ---
   bindBackButton() {
     if (this.els?.backBtn) {
       this.els.backBtn.onclick = () => {
@@ -184,15 +184,11 @@ const App = {
 
   updateTopControlBar() {
     if (this.els?.host) {
-      let displayUrl = (this.state.url || '').replace(/^(https:\/\/|http:\/\/|www\.)/,'');
-      if (displayUrl.endsWith('/')) {
-        displayUrl = displayUrl.slice(0, -1);
-      }
-      this.els.host.textContent = displayUrl; 
-      this.els.host.href = this.state.url || '#'; 
+      // --- HOST ESTÁTICO Y NO CLICKABLE ---
+      this.els.host.textContent = "sentient.io"; 
+      this.els.host.href = '#'; 
+      this.els.host.onclick = (e) => e.preventDefault();
     }
-
-    // --- LÓGICA DE BOTONES ACTUALIZADA ---
     
     // 1. Mostrar/Ocultar Botón "Back"
     if (this.state.appStep === 'edit_details') {
@@ -261,13 +257,29 @@ const App = {
     }
   },
 
+  // --- BREADCRUMBS CLICKABLES ---
   renderBreadcrumbs() {
     if (!this.els.breadcrumbs) return;
     const steps = this.els.breadcrumbs.querySelectorAll('.breadcrumb-step');
     const currentStep = this.state.appStep;
-    
-    steps.forEach(span => {
+    const stepOrder = ['pick_cover', 'edit_details', 'gen_carousel', 'export'];
+    const currentIndex = stepOrder.indexOf(currentStep);
+
+    steps.forEach((span, index) => {
       span.classList.toggle('active', span.dataset.step === currentStep);
+      
+      if (index < currentIndex) { // Este es un paso "pasado"
+        span.classList.add('clickable');
+        span.onclick = () => {
+          // Ir atrás a este paso
+          if (span.dataset.step === 'pick_cover' && this.state.mode === 'EDIT') {
+            this.els.backBtn.click(); // Simular click en el botón "Back"
+          }
+        };
+      } else {
+        span.classList.remove('clickable');
+        span.onclick = null;
+      }
     });
   },
 
@@ -283,7 +295,6 @@ const App = {
     if (this.state.editCardData && this.state.editCardData[colorField] !== undefined) {
       this.state.editCardData[colorField] = newColor;
       UIManager.renderEditCard(this); 
-      // UIManager.updateColorDots(this, document.getElementById(`mock${this.state.active}`));
     }
   },
 

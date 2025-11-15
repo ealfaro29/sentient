@@ -16,6 +16,13 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .breadcrumb-separator { color: var(--text-dim); opacity: 0.5; margin: 0 -4px; }
 .breadcrumb-step { color: var(--text-dim); opacity: 0.5; transition: all 0.2s ease; padding: 4px 6px; border-radius: 6px; }
 .breadcrumb-step.active { color: var(--brand); font-weight: 700; opacity: 1; background-color: rgba(204, 255, 0, 0.1); }
+.breadcrumb-step.clickable {
+  cursor: pointer;
+}
+.breadcrumb-step.clickable:hover {
+  color: var(--brand);
+  opacity: 1;
+}
 
 /* Estilos para el nuevo botón Next */
 #nextBtn { cursor: pointer; opacity: 0; transition: opacity 0.5s ease-out; }
@@ -317,7 +324,7 @@ input:checked + .dash-toggle-slider-new:before {
   width: 60px;
   font-size: 0.9rem;
   -webkit-appearance: textfield;
-  -moz-appearance: textfield; 
+  -moz-appearance: textfield;
   appearance: textfield;
 }
 .dash-number-input::-webkit-outer-spin-button,
@@ -399,8 +406,7 @@ input:checked + .dash-toggle-slider-new:before {
   transform-origin: center center; 
   will-change: transform; 
   overflow: hidden; 
-  /* --- OUTLINE 3pt AÑADIDO --- */
-  border: 3pt solid #333;
+  border: none;
 }
 .card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: filter .25s ease; }
 .card-overlay { position: absolute; inset: 0; }
@@ -429,10 +435,7 @@ input:checked + .dash-toggle-slider-new:before {
   cursor: text; 
   min-width: 50px;
   position: relative; 
-  padding-right: 40px; 
-}
-.mockup.is-editing .c-pill[contenteditable="true"] {
-  padding-right: 70px; 
+  /* --- Padding eliminado --- */
 }
 
 .mockup.is-editing [contenteditable="true"]:focus { 
@@ -442,12 +445,10 @@ input:checked + .dash-toggle-slider-new:before {
   background: rgba(0,0,0,0.2); 
   caret-color: var(--brand); 
   padding: 2px 5px; 
-  padding-right: 40px; 
 }
 .mockup.is-editing .c-pill[contenteditable="true"]:focus {
   outline-offset: 4px;
   padding: 16px 48px; 
-  padding-right: 70px; 
   background: transparent; 
 }
 
@@ -465,16 +466,18 @@ input:checked + .dash-toggle-slider-new:before {
 /* --- ESTILOS DE BOLITAS DE COLOR (NUEVO) --- */
 .colorPickerDot {
   position: absolute;
-  right: 10px;
+  /* --- MÁS GRANDE --- */
+  width: 24px;
+  height: 24px;
+  /* --- POR FUERA --- */
+  right: -40px; 
   top: 50%;
   transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
   border-radius: 50%;
   cursor: pointer;
   z-index: 80; 
   transition: all 0.2s ease-in-out;
-  border: 3px solid rgba(0,0,0,0.3); /* Borde oscuro semi-transparente */
+  border: 3px solid rgba(0,0,0,0.3); 
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
   display: none; 
 }
@@ -490,12 +493,18 @@ input:checked + .dash-toggle-slider-new:before {
   border-color: rgba(0,0,0,0.8);
 }
 
-/* Posicionamiento de las bolitas del Pill */
+/* --- APILADO (STACKED) PARA EL PILL --- */
 .c-pill .colorPickerDot[data-target="pillBgColor"] {
-  right: 10px;
+  transform: translateY(-15px); /* Mover arriba */
 }
 .c-pill .colorPickerDot[data-target="pillTextColor"] {
-  right: 40px; /* 10px + 20px (ancho) + 10px (espacio) */
+  transform: translateY(15px); /* Mover abajo */
+}
+.c-pill .colorPickerDot[data-target="pillBgColor"]:hover {
+  transform: translateY(-15px) scale(1.1);
+}
+.c-pill .colorPickerDot[data-target="pillTextColor"]:hover {
+  transform: translateY(15px) scale(1.1);
 }
 
 
@@ -507,7 +516,15 @@ input:checked + .dash-toggle-slider-new:before {
 .mockup {
   cursor: default; max-height: 95%; width: 100%; 
   min-width: 0; 
-  background: #000; border: none; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6); display: flex; flex-direction: column; transform-style: preserve-3d; 
+  background: #000; 
+  /* --- BORDE 3pt APLICADO AL FRAME --- */
+  border: 3pt solid #333;
+  border-radius: 20px; 
+  overflow: hidden; 
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6); 
+  display: flex; 
+  flex-direction: column; 
+  transform-style: preserve-3d; 
   transition: all .6s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
 }
 #overviewGrid .mockup { 
@@ -536,10 +553,10 @@ input:checked + .dash-toggle-slider-new:before {
 /* Cuando el Grid entra en modo edición */
 @media (min-width: 1024px) { /* Solo en 'lg' y superior */
   .stage-grid.in-edit-mode .mockup.is-editing {
-    grid-column: 1 / 2; /* Mover a la primera columna */
+    grid-column: 1 / 2; 
   }
   .stage-grid.in-edit-mode #editDashboard {
-    grid-column: 2 / 5; /* Ocupar las 3 columnas restantes */
+    grid-column: 2 / 5; 
   }
   .stage-grid.in-edit-mode .mockup.is-exiting {
     display: none;
