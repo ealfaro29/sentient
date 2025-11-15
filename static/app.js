@@ -26,7 +26,7 @@ const SENTIENT_THEME = {
 
 const App = {
   state: {
-    active: 'A',
+    active: null, 
     mode: 'LANDING',
     appStep: 'pick_cover', 
     theme: {},
@@ -36,12 +36,13 @@ const App = {
       B: { title: 'SET',   subtitle: 'Choose variant...',       bg: '', tag: 'STORY',    layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'SET',   defaultSubtitle: 'Choose variant...', defaultTag: 'STORY', titleColor: 'brand', subtitleColor: 'white' },
       C: { title: 'GO',    subtitle: 'Customize & export.',     bg: '', tag: 'BREAKING', layout: 'layout-bold',     caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO',    defaultSubtitle: 'Customize & export.', defaultTag: 'BREAKING', titleColor: 'brand', subtitleColor: 'white' },
       D: { title: 'GIGA', subtitle: 'Analyze & Synthesize.', bg: '', tag: 'NERD',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GIGA', defaultSubtitle: 'Analyze & Synthesize.', defaultTag: 'NERD', titleColor: 'brand', subtitleColor: 'white' } 
-    }
+    },
+    editCardData: {}
   },
 
   async init() {
     this.cacheDOM();
-    UIManager.bindEvents(this); 
+    // UIManager.bindEvents(this); // Movido a setAppState
     this.applyTheme();
     Animation.init(this); 
     
@@ -54,7 +55,6 @@ const App = {
   cacheDOM() {
     const $ = (id) => document.getElementById(id);
     this.els = {
-      // IDs del nuevo landing
       landing: $('landing'),
       logo: $('logo'),
       url: $('url'),
@@ -64,25 +64,19 @@ const App = {
       particles: $('particles'),
       host: $('host'), 
       breadcrumbs: $('breadcrumbs'), 
-
-      // IDs de la App (conservados)
       topControlBar: $('topControlBar'),
       appStage: $('appStage'),
       dl: null, 
       nextBtn: $('nextBtn'), 
-      iUrl: $('imgUrlInput'),
-      iFile: $('imgFileInput'),
-      imgFileBtn: $('imgFileBtn'),
-      blur: $('blurRange'),
-      contrast: $('contrastRange'),
-      activeControls: $('activeControls'),
-      layoutBtn: $('layoutBtn'),
-      layoutValue: $('layoutValue'),
-      overlayBtn: $('overlayBtn'),
-      overlayValue: $('overlayValue'),
-      stageGrid: document.querySelector('.stage-grid'),
       
-      // Nuevo Elemento para el control de color
+      overviewGrid: $('overviewGrid'), 
+      editDashboard: $('editDashboard'),
+
+      // (Controles ocultos, no son necesarios)
+      iUrl: null, iFile: null, imgFileBtn: null, blur: null, contrast: null,
+      activeControls: null, layoutBtn: null, layoutValue: null, 
+      overlayBtn: null, overlayValue: null,
+      
       colorPickerDot: $('colorPickerDot'),
     };
   },
@@ -90,14 +84,9 @@ const App = {
   setAppState(mode) {
     this.state.mode = mode;
 
-    const showTop = (mode === 'APP' || mode === 'LOADING');
+    const showTop = (mode === 'APP' || mode === 'EDIT' || mode === 'LOADING' || mode === 'TRANSITION');
     this.els.topControlBar.classList.toggle('hidden', !showTop);
     this.els.topControlBar.classList.toggle('flex', showTop); 
-
-    // --- INICIO DE MODIFICACIÓN ---
-    // 1. Lógica de 'hidden'/'block' para #host ELIMINADA
-    //    La visibilidad ahora se controla con la clase '.visible' y opacidad
-    // --- FIN DE MODIFICACIÓN ---
 
     if (mode === 'LANDING') {
       if (this.els.landing) {
@@ -109,17 +98,21 @@ const App = {
       if (this.els.fusion) this.els.fusion.style.visibility = 'visible';
       
       this.els.appStage.classList.add('opacity-0', 'pointer-events-none');
-      this.els.activeControls?.classList.remove('is-visible');
-      
-      ['A','B','C','D'].forEach(v => {
-        const el = document.getElementById(`mock${v}`);
-        el?.classList.remove('visible-card','active-stage','inactive');
-      });
       
       this.els.breadcrumbs?.classList.remove('visible');
       this.els.nextBtn?.classList.remove('visible');
-      // 2. Añadido reseteo para #host
       this.els.host?.classList.remove('visible'); 
+
+      // Resetear el modo de edición del grid
+      this.els.overviewGrid.classList.remove('in-edit-mode');
+      this.els.editDashboard.classList.remove('is-visible');
+      this.els.editDashboard.style.display = 'none';
+      CARD_IDS.forEach(id => {
+        const el = document.getElementById(`mock${id}`);
+        if (el) {
+          el.classList.remove('is-exiting', 'is-editing', 'active-stage', 'inactive');
+        }
+      });
 
     } else if (mode === 'LOADING') {
       this.els.appStage.classList.add('opacity-0', 'pointer-events-none');
@@ -128,22 +121,32 @@ const App = {
           this.els.landing.style.pointerEvents = 'none';
       }
       
-    } else if (mode === 'APP') {
-      if (this.els.landing) {
-          this.els.landing.style.display = 'none';
-      }
+    } else if (mode === 'APP') { // Fase 1: Overview
+      if (this.els.landing) this.els.landing.style.display = 'none';
       if (this.els.logo) this.els.logo.style.opacity = '0';
 
       this.els.appStage.classList.remove('opacity-0', 'pointer-events-none');
       
       this.renderBreadcrumbs(); 
-      UIManager.updateTopControlBar?.(this, this.state.url); 
-      UIManager.renderAll(this);
+      // --- INICIO DE CORRECCIÓN ---
+      this.updateTopControlBar(); // Error 1: Llamar a this.updateTopControlBar
+      // --- FIN DE CORRECCIÓN ---
+      UIManager.renderAll(this); 
+      UIManager.bindOverviewEvents(this); 
+
+    } else if (mode === 'EDIT') { // Fase 2: Edición
+      this.renderBreadcrumbs(); 
+      // --- INICIO DE CORRECCIÓN ---
+      this.updateTopControlBar(); // Error 1: Llamar a this.updateTopControlBar
+      // --- FIN DE CORRECCIÓN ---
+      
+      UIManager.renderEditCard(this);
+      UIManager.bindEditEvents(this); 
+      UIManager.updateDashboard(this);
     }
   },
 
   applyTheme() {
-    // (Esta función no cambia)
     const t = SENTIENT_THEME;
     this.state.theme = t;
     document.body.className = t.id;
@@ -159,28 +162,73 @@ const App = {
     root.style.setProperty('--font-headline-weight', t.fontConfig.fontWeight);
   },
 
-  updateTopControlBar(url) {
-    // (Esta función no cambia)
+  updateTopControlBar() {
     if (this.els?.host) {
-      let displayUrl = url.replace(/^(https:\/\/|http:\/\/|www\.)/,'');
+      let displayUrl = (this.state.url || '').replace(/^(https:\/\/|http:\/\/|www\.)/,'');
       if (displayUrl.endsWith('/')) {
         displayUrl = displayUrl.slice(0, -1);
       }
-      
       this.els.host.textContent = displayUrl; 
-      this.els.host.href = url; 
+      this.els.host.href = this.state.url || '#'; 
     }
 
     if (this.els?.nextBtn) {
       this.els.nextBtn.onclick = () => {
-        console.log("Botón Next presionado. Estado actual:", this.state.appStep);
-        // Lógica futura para avanzar el breadcrumb
+        
+        if (this.state.mode === 'TRANSITION') return; 
+
+        if (this.state.appStep === 'pick_cover') {
+          // --- Lógica para pasar a FASE 2 ---
+          if (!this.state.active) {
+            toast("Please select a card to edit first.", "warn");
+            return;
+          }
+          
+          this.state.mode = 'TRANSITION';
+          
+          this.state.editCardData = JSON.parse(JSON.stringify(this.state.data[this.state.active]));
+          this.state.editCardData.sourceVariant = this.state.active;
+          this.state.editCardData.sourcePhoto = this.state.active;
+          this.state.editCardData.pillBgColor = 'brand';
+          this.state.editCardData.pillTextColor = 'black';
+          
+          this.state.appStep = 'edit_details';
+          this.renderBreadcrumbs();
+          this.els.nextBtn.querySelector('span').textContent = 'Generate >';
+          
+          this.els.overviewGrid.classList.add('in-edit-mode');
+          
+          const activeCardEl = document.getElementById(`mock${this.state.active}`);
+          activeCardEl.classList.add('is-editing'); 
+          activeCardEl.classList.remove('active-stage'); 
+          
+          CARD_IDS.forEach(id => {
+            if (id !== this.state.active) {
+              document.getElementById(`mock${id}`).classList.add('is-exiting'); 
+            }
+          });
+          
+          this.els.editDashboard.style.display = 'block';
+          setTimeout(() => { 
+            this.els.editDashboard.classList.add('is-visible');
+          }, 30); 
+          
+          setTimeout(() => {
+            this.state.mode = 'EDIT';
+            UIManager.renderEditCard(this);
+            UIManager.bindEditEvents(this); 
+            UIManager.updateDashboard(this);
+          }, 700); 
+
+        } else if (this.state.appStep === 'edit_details') {
+          console.log("Avanzando a Fase 3 (Carousel)");
+          toast("Fase 3 (Carousel) aún no implementada.");
+        }
       };
     }
   },
 
   renderBreadcrumbs() {
-    // (Esta función no cambia)
     if (!this.els.breadcrumbs) return;
     const steps = this.els.breadcrumbs.querySelectorAll('.breadcrumb-step');
     const currentStep = this.state.appStep;
@@ -190,24 +238,18 @@ const App = {
     });
   },
 
-  updateCardColor(cardId, field, newColor) {
-    // (Esta función no cambia)
-    const colorField = field + 'Color';
-    if (this.state.data[cardId] && this.state.data[cardId][colorField] !== undefined) {
-      this.state.data[cardId][colorField] = newColor;
-      UIManager.renderCard(this, cardId); 
+  updateCardData(cardObj, field, newText) {
+    if (cardObj) {
+      cardObj[field] = newText;
+      cardObj.isPlaceholder = (newText.trim() === '');
     }
   },
 
-  updateCardData(cardId, field, newText) {
-    // (Esta función no cambia)
-    if (this.state.data[cardId]) {
-      this.state.data[cardId][field] = newText;
-      if (newText.trim() !== '') {
-        this.state.data[cardId].isPlaceholder = false;
-      } else {
-        this.state.data[cardId].isPlaceholder = true;
-      }
+  updateCardColor(field, newColor) {
+    const colorField = field + 'Color';
+    if (this.state.editCardData && this.state.editCardData[colorField] !== undefined) {
+      this.state.editCardData[colorField] = newColor;
+      UIManager.renderEditCard(this); 
     }
   },
 
@@ -215,13 +257,10 @@ const App = {
   renderAll() { UIManager.renderAll(this); },
 
   switchVar(v) {
-    // (Esta función no cambia)
+    if (this.state.mode !== 'APP') return; 
     if (!CARD_IDS.includes(v)) return;
-    this.state.active = v;
-    UIManager.renderAll(this);
+    this.state.active = v; 
     
-    // this.els.activeControls?.classList.add('is-visible'); 
-
     const ids = ['A','B','C','D'];
     [document.getElementById('mockA'),
      document.getElementById('mockB'),
@@ -236,8 +275,8 @@ const App = {
   },
 
   async downloadHD() {
-    // (Esta función no cambia)
     const v = this.state.active;
+    const source = document.getElementById(`card${v}`);
     // ...
   }
 };

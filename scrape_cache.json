@@ -1,0 +1,127 @@
+{
+  "https://www.theatlantic.com/family/2025/11/naked-locker-room-end/684907/": {
+    "ts": 1763153762.6488059,
+    "data": {
+      "source": "THEATLANTIC.COM",
+      "original": {
+        "title": "The End of Naked Locker Rooms",
+        "subtitle": "Not long ago, after a day of work, a colleague and I met for a friendly game of racquetball at our university gym. In the newly designed locker room, I began pulling off my shirt to change when he qui..."
+      },
+      "images": {
+        "a": "https://cdn.theatlantic.com/thumbor/6heNxFnbZcDY6rhZzpSNYkiSwdU=/0x114:5345x2898/1200x625/media/img/mt/2025/11/2025_10_21_Beckert_everyday_nudity/original.jpg"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "Locker Rooms Shift to Private Changing",
+            "subtitle": "New gym designs favor privacy over communal nudity"
+          },
+          "B": {
+            "title": "From Nudity to Privacy: Gym Culture Evolves",
+            "subtitle": "How locker rooms reflect changing social norms"
+          },
+          "C": {
+            "title": "End of Naked Locker Rooms?",
+            "subtitle": "Gyms enforce private changing stalls universally"
+          },
+          "D": {
+            "title": "Locker Room Designs Embrace Privacy Trends",
+            "subtitle": "Trade reports show communal showers vanish by 2017"
+          }
+        },
+        "common_caption": "Locker rooms are changing, nudity declines quietly. A recent report reveals many public gyms now require private stalls for changing, replacing open locker rooms. This shift comes as facilities aim to accommodate diverse gender identities and address concerns around privacy and consent. The move alters long-standing social norms where communal nudity in same-sex spaces was once typical. This change reshapes how Americans experience their bodies and others' outside media portrayals. How will the loss of casual nudity affect social comfort and body image perceptions? Source: theatlantic.com",
+        "image_keywords": [
+          "gym locker room",
+          "private changing stall",
+          "public pool",
+          "locker room design",
+          "gender inclusive facilities"
+        ]
+      },
+      "ai_error": null
+    }
+  },
+  "https://www.theatlantic.com/podcasts/2025/11/ai-bubble-us-economy/684906/": {
+    "ts": 1763171441.0234942,
+    "data": {
+      "source": "THEATLANTIC.COM",
+      "original": {
+        "title": "What If AI Is a Bubble?",
+        "subtitle": "Subscribe here: Apple Podcasts | Spotify | YouTube | Overcast | Pocket Casts\n\nIn 2026, global spending on artificial intelligence is supposed to reach close to half a trillion dollars. Nvidia, which m..."
+      },
+      "images": {
+        "a": "https://cdn.theatlantic.com/thumbor/P-Bhj59IEf1PiXkfX-1MMpL8E5E=/295x220:3975x2137/1200x625/media/img/mt/2025/11/Radio_Atlantic_Vertical_Ai_bubble/original.png"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "AI Investment Hits Trillion-Dollar Heights",
+            "subtitle": "Experts question if this surge is a bubble"
+          },
+          "B": {
+            "title": "The $5 Trillion AI Question",
+            "subtitle": "Will the AI boom pay off or burst?"
+          },
+          "C": {
+            "title": "Is AI the Next Big Bubble?",
+            "subtitle": "Billions invested, but will it last?"
+          },
+          "D": {
+            "title": "Analyzing AI's $500 Billion Market Impact",
+            "subtitle": "Spending projections meet market valuation data"
+          }
+        },
+        "common_caption": "Is AI investment becoming an economic bubble? In 2026, global spending on artificial intelligence is expected to approach half a trillion dollars, with companies like Nvidia leading the charge as it recently became the first firm valued at $5 trillion. This surge includes massive investments in data centers anticipated to consume more power than several major American cities combined. However, questions remain about whether AI\u2019s promise of miraculous breakthroughs and automation will ever justify these enormous costs or if the current boom resembles past financial bubbles like those in 1929 or 2000. Understanding this dynamic is essential for assessing the risks and opportunities beneath the hype and what it means for the economy and everyday people. Could the AI boom reshape markets sustainably or end in a costly crash? Source: theatlantic.com",
+        "image_keywords": [
+          "Nvidia headquarters",
+          "computer data center",
+          "stock market graph",
+          "technology investment"
+        ]
+      },
+      "ai_error": null
+    }
+  },
+  "https://www.washingtonpost.com/weather/2025/11/12/aurora-northern-lights-forecast-dc-video/": {
+    "ts": 1763181325.0055766,
+    "data": {
+      "source": "WASHINGTONPOST.COM",
+      "original": {
+        "title": "Northern lights danced above the U.S. Will there be more aurora tonight?",
+        "subtitle": "The heavens lit up with pulses of dancing aurora borealis well to the south of usual on Tuesday night as a severe geomagnetic storm struck Earth\u2019s atmosphere. Even under bright city lights and not far..."
+      },
+      "images": {
+        "a": "https://www.washingtonpost.com/wp-apps/imrs.php?src=https://arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/MCGTD3B2OCKMYHKJXE2CCTV42Q.jpg&w=1440"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "Aurora Lights Appear Far South",
+            "subtitle": "Geomagnetic storm brings aurora to unexpected areas"
+          },
+          "B": {
+            "title": "When the Sky Danced Southward",
+            "subtitle": "Aurora borealis surprises near the US-Mexico border"
+          },
+          "C": {
+            "title": "Northern Lights Shock the South",
+            "subtitle": "Severe storm makes aurora visible in bright cities"
+          },
+          "D": {
+            "title": "Geomagnetic Storm Triggers Wide Aurora",
+            "subtitle": "Intense solar wind disrupts Earth's magnetosphere"
+          }
+        },
+        "common_caption": "See the northern lights closer than ever. A severe geomagnetic storm caused dramatic aurora borealis displays well south of their typical locations on Tuesday night. The show was visible even near the U.S.-Mexico border under city lights, surprising many viewers. This aurora event was triggered by intense solar wind interacting with Earth's magnetic field, creating stronger and more widespread light emissions than usual. Such storms can affect satellite and communication systems but also provide rare viewing opportunities for people in low-latitude areas. This event highlights how solar activity can extend the reach of aurora displays significantly beyond expected zones. What other rare natural phenomena might become more common due to shifting solar patterns? Source: washingtonpost.com",
+        "image_keywords": [
+          "aurora borealis",
+          "geomagnetic storm",
+          "night sky",
+          "US-Mexico border",
+          "city lights"
+        ]
+      },
+      "ai_error": null
+    }
+  }
+}

@@ -35,14 +35,14 @@
       </div>
 
       <div class="flex items-center">
-        
         <a id="host" href="#" target="_blank"
            class="font-bold transition-all
                   bg-black border border-[var(--brand)] rounded-full
                   px-4 py-1.5 text-xs text-white no-underline
                   max-w-xs truncate
                   hover:bg-[rgba(204,255,0,0.1)] hover:text-[var(--brand)]
-                  mr-24"> </a>
+                  mr-24"> 
+        </a>
         
         <button id="nextBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--brand)] text-black font-extrabold rounded-lg text-sm transition-transform hover:scale-105">
           <img src="mark.svg" alt="icon" class="w-4 h-4" />
@@ -51,6 +51,7 @@
       </div>
 
     </div>
+    
     <div id="particles"></div>
     <img id="logo" src="logo.svg" alt="logo" />
     <section id="landing" aria-label="Pantalla inicial">
@@ -65,129 +66,179 @@
     <main id="mainStage" class="flex-1 bg-transparent flex flex-col items-center justify-center p-5 overflow-hidden relative z-10">
 
       <div id="appStage" class="w-full h-full opacity-0 transition-opacity duration-500 pointer-events-none">
-        <div class="stage-grid w-full h-full grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5 justify-center items-center overflow-y-auto lg:overflow-hidden p-5" style="padding-top: 70px;">
-
-          <div id="mockA" class="mockup">
-            <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
-              <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
-              <span class="text-sm font-semibold text-white flex-1">sentient</span>
-              <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
-            </div>
-            <div class="canvas-wrapper" id="mountA">
-              <div id="cardA" class="render-target">
-                <img class="card-bg" crossorigin="anonymous" />
-                <div class="card-overlay"></div>
-                <div class="card-content layout-standard">
-                  <div class="c-pill">NEWS</div>
-                  <h1 class="c-title is-placeholder" contenteditable="true">READY</h1>
-                  <h2 class="c-subtitle is-placeholder" contenteditable="true">Paste an article URL...</h2>
+        
+        <div id="overviewGrid" class="stage-grid w-full h-full grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-5 justify-center items-center overflow-y-auto lg:overflow-hidden p-5" style="padding-top: 70px;">
+            
+            <div id="mockA" class="mockup">
+              <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
+                <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
+                <span class="text-sm font-semibold text-white flex-1">sentient</span>
+                <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
+              </div>
+              <div class="canvas-wrapper" id="mountA">
+                <div id="cardA" class="render-target">
+                  <img class="card-bg" crossorigin="anonymous" />
+                  <div class="card-overlay"></div>
+                  <div class="card-content layout-standard">
+                    <div class="c-pill" data-placeholder="NEWS"></div>
+                    <h1 class="c-title" data-placeholder="READY"></h1>
+                    <h2 class="c-subtitle" data-placeholder="Paste an article URL..."></h2>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="insta-footer p-3 bg-black flex-shrink-0">
-              <div class="flex gap-4 mb-3">
-                <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+              <div class="insta-footer p-3 bg-black flex-shrink-0">
+                <div class="flex gap-4 mb-3">
+                  <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+                </div>
+                <div class="font-semibold text-sm">8,432 likes</div>
               </div>
-              <div class="font-semibold text-sm">8,432 likes</div>
             </div>
-          </div>
 
-          <div id="mockB" class="mockup">
-            <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
-              <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
-              <span class="text-sm font-semibold text-white flex-1">sentient</span>
-              <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
-            </div>
-            <div class="canvas-wrapper" id="mountB">
-              <div id="cardB" class="render-target">
-                <img class="card-bg" crossorigin="anonymous" />
-                <div class="card-overlay"></div>
-                <div class="card-content layout-centered">
-                  <div class="c-pill">STORY</div>
-                  <h1 class="c-title is-placeholder" contenteditable="true">SET</h1>
-                  <h2 class="c-subtitle is-placeholder" contenteditable="true">Choose variant...</h2>
+            <div id="mockB" class="mockup">
+              <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
+                <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
+                <span class="text-sm font-semibold text-white flex-1">sentient</span>
+                <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
+              </div>
+              <div class="canvas-wrapper" id="mountB">
+                <div id="cardB" class="render-target">
+                  <img class="card-bg" crossorigin="anonymous" />
+                  <div class="card-overlay"></div>
+                  <div class="card-content layout-centered">
+                    <div class="c-pill" data-placeholder="STORY"></div>
+                    <h1 class="c-title" data-placeholder="SET"></h1>
+                    <h2 class="c-subtitle" data-placeholder="Choose variant..."></h2>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="insta-footer p-3 bg-black flex-shrink-0">
-              <div class="flex gap-4 mb-3">
-                <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+              <div class="insta-footer p-3 bg-black flex-shrink-0">
+                 <div class="flex gap-4 mb-3">
+                  <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+                </div>
+                <div class="font-semibold text-sm">12,901 likes</div>
               </div>
-              <div class="font-semibold text-sm">12,901 likes</div>
             </div>
-          </div>
 
-          <div id="mockC" class="mockup">
-            <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
-              <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
-              <span class="text-sm font-semibold text-white flex-1">sentient</span>
-              <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
-            </div>
-            <div class="canvas-wrapper" id="mountC">
-              <div id="cardC" class="render-target">
-                <img class="card-bg" crossorigin="anonymous" />
-                <div class="card-overlay"></div>
-                <div class="card-content layout-bold">
-                  <div class="c-pill">BREAKING</div>
-                  <h1 class="c-title is-placeholder" contenteditable="true">GO</h1>
-                  <h2 class="c-subtitle is-placeholder" contenteditable="true">Customize & export.</h2>
+            <div id="mockC" class="mockup">
+              <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
+                <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
+                <span class="text-sm font-semibold text-white flex-1">sentient</span>
+                <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
+              </div>
+              <div class="canvas-wrapper" id="mountC">
+                <div id="cardC" class="render-target">
+                  <img class="card-bg" crossorigin="anonymous" />
+                  <div class="card-overlay"></div>
+                  <div class="card-content layout-bold">
+                    <div class="c-pill" data-placeholder="BREAKING"></div>
+                    <h1 class="c-title" data-placeholder="GO"></h1>
+                    <h2 class="c-subtitle" data-placeholder="Customize & export."></h2>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="insta-footer p-3 bg-black flex-shrink-0">
-              <div class="flex gap-4 mb-3">
-                <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+              <div class="insta-footer p-3 bg-black flex-shrink-0">
+                 <div class="flex gap-4 mb-3">
+                  <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+                </div>
+                <div class="font-semibold text-sm">9,217 likes</div>
               </div>
-              <div class="font-semibold text-sm">9,217 likes</div>
             </div>
-          </div>
-
-          <div id="mockD" class="mockup">
-            <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
-              <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
-              <span class="text-sm font-semibold text-white flex-1">sentient</span>
-              <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
-            </div>
-            <div class="canvas-wrapper" id="mountD">
-              <div id="cardD" class="render-target">
-                <img class="card-bg" crossorigin="anonymous" />
-                <div class="card-overlay"></div>
-                <div class="card-content layout-standard">
-                  <div class="c-pill">NERD</div>
-                  <h1 class="c-title is-placeholder" contenteditable="true">GIGA</h1>
-                  <h2 class="c-subtitle is-placeholder" contenteditable="true">Analyze & Synthesize.</h2>
+            
+            <div id="mockD" class="mockup">
+              <div class="insta-header h-[54px] flex items-center px-4 border-b border-[#1a1a1a] flex-shrink-0 bg-black">
+                <div class="insta-avatar w-8 h-8 rounded-full mr-3"><div></div></div>
+                <span class="text-sm font-semibold text-white flex-1">sentient</span>
+                <i data-lucide="more-horizontal" class="insta-icon text-white stroke-[1.5px] w-6 h-6 card-options-btn"></i>
+              </div>
+              <div class="canvas-wrapper" id="mountD">
+                <div id="cardD" class="render-target">
+                  <img class="card-bg" crossorigin="anonymous" />
+                  <div class="card-overlay"></div>
+                  <div class="card-content layout-standard">
+                    <div class="c-pill" data-placeholder="NERD"></div>
+                    <h1 class="c-title" data-placeholder="GIGA"></h1>
+                    <h2 class="c-subtitle" data-placeholder="Analyze & Synthesize."></h2>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="insta-footer p-3 bg-black flex-shrink-0">
-              <div class="flex gap-4 mb-3">
-                <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
-                <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+              <div class="insta-footer p-3 bg-black flex-shrink-0">
+                 <div class="flex gap-4 mb-3">
+                  <i data-lucide="heart" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="message-circle" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="send" class="insta-icon text-white stroke-[1.5px] w-6 h-6"></i>
+                  <i data-lucide="bookmark" class="insta-icon text-white stroke-[1.5px] w-6 h-6 ml-auto"></i>
+                </div>
+                <div class="font-semibold text-sm">1,337 views</div>
               </div>
-              <div class="font-semibold text-sm">1,337 views</div>
             </div>
-          </div>
+            
+            <div id="editDashboard" class="h-full w-full p-2 overflow-y-auto">
+              
+              <div class="dash-section">
+                <h3 class="dash-title">Variants</h3>
+                <div class="dash-btngroup">
+                  <button class="dash-button" data-variant-btn="A">Variant A</button>
+                  <button class="dash-button" data-variant-btn="B">Variant B</button>
+                  <button class="dash-button" data-variant-btn="C">Variant C</button>
+                  <button class="dash-button" data-variant-btn="D">Variant D</button>
+                </div>
+              </div>
+              <div class="dash-section">
+                <h3 class="dash-title">Photos</h3>
+                <div class="dash-btngroup" id="dashPhotoGroup">
+                  <button class="dash-button photo-thumbnail" data-photo-btn="A"><img src="" alt="Photo A"></button>
+                  <button class="dash-button photo-thumbnail" data-photo-btn="B"><img src="" alt="Photo B"></button>
+                  <button class="dash-button photo-thumbnail" data-photo-btn="C"><img src="" alt="Photo C"></button>
+                  <button class="dash-button photo-thumbnail" data-photo-btn="D"><img src="" alt="Photo D"></button>
+                </div>
+              </div>
+              <div class="dash-section">
+                <h3 class="dash-title">Photo Edit</h3>
+                <div class="dash-subtitle">Overlay</div>
+                <div class="dash-btngroup">
+                  <button class="dash-button" data-overlay-btn="black">Black</button>
+                  <button class="dash-button" data-overlay-btn="white">White</button>
+                  <button class="dash-button" data-overlay-btn="brand">Accent</button>
+                </div>
+                <div class="dash-subtitle mt-4">Adjustments (Mockup)</div>
+                <div class="dash-mock-controls">
+                  <div class="dash-slider"><label>Contrast</label><input type="range" min="50" max="200" value="100"></div>
+                  <div class="dash-slider"><label>Brightness</label><input type="range" min="50" max="200" value="100"></div>
+                  <div class="dash-slider"><label>Blur</label><input type="range" min="0" max="30" value="0"></div>
+                  <div class="dash-slider"><label>Grayscale</label><input type="range" min="0" max="100" value="0"></div>
+                  <div class="dash-slider"><label>Noise</label><input type="range" min="0" max="100" value="0"></div>
+                </div>
+              </div>
+              <div class="dash-section">
+                <h3 class="dash-title">Layout</h3>
+                <div class="dash-btngroup">
+                  <button class="dash-button" data-layout-btn="layout-standard">Bottom</button>
+                  <button class="dash-button" data-layout-btn="layout-centered">Centered</button>
+                  <button class="dash-button" data-layout-btn="layout-bold">Top</button>
+                </div>
+              </div>
+              <div class="dash-section">
+                <h3 class="dash-title">Super-elements (Mockup)</h3>
+                <div class="dash-btngroup">
+                  <button class="dash-button" disabled>Add Logo</button>
+                  <button class="dash-button" disabled>Add Pattern</button>
+                  <button class="dash-button" disabled>Add Frame</button>
+                </div>
+              </div>
 
-          <div id="activeControls" class="controls-grid-position hidden"> 
-            </div>
-
-        </div>
-      </div>
-
+            </div> </div> </div>
     </main>
-
-    </div>
+    
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
   <script type="module" src="animation.js"></script>

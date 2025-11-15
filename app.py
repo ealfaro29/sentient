@@ -47,8 +47,16 @@ if OPENAI_API_KEY and OpenAI is not None:
     except Exception as e:
         print(f"⚠️ ERROR: No se pudo iniciar el cliente OpenAI: {e}")
 
-# Caché simple en memoria para resultados de scrape
-SCRAPE_CACHE = {}
+# --- Caché Persistente ---
+CACHE_FILE = 'scrape_cache.json'
+try:
+    with open(CACHE_FILE, 'r') as f:
+        SCRAPE_CACHE = json.load(f)
+    print(f"✅ Caché persistente cargada desde {CACHE_FILE}")
+except (FileNotFoundError, json.JSONDecodeError):
+    SCRAPE_CACHE = {}
+    print("⚠️ No se encontró caché persistente, iniciando vacía.")
+
 CACHE_DURATION = 60 * 60 * 24  # 24 horas
 
 # Headers para simular navegador (Usado en proxy de imágenes)
@@ -62,8 +70,6 @@ BROWSER_HEADERS = {
 # --------------------------------------------------------------------
 # Utilidades
 # --------------------------------------------------------------------
-
-# --- FUNCIONES DE PEXELS (RESTAURADAS) ---
 def clean_pexels_query(query: str) -> str:
     stop_words = set([
         'the', 'a', 'an', 'is', 'are', 'was', 'were', 'by', 'of', 'in',
@@ -83,18 +89,15 @@ def get_pexels_images(query: str, count: int = 4):
         return []
     try:
         headers = {'Authorization': PEXELS_API_KEY}
-        # Uso de la API de Pexels
         url = f'https://api.pexels.com/v1/search?query={quote_plus(search_query)}&per_page={count}&orientation=portrait'
         r = requests.get(url, headers=headers, timeout=8)
         if r.status_code == 200 and r.headers.get('content-type', '').startswith('application/json'):
             data = r.json()
-            # Extraemos la URL 'large2x' de Pexels
             return [p['src']['large2x'] for p in data.get('photos', [])]
         return []
     except Exception:
         return []
 
-# Funciones generate_detailed_image_prompt y generate_gemini_image han sido ELIMINADAS.
 
 def get_ai_data(title: str = None, text: str = None, source: str = None, keywords: str = None):
     if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
@@ -102,7 +105,7 @@ def get_ai_data(title: str = None, text: str = None, source: str = None, keyword
     
     try:
         if keywords:
-            # --- NUEVO PROMPT DE FALLBACK (BASADO EN KEYWORDS) ---
+            # --- PROMPT DE FALLBACK (BASADO EN KEYWORDS) ---
             prompt_content = f"""
             Context: The original article scrape failed.
             Keywords from URL: {keywords}
@@ -154,7 +157,6 @@ def get_ai_data(title: str = None, text: str = None, source: str = None, keyword
         if run.status == 'completed':
             msgs = OPENAI_CLIENT.beta.threads.messages.list(thread_id=run.thread_id)
             try:
-                # Limpiar el JSON de posibles bloques de código
                 text_response = msgs.data[0].content[0].text.value
                 json_match = re.search(r'```json\s*([\s\S]+?)\s*```', text_response)
                 if json_match:
@@ -202,7 +204,6 @@ def infer_search_info(url: str):
 
 def perform_google_search(query: str, max_results: int = 5):
     if not GOOGLE_SEARCH_API_KEY or not GOOGLE_SEARCH_CX:
-        # Fallback de DDG eliminado
         return []
     try:
         url = "https://www.googleapis.com/customsearch/v1"
@@ -229,8 +230,6 @@ def perform_google_search(query: str, max_results: int = 5):
     except Exception:
          return []
 
-# --- perform_ddg_search_fallback ELIMINADO ---
-
 
 def domain_of(url: str) -> str:
     try:
@@ -247,30 +246,16 @@ def home():
     return app.send_static_file('index.html')
 
 
-# --- /api/initial_images ELIMINADO ---
-
-
-# --- /api/search_image (RESTAURADO) ---
 @app.route('/api/search_image', methods=['POST'])
 def search_image():
-    """Endpoint para buscar una imagen en Pexels y devolver una lista de URLs."""
     payload = request.get_json(silent=True) or {}
     query = payload.get('query', '').strip()
-    count = payload.get('count', 1) # Permitir al cliente especificar el conteo
+    count = payload.get('count', 1) 
     if not query:
         return jsonify({'error': 'Missing query'}), 400
 
-    # Obtenemos el número de imágenes solicitado
     images = get_pexels_images(query, count=count)
-    
-    # Devolvemos la lista de URLs
     return jsonify({'imageUrls': images}), 200
-
-
-# --- RUTAS DE GENERACIÓN DE IMAGEN Y PROMPT ELIMINADAS: /api/generate_prompt y /api/generate_image ---
-
-
-# --- /api/search_alternatives ELIMINADO ---
 
 
 @app.route('/api/scrape', methods=['POST'])
@@ -284,9 +269,10 @@ def scrape():
     now = time.time()
     if url in SCRAPE_CACHE:
         cached = SCRAPE_CACHE[url]
-        #   if now - cached['ts'] < CACHE_DURATION:
-        print("✅ [MODO TEST] Devolviendo resultado desde caché.")
-        return jsonify(cached['data'])
+        # (Modo Test: Comentar la línea 'if' para forzar el caché)
+        if now - cached['ts'] < CACHE_DURATION: 
+            print("✅ Devolviendo resultado desde caché.")
+            return jsonify(cached['data'])
 
     try:
         # ===== INTEGRACIÓN SCRAPE.DO (ÚNICA OPCIÓN) =====
@@ -306,12 +292,10 @@ def scrape():
         if not html_content:
             raise RuntimeError("Downloaded HTML is empty")
 
-        # Pasamos el HTML limpio a newspaper3k
         art = Article(url)
         art.set_html(html_content)
         art.parse()
 
-        # NLP para resumen
         try:
             art.nlp()
         except Exception:
@@ -320,22 +304,17 @@ def scrape():
         title = art.title or ''
         text = art.text or ''
         source = domain_of(url) or 'UNKNOWN'
-        # Imagen principal del artículo
         top_image = art.top_image 
 
-        # Datos originales base
         original = {
             "title": title.strip() or 'UNTITLED',
             "subtitle": (text[:200] + '...') if text else ''
         }
         
-        # Resumen para Card D (Nerd) en caso de fallback
         summary = art.summary if art.summary else original["subtitle"]
 
-        # --- IA CALL ---
         ai_payload, ai_err = get_ai_data(title=original["title"], text=text, source=source)
         
-        # --- KEYWORDS DE IMAGEN ---
         search_query = ""
         if ai_payload and 'image_keywords' in ai_payload:
             keywords = ai_payload.get('image_keywords', [])
@@ -343,16 +322,12 @@ def scrape():
                 search_query = " ".join(keywords)
         
         if not search_query and original["title"] != 'UNTITLED':
-            # Si la IA falla en keywords, usamos el título (limpieza simple)
             search_query = re.sub(r'[^\w\s]', '', original["title"] or '').lower()
 
-
-        # --- OBTENCIÓN DE IMÁGENES ---
         images = {}
         if top_image:
             images["a"] = top_image
         
-        # --- CONSTRUCCIÓN DEL CONTENIDO FINAL ---
         fallback_variant_d = {
             "title": f"[Analysis] {original['title']}", 
             "subtitle": summary
@@ -373,7 +348,6 @@ def scrape():
             final_variants['D'] = ai_vars.get('D', fallback_variant_d)
             common_caption = ai_payload.get('common_caption', common_caption)
         else:
-            # Fallback total si falla IA
             final_variants = {
                 'A': fallback_variant_std,
                 'B': fallback_variant_std,
@@ -381,11 +355,10 @@ def scrape():
                 'D': fallback_variant_d
             }
 
-        # Estructura final de respuesta
         result = {
             "source": source.upper() if source else "UNKNOWN",
             "original": original,
-            "images": images, # Solo contiene 'a' si se encontró top_image
+            "images": images, 
             "ai_content": {
                 "variants": final_variants,
                 "common_caption": common_caption,
@@ -395,50 +368,53 @@ def scrape():
         }
 
         SCRAPE_CACHE[url] = {"ts": now, "data": result}
+        
+        # Guardar en caché persistente
+        try:
+            with open(CACHE_FILE, 'w') as f:
+                json.dump(SCRAPE_CACHE, f, indent=2)
+            print(f"✅ Caché persistente guardada en {CACHE_FILE}")
+        except Exception as e:
+            print(f"⚠️ Error al guardar caché en disco: {e}")
+            
         return jsonify(result)
 
     except Exception as e:
-        # --- ¡NUEVO FLUJO DE FALLBACK! ---
+        # --- FLUJO DE FALLBACK (IA con Keywords) ---
         print(f'Scrape failed: {str(e)}')
         
         domain, year, keywords = infer_search_info(url)
         fallback_query = f"{domain} {keywords} {year}".strip()
         source = domain_of(url) or 'UNKNOWN'
 
-        # Llamar a IA solo con keywords
         ai_payload, ai_err = get_ai_data(source=source, keywords=fallback_query)
 
         if not ai_payload:
-            # Si la IA también falla, devolver un error definitivo
             return jsonify({'error': f'Scrape failed and AI fallback failed: {ai_err}'}), 500
 
-        # Construir una respuesta de fallback
         fallback_title = " ".join(keywords.split()[:5])
         fallback_subtitle = ai_payload.get('common_caption', 'Could not scrape article.')
 
         result = {
             "source": source.upper(),
             "original": { "title": fallback_title, "subtitle": fallback_subtitle },
-            "images": {"a": ""}, # Sin top_image
+            "images": {"a": ""}, 
             "ai_content": {
                 "variants": ai_payload.get('variants', {}),
                 "common_caption": ai_payload.get('common_caption', fallback_subtitle),
                 "image_keywords": ai_payload.get('image_keywords', fallback_query.split())
             },
-            "ai_error": ai_err # Podría ser None si la IA funcionó
+            "ai_error": ai_err 
         }
-        # No guardar en caché los fallos
         return jsonify(result)
 
 
 @app.route('/api/proxy_image', methods=['GET'])
 def proxy_image():
-    # Esta ruta se usa para cargar imágenes de forma confiable.
     img_url = request.args.get('url', '').strip()
     if not img_url:
         return jsonify({'error': 'Missing url'}), 400
     try:
-        # Usamos headers de navegador para evitar bloqueos en imágenes (403/502)
         r = requests.get(img_url, headers=BROWSER_HEADERS, timeout=15, stream=True)
         r.raise_for_status()
         content_type = r.headers.get('Content-Type', 'image/jpeg')
@@ -459,6 +435,5 @@ def proxy_image():
 # Entry point
 # --------------------------------------------------------------------
 if __name__ == '__main__':
-    # Para desarrollo local; en producción usa gunicorn
     port = int(os.getenv("PORT", "5000"))
     app.run(host='0.0.0.0', port=port, debug=True)

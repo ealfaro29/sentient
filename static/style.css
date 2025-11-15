@@ -10,63 +10,62 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 /* Top bar */
 #topControlBar { gap: 12px; }
 
-/* --- INICIO DE MODIFICACIÓN --- */
 /* Estilos de Breadcrumbs */
-#breadcrumbs {
-  font-weight: 500;
-  user-select: none;
-  opacity: 0; 
-  transition: opacity 0.5s ease-out;
-}
-#breadcrumbs.visible {
-  opacity: 1;
-}
-
-.breadcrumb-separator {
-  color: var(--text-dim);
-  opacity: 0.5;
-  margin: 0 -4px;
-}
-.breadcrumb-step {
-  color: var(--text-dim);
-  opacity: 0.5;
-  transition: all 0.2s ease;
-  padding: 4px 6px;
-  border-radius: 6px;
-}
-.breadcrumb-step.active {
-  color: var(--brand);
-  font-weight: 700;
-  opacity: 1;
-  background-color: rgba(204, 255, 0, 0.1);
-}
+#breadcrumbs { font-weight: 500; user-select: none; opacity: 0; transition: opacity 0.5s ease-out; }
+#breadcrumbs.visible { opacity: 1; }
+.breadcrumb-separator { color: var(--text-dim); opacity: 0.5; margin: 0 -4px; }
+.breadcrumb-step { color: var(--text-dim); opacity: 0.5; transition: all 0.2s ease; padding: 4px 6px; border-radius: 6px; }
+.breadcrumb-step.active { color: var(--brand); font-weight: 700; opacity: 1; background-color: rgba(204, 255, 0, 0.1); }
 
 /* Estilos para el nuevo botón Next */
-#nextBtn {
-  cursor: pointer;
+#nextBtn { cursor: pointer; opacity: 0; transition: opacity 0.5s ease-out; }
+#nextBtn.visible { opacity: 1; }
+
+/* Regla #host actualizada */
+#host { max-width: min(300px, 80vw); opacity: 0; transition: opacity 0.5s ease-out; }
+#host.visible { opacity: 1; }
+
+
+/* 1. Posicionamiento del Dashboard */
+#editDashboard {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  max-height: 100%;
+  
+  /* 2. Ocupará 3 columnas (pero está oculto) */
+  grid-column: span 3 / span 3;
+  display: none; 
   opacity: 0;
-  transition: opacity 0.5s ease-out;
+  transform: translateX(100%);
+  transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-#nextBtn.visible {
+#editDashboard.is-visible {
   opacity: 1;
+  transform: translateX(0);
 }
 
+/* 3. Estilos del Dashboard */
+.dash-section { padding: 16px; border-bottom: 1px solid var(--border); }
+.dash-section:last-child { border-bottom: none; }
+.dash-title { font-size: 1.1rem; font-weight: 700; color: var(--brand); margin-bottom: 12px; }
+.dash-subtitle { font-size: 0.8rem; font-weight: 500; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+.dash-btngroup { display: flex; flex-wrap: wrap; gap: 8px; }
+.dash-button { background: #222; color: var(--text); border: 1px solid #333; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+.dash-button:hover { background: #333; border-color: #555; }
+.dash-button.active { background: var(--brand); color: #000; border-color: var(--brand); }
+.dash-button[disabled] { opacity: 0.4; cursor: not-allowed; background: #111; }
 
+/* 4. Estilos de Miniaturas de Foto */
+.photo-thumbnail { width: 60px; height: 75px; padding: 2px; border-width: 2px; }
+.photo-thumbnail img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+.photo-thumbnail.active { border-color: var(--brand); }
 
-
-/* 1. Regla de #host actualizada. Se eliminó 'position: fixed' */
-#host {
-  max-width: min(300px, 80vw); 
-  /* 2. Añadida opacidad y transición */
-  opacity: 0;
-  transition: opacity 0.5s ease-out;
-  /* El margen se aplica con Tailwind ('mr-24') en el HTML */
-}
-/* 3. Añadida clase .visible para #host */
-#host.visible {
-  opacity: 1;
-}
-/* --- FIN DE MODIFICACIÓN --- */
+/* 5. Estilos Mockup Sliders */
+.dash-mock-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dash-slider { font-size: 0.9rem; color: var(--text-dim); }
+.dash-slider label { margin-right: 8px; }
+.dash-slider input[type="range"] { width: 100%; opacity: 0.5; /* Mockup */ }
 
 
 /* Mockups + canvas */
@@ -76,7 +75,6 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .card-overlay { position: absolute; inset: 0; }
 .card-content { position: absolute; inset: 0; padding: 80px; display: flex; flex-direction: column; z-index: 2; }
 
-/* (El resto de .css no cambia) */
 .layout-standard { justify-content: flex-end; text-align: left; }
 .layout-centered { justify-content: center; align-items: center; text-align: center; }
 .layout-bold { justify-content: flex-start; padding-top: 160px; text-align: left; }
@@ -85,7 +83,7 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .layout-centered .c-title, .layout-centered .c-subtitle { max-width: 900px; margin-left: auto; margin-right: auto; }
 .layout-bold .c-title, .layout-bold .c-subtitle { max-width: 860px; }
 
-.c-pill { align-self: flex-start; padding: 16px 48px; background: var(--brand); color: var(--bg-main); font-size: 36px; font-weight: 900; border-radius: 100px; margin-bottom: 50px; letter-spacing: -1px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
+.c-pill { align-self: flex-start; padding: 16px 48px; background: var(--brand); color: var(--bg-main); font-size: 36px; font-weight: 900; border-radius: 100px; margin-bottom: 50px; letter-spacing: -1px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); transition: background-color 0.2s, color 0.2s; }
 
 .c-title { font-family: var(--font-headline, Inter), sans-serif; font-weight: var(--font-headline-weight, 800); color: var(--brand); text-transform: uppercase; letter-spacing: -1px; line-height: 0.98; word-break: normal; overflow-wrap: normal; hyphens: manual; white-space: normal; font-size: 84px; }
 .c-subtitle { font-family: var(--font-card-body, Inter), sans-serif; color: #fff; font-weight: 500; letter-spacing: -0.5px; line-height: 1.15; margin-top: 24px; word-break: normal; overflow-wrap: normal; hyphens: manual; white-space: normal; font-size: 32px; }
@@ -94,12 +92,13 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .layout-bold .c-title { font-size: 110px; line-height: 0.95; }
 .layout-bold .c-subtitle { font-size: 34px; }
 
-[contenteditable="true"] { 
+/* Estilos de Edición (SOLO se aplican cuando la tarjeta está en modo edición) */
+.mockup.is-editing [contenteditable="true"] { 
   user-select: text; 
   cursor: text; 
   min-width: 50px; 
 }
-[contenteditable="true"]:focus { 
+.mockup.is-editing [contenteditable="true"]:focus { 
   outline: 3px solid var(--brand); 
   outline-offset: 6px; 
   border-radius: 4px; 
@@ -107,16 +106,20 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   caret-color: var(--brand); 
   padding: 2px 5px; 
 }
-.c-pill[contenteditable="true"] {
+.mockup.is-editing .c-pill[contenteditable="true"] {
   min-width: 150px; 
+  cursor: pointer; 
 }
-.c-pill[contenteditable="true"]:focus {
+.mockup.is-editing .c-pill[contenteditable="true"]:focus {
   outline-offset: 4px;
   padding: 16px 48px; 
-  background: var(--brand); 
+  background: transparent; 
 }
 
-[contenteditable="true"]:empty::before {
+/* Lógica de placeholder (para ambas vistas) */
+.c-title[data-placeholder]:empty::before,
+.c-subtitle[data-placeholder]:empty::before,
+.c-pill[data-placeholder]:empty::before {
   content: attr(data-placeholder); 
   opacity: 0.5;
   font-style: italic;
@@ -135,158 +138,75 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   border: 3px solid var(--bg-panel); 
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
+#colorPickerDot[data-color="brand"] { background-color: var(--brand); }
+#colorPickerDot[data-color="white"] { background-color: white; }
+#colorPickerDot[data-color="black"] { background-color: black; }
+#colorPickerDot:hover { transform: scale(1.1); box-shadow: 0 0 0 3px var(--brand); }
 
-#colorPickerDot[data-color="brand"] {
-  background-color: var(--brand);
+/* Estilos de Tarjeta (Overview) */
+.stage-grid { 
+  perspective: 1000px; 
+  transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-#colorPickerDot[data-color="white"] {
-  background-color: white;
+.mockup {
+  cursor: default; max-height: 95%; width: 100%; 
+  min-width: 0; 
+  background: #000; border: none; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6); display: flex; flex-direction: column; transform-style: preserve-3d; 
+  transition: all .6s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
 }
-#colorPickerDot[data-color="black"] {
-  background-color: black;
+#overviewGrid .mockup { 
+  opacity: 0; transform: scale(0.5); 
+  cursor: pointer; 
+} 
+#overviewGrid .mockup.visible-card { 
+  opacity: 1; 
+  transform: scale(1); 
 }
-
-#colorPickerDot:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 3px var(--brand);
-}
-
-.stage-grid { perspective: 1000px; }
-.mockup { cursor: pointer; max-height: 95%; width: auto; min-width: 320px; background: #000; border: none; border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6); display: flex; flex-direction: column; opacity: 0; transform: scale(0.5); transform-style: preserve-3d; transition: all .45s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-.mockup.visible-card { opacity: 1; transform: scale(1); }
 .mockup.active-stage { transform: scale(1.02); box-shadow: 0 0 8px 1px var(--brand), 0 15px 30px -10px rgba(0,0,0,0.8); z-index: 10; }
 .mockup.inactive { opacity: 1; transform: scale(0.98); filter: brightness(0.95); }
-.mockup.no-insta { border: none; box-shadow: none; cursor: default; }
-.mockup.no-insta .insta-header, .mockup.no-insta .insta-footer { display: none !important; }
-.mockup.no-insta .canvas-wrapper { aspect-ratio: auto; flex-grow: 1; }
 
-.controls-grid-position {
-  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
-  border: 1px solid var(--border); border-radius: 14px;
-  padding: 10px; width: min(92vw, 780px);
-  display: none !important; 
+/* 6. Clases de Animación de Grid Morph */
+.mockup.is-exiting {
+  opacity: 0 !important;
+  transform: translateY(100px) scale(0.9) !important;
+  z-index: 1;
+  pointer-events: none; 
 }
-.controls-grid-position.is-visible {
-  display: grid !important; 
-  opacity: 1;
-  pointer-events: all;
-  transform: translateX(-50%);
+.mockup.is-editing {
+  z-index: 2;
+  cursor: default !important; 
 }
 
-.insta-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  margin-right: 0.75rem; 
-  flex-shrink: 0;
-  background: var(--bg-main); 
-  border: 2px solid var(--brand); 
-  padding: 2px;
-  overflow: hidden;
-}
-.insta-avatar > div {
-    width: 100%;
-    height: 100%;
-    background-image: url('mark.svg');
-    background-size: 80%;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-color: var(--brand); 
-    border-radius: 50%;
-}
-
- 
-
-  #particles{position:fixed;inset:0;z-index:40;pointer-events:none}
-
-  #logo{
-    position:fixed;left:50%;top:calc(50% - 120px);
-    transform:translate(-50%,-50%);
-    width:400px;height:400px;object-fit:contain;
-    z-index:56;opacity:1;transition:opacity .3s ease;
-    pointer-events:none;user-select:none
+/* 7. Cuando el Grid entra en modo edición */
+@media (min-width: 1024px) { /* Solo en 'lg' y superior */
+  .stage-grid.in-edit-mode .mockup.is-editing {
+    grid-column: 1 / 2; /* Mover a la primera columna */
   }
-
-  #landing{position:fixed;inset:0;z-index:50;background:transparent;opacity:1;pointer-events:auto; display: flex; align-items: center; justify-content: center;}
-  #fusion{position:relative;display:flex;align-items:center;height:60px;gap:0;z-index:55} 
-  #url{width:min(520px,56vw);height:60px;background:#000;border:1px solid var(--brand);color:#fff;border-radius:999px 0 0 999px;padding:0 16px;font-size:16px;outline:none}
-  #magic{
-    height:60px;min-width:68px;display:inline-flex;align-items:center;justify-content:center;
-    padding:0 18px;border-radius:0 999px 999px 0;background:var(--brand);color:#000;
-    border:none;cursor:pointer
+  .stage-grid.in-edit-mode #editDashboard {
+    grid-column: 2 / 5; /* Ocupar las 3 columnas restantes */
   }
-  #magic:active{transform:translateY(1px)}
-  #magic img{width:36px;height:36px;display:block;pointer-events:none;user-select:none}
-
-  #morphPill{
-    position:fixed;z-index:70;display:none;align-items:center;justify-content:center;
-    background:var(--brand);color:#000;font-weight:900;letter-spacing:.2px;border:1px solid var(--brand);
-    left:50%;top:50%;transform:translate(-50%,-50%) scale(1);
-    transition:width 1s cubic-bezier(.22,.61,.36,1),height 1s cubic-bezier(.22,.61,.36,1),border-radius 1s cubic-bezier(.22,.61,.36,1),opacity .4s ease;
-    aspect-ratio:1/1;
-    background:
-      radial-gradient(120% 220% at 50% 50%, rgba(204,255,0,0.15), transparent 55%),
-      linear-gradient(180deg, #D6FF57 0%, #B6FF00 100%);
-    border-radius:999px
-  }
-
-  #flyMark{
-    position:fixed;z-index:71;left:0;top:0;width:36px;height:36px;pointer-events:none;user-select:none;
-    transform-origin:center center;
-    transition:left 1s cubic-bezier(.22,.61,.36,1), top 1s cubic-bezier(.22,.61,.36,1),
-               width 1s cubic-bezier(.22,.61,.36,1), height 1s cubic-bezier(.22,.61,.36,1);
-  }
-  .asEmbed{
-    position:absolute !important; z-index:71 !important; inset:0 !important; margin:auto !important;
-    width:100% !important; height:100% !important; object-fit:contain !important;
-    left:auto !important; top:auto !important; transition:none !important;
-  }
-
-.fallback-item {
-  padding: 12px; 
-  border-bottom: 1px solid var(--border);
-  cursor: pointer; 
-  background: transparent;
-  width: 100%;
-  border: none;
-  text-align: left; 
-  transition: background-color 0.15s ease;
-}
-.fallback-item:hover {
-  background-color: rgba(204, 255, 0, 0.1); 
-}
-.fallback-item:last-child {
-  border-bottom: none;
-}
-.fallback-item .text-sm { font-size: 0.875rem; }
-.fallback-item .font-bold { font-weight: 700; }
-.fallback-item .mb-1 { margin-bottom: 0.25rem; }
-.fallback-item .text-xs { font-size: 0.75rem; }
-.fallback-item .opacity-70 { opacity: 0.7; }
-.fallback-item .mb-2 { margin-bottom: 0.5rem; }
-.fallback-item .underline { text-decoration: underline; }
-.fallback-item a { color: var(--brand); }
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.is-pulsing {
-  animation: pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-    opacity: 0.8;
+  .stage-grid.in-edit-mode .mockup.is-exiting {
+    /* Ocultarlas completamente para que no ocupen espacio en el grid */
+    display: none;
   }
 }
+
+
+/* (Resto de .css sin cambios) */
+.insta-avatar { width: 32px; height: 32px; border-radius: 50%; margin-right: 0.75rem; flex-shrink: 0; background: var(--bg-main); border: 2px solid var(--brand); padding: 2px; overflow: hidden; }
+.insta-avatar > div { width: 100%; height: 100%; background-image: url('mark.svg'); background-size: 80%; background-position: center; background-repeat: no-repeat; background-color: var(--brand); border-radius: 50%; }
+#particles{position:fixed;inset:0;z-index:40;pointer-events:none}
+#logo{ position:fixed;left:50%;top:calc(50% - 120px); transform:translate(-50%,-50%); width:400px;height:400px;object-fit:contain; z-index:56;opacity:1;transition:opacity .3s ease; pointer-events:none;user-select:none }
+#landing{position:fixed;inset:0;z-index:50;background:transparent;opacity:1;pointer-events:auto; display: flex; align-items: center; justify-content: center;}
+#fusion{position:relative;display:flex;align-items:center;height:60px;gap:0;z-index:55} 
+#url{width:min(520px,56vw);height:60px;background:#000;border:1px solid var(--brand);color:#fff;border-radius:999px 0 0 999px;padding:0 16px;font-size:16px;outline:none}
+#magic{ height:60px;min-width:68px;display:inline-flex;align-items:center;justify-content:center; padding:0 18px;border-radius:0 999px 999px 0;background:var(--brand);color:#000; border:none;cursor:pointer }
+#magic:active{transform:translateY(1px)}
+#magic img{width:36px;height:36px;display:block;pointer-events:none;user-select:none}
+#morphPill{ position:fixed;z-index:70;display:none;align-items:center;justify-content:center; background:var(--brand);color:#000;font-weight:900;letter-spacing:.2px;border:1px solid var(--brand); left:50%;top:50%;transform:translate(-50%,-50%) scale(1); transition:width 1s cubic-bezier(.22,.61,.36,1),height 1s cubic-bezier(.22,.61,.36,1),border-radius 1s cubic-bezier(.22,.61,.36,1),opacity .4s ease; aspect-ratio:1/1; background: radial-gradient(120% 220% at 50% 50%, rgba(204,255,0,0.15), transparent 55%), linear-gradient(180deg, #D6FF57 0%, #B6FF00 100%); border-radius:999px }
+#flyMark{ position:fixed;z-index:71;left:0;top:0;width:36px;height:36px;pointer-events:none;user-select:none; transform-origin:center center; transition:left 1s cubic-bezier(.22,.61,.36,1), top 1s cubic-bezier(.22,.61,.36,1), width 1s cubic-bezier(.22,.61,.36,1), height 1s cubic-bezier(.22,.61,.36,1); }
+.asEmbed{ position:absolute !important; z-index:71 !important; inset:0 !important; margin:auto !important; width:100% !important; height:100% !important; object-fit:contain !important; left:auto !important; top:auto !important; transition:none !important; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.is-pulsing { animation: pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; } }
