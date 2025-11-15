@@ -65,7 +65,8 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 12px;
-  max-height: 100%;
+  /* --- ALTURA CORREGIDA (sin height: 100%) --- */
+  max-height: 95%; 
   
   grid-column: span 3 / span 3;
   display: none; 
@@ -298,6 +299,12 @@ input:checked + .dash-toggle-slider-new:before {
   width: 34px;
   height: 34px;
 }
+/* --- ESTILO ARCOÍRIS --- */
+.dash-color-btn-wrapper[data-overlay-btn="custom"] {
+  background: conic-gradient(from 0.5turn, red, orange, yellow, green, blue, indigo, violet, red);
+  padding: 2px; /* Padding para crear el "borde" de gradiente */
+}
+
 .dash-color-picker-new {
   position: absolute;
   left: 0;
@@ -314,20 +321,37 @@ input:checked + .dash-toggle-slider-new:before {
 }
 .dash-color-picker-new::-webkit-color-swatch {
   border-radius: 6px;
-  border: 2px solid #222; 
+  border: none;
 }
-.dash-color-btn-wrapper.active .dash-color-picker-new::-webkit-color-swatch {
-  border: 2px solid #000; 
+/* --- AJUSTE PARA EL BOTÓN ARCOÍRIS --- */
+.dash-color-btn-wrapper[data-overlay-btn="custom"] .dash-color-picker-new {
+  position: relative; /* Quitar 'absolute' */
+  width: 100%;
+  height: 100%;
 }
-.dash-color-picker-new::-moz-color-swatch {
-  border-radius: 6px;
-  border: 2px solid #222;
+.dash-color-btn-wrapper[data-overlay-btn="custom"] .dash-color-picker-new::-webkit-color-swatch {
+  border-radius: 4px; /* Radio más pequeño para el interior */
+  border: none;
 }
-.dash-color-btn-wrapper.active .dash-color-picker-new::-moz-color-swatch {
-  border: 2px solid #000;
+.dash-color-btn-wrapper[data-overlay-btn="custom"] .dash-color-picker-new::-moz-color-swatch {
+  border-radius: 4px;
+  border: none;
 }
 
+
 /* --- ESTILO PARA EL SLIDER DE OPACIDAD --- */
+.dash-slider-group-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-slider-group-horizontal .dash-label-title {
+  text-transform: none; /* 'Opacity' no debe estar en mayúsculas */
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .dash-overlay-slider {
   -webkit-appearance: none;
   appearance: none;
@@ -371,8 +395,9 @@ input:checked + .dash-toggle-slider-new:before {
   margin-top: 12px;
   display: none; 
 }
-.dash-color-btn-wrapper.active[data-overlay-btn="custom"] ~ .dash-hex-input-new,
-.dash-color-btn-wrapper.active[data-overlay-btn="custom"] + .dash-overlay-slider + .dash-hex-input-new {
+/* Mostrar el HEX input si el botón custom está activo */
+.dash-btngroup label.active[data-overlay-btn="custom"] ~ .dash-hex-input-new,
+.dash-btngroup label.active[data-overlay-btn="custom"] + .dash-slider-group-horizontal + .dash-hex-input-new {
   display: block; 
 }
 
@@ -542,7 +567,10 @@ input:checked + .dash-toggle-slider-new:before {
   transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .mockup {
-  cursor: default; max-height: 95%; width: 100%; 
+  cursor: default; 
+  /* --- ALTURA CORREGIDA --- */
+  max-height: 95%; /* Altura máxima */
+  width: 100%; 
   min-width: 0; 
   background: #000; 
   /* --- BORDE 3pt APLICADO AL FRAME --- */

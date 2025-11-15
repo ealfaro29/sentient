@@ -233,6 +233,20 @@
 
                   <div class="dash-section-new">
                     <div class="dash-row">
+                      <label class="dash-label-title">Branding</label>
+                      <div class="dash-btngroup">
+                        <button class="dash-button-new" disabled>Logo</button>
+                        <button class="dash-button-new" disabled>Frame</button>
+                        <button class="dash-button-new" disabled>Pattern</button>
+                        <button class="dash-button-new" disabled>Theme</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr class="dash-separator" />
+
+                  <div class="dash-section-new">
+                    <div class="dash-row">
                       <label class="dash-label-title">Layouts</label>
                       <div class="dash-btngroup">
                         <button class="dash-button-new" data-layout-btn="layout-standard">Bottom</button>
@@ -263,7 +277,10 @@
                           <input type="color" id="overlayColorPicker" value="#CCFF00" class="dash-color-picker-new">
                         </label>
                       </div>
-                      <input type="range" id="overlayOpacitySlider" class="dash-overlay-slider" min="0" max="100" value="50">
+                      <div class="dash-slider-group-horizontal">
+                        <label for="overlayOpacitySlider" class="dash-label-title">Opacity</label>
+                        <input type="range" id="overlayOpacitySlider" class="dash-overlay-slider" min="0" max="100" value="50">
+                      </div>
                     </div>
                     <input type="text" id="overlayHexInput" value="#CCFF00" class="dash-hex-input-new" placeholder="#HEX">
                   </div>
@@ -287,19 +304,6 @@
                       <div class="dash-slider-new">
                         <label for="grayscaleSlider">Grayscale</label>
                         <input type="range" id="grayscaleSlider" min="0" max="100" value="0">
-                      </div>
-                    </div>
-                  </div>
-
-                  <hr class="dash-separator" />
-
-                  <div class="dash-section-new">
-                    <div class="dash-row">
-                      <label class="dash-label-title">Branding</label>
-                      <div class="dash-btngroup">
-                        <button class="dash-button-new" disabled>Logo</button>
-                        <button class="dash-button-new" disabled>Frame</button>
-                        <button class="dash-button-new" disabled>Pattern</button>
                       </div>
                     </div>
                   </div>

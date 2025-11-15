@@ -30,7 +30,7 @@ const App = {
     mode: 'LANDING',
     appStep: 'pick_cover', 
     theme: {},
-    url: '', 
+    url: '', // <-- Se rellenará con la URL de scraping
     data: {
       A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, brightness: 100, grayscale: 0, overlayColor: 'black', overlayOpacity: 50, isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...', defaultTag: 'NEWS', titleColor: 'brand', subtitleColor: 'white', pillBgColor: 'brand', pillTextColor: 'black' },
       B: { title: 'SET',   subtitle: 'Choose variant...',       bg: '', tag: 'STORY',    layout: 'layout-centered', caption: '', blur: 0, contrast: 100, brightness: 100, grayscale: 0, overlayColor: 'black', overlayOpacity: 50, isPlaceholder: true, defaultTitle: 'SET',   defaultSubtitle: 'Choose variant...', defaultTag: 'STORY', titleColor: 'brand', subtitleColor: 'white', pillBgColor: 'brand', pillTextColor: 'black' },
@@ -70,7 +70,7 @@ const App = {
       appStage: $('appStage'),
       dl: null, 
       nextBtn: $('nextBtn'), 
-      backBtn: $('backBtn'), // <-- BOTÓN "BACK" AÑADIDO
+      backBtn: $('backBtn'), 
       
       overviewGrid: $('overviewGrid'), 
       editDashboard: $('editDashboard'),
@@ -183,11 +183,15 @@ const App = {
   },
 
   updateTopControlBar() {
+    // --- LÓGICA DEL HOST/URL REVERTIDA A LA ORIGINAL ---
     if (this.els?.host) {
-      // --- HOST ESTÁTICO Y NO CLICKABLE ---
-      this.els.host.textContent = "sentient.io"; 
-      this.els.host.href = '#'; 
-      this.els.host.onclick = (e) => e.preventDefault();
+      let displayUrl = (this.state.url || '').replace(/^(https:\/\/|http:\/\/|www\.)/,'');
+      if (displayUrl.endsWith('/')) {
+        displayUrl = displayUrl.slice(0, -1);
+      }
+      this.els.host.textContent = displayUrl || "sentient.io"; // Fallback por si no hay URL
+      this.els.host.href = this.state.url || '#'; 
+      this.els.host.onclick = null; // Asegurarse de que sea clickable
     }
     
     // 1. Mostrar/Ocultar Botón "Back"

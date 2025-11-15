@@ -255,13 +255,15 @@ export const UIManager = {
             const titleOpt = document.createElement('option');
             titleOpt.value = id; 
             let titleText = data.title || data.defaultTitle || 'Variant ' + id;
-            titleOpt.textContent = titleText.substring(0, 15) + (titleText.length > 15 ? '...' : '');
+            // --- CAMBIO A 24 CARACTERES ---
+            titleOpt.textContent = titleText.substring(0, 24) + (titleText.length > 24 ? '...' : '');
             titleSelect.appendChild(titleOpt);
 
             const subtitleOpt = document.createElement('option');
             subtitleOpt.value = id;
             let subtitleText = data.subtitle || data.defaultSubtitle || 'Subtitle ' + id;
-            subtitleOpt.textContent = subtitleText.substring(0, 15) + (subtitleText.length > 15 ? '...' : '');
+            // --- CAMBIO A 24 CARACTERES ---
+            subtitleOpt.textContent = subtitleText.substring(0, 24) + (subtitleText.length > 24 ? '...' : '');
             subtitleSelect.appendChild(subtitleOpt);
         });
     }
