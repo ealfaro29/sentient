@@ -77,6 +77,7 @@ function safeUpdateText(el, newText) {
     if (textNode) {
       textNode.nodeValue = newText;
     } else {
+      // Si no hay nodo de texto, crearlo (y ponerlo antes de las bolitas)
       el.prepend(document.createTextNode(newText));
     }
 }
@@ -317,8 +318,8 @@ export const UIManager = {
       btn.classList.toggle('active', btn.dataset.overlayBtn === activeOverlay);
     });
 
-    // --- SINCRONIZAR NUEVO INPUT DE OPACIDAD ---
-    dash.querySelector('#overlayOpacityInput').value = d.overlayOpacity;
+    // --- SINCRONIZAR NUEVO SLIDER DE OPACIDAD ---
+    dash.querySelector('#overlayOpacitySlider').value = d.overlayOpacity;
 
     // Sincronizar Color Picker y HEX Input
     const colorPicker = dash.querySelector('#overlayColorPicker');
@@ -544,8 +545,8 @@ export const UIManager = {
         }
       });
       
-      // 7. Input de Opacidad (NUEVO)
-      dash.querySelector('#overlayOpacityInput').oninput = (e) => {
+      // 7. Input de Opacidad (AHORA ES SLIDER)
+      dash.querySelector('#overlayOpacitySlider').oninput = (e) => {
           app.state.editCardData.overlayOpacity = e.target.value;
           this.renderEditCard(app);
       };

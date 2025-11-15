@@ -123,5 +123,89 @@
       },
       "ai_error": null
     }
+  },
+  "https://www.swpc.noaa.gov/news/g4-severe-watch-effect-12-november": {
+    "ts": 1763226329.3618948,
+    "data": {
+      "source": "SWPC.NOAA.GOV",
+      "original": {
+        "title": "G4 (Severe) Watch in Effect for 12 November",
+        "subtitle": "Geomagnetic Storm Watches in Effect, to include G4 (Severe) potential for 12 November. The current list of Watches include: 11 Nov G2 (Moderate); 12 Nov G4 (Severe); and 13 Nov G3 (Strong). These Watc..."
+      },
+      "images": {
+        "a": "https://www.swpc.noaa.gov/sites/default/files/favicon.ico"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "Severe Geomagnetic Storm Watch Issued",
+            "subtitle": "G4 storm potential for November 12 confirmed"
+          },
+          "B": {
+            "title": "Solar Storms Brewing This Week",
+            "subtitle": "Several CMEs may hit Earth starting November 11"
+          },
+          "C": {
+            "title": "Brace for Impact: Severe Solar Storm Incoming",
+            "subtitle": "Experts warn of major geomagnetic disruption on November 12"
+          },
+          "D": {
+            "title": "G4 Storm Alert: Technical Details Unveiled",
+            "subtitle": "X5.1 flare linked CME aimed near Earth orbit"
+          }
+        },
+        "common_caption": "Prepare for a severe geomagnetic storm on November 12. The NOAA's Space Weather Prediction Center announced multiple geomagnetic storm watches including a severe G4 category expected on November 12. These watches are based on several coronal mass ejections from the Sun occurring between November 9 and 12, with the latest being the most energetic linked to an X5.1 solar flare. The key factor is that this latest CME is directed north and ahead of Earth's orbit, creating uncertainty but high confidence for Earth\u2019s impact. Instruments located about one million miles from Earth will soon determine the exact intensity of the storm to inform further warnings. This event could disrupt satellites, power grids, and communication systems, particularly affecting users dependent on high-frequency signals. How prepared are critical infrastructure systems for the arrival of such strong solar activity? Source: swpc.noaa.gov",
+        "image_keywords": [
+          "solar flare",
+          "coronal mass ejection",
+          "space weather",
+          "Earth atmosphere",
+          "satellite"
+        ]
+      },
+      "ai_error": null
+    }
+  },
+  "https://www.theguardian.com/commentisfree/2025/nov/15/big-content-ai-entertainment-media-conglomerates-tech": {
+    "ts": 1763226555.9579275,
+    "data": {
+      "source": "THEGUARDIAN.COM",
+      "original": {
+        "title": "Big content is taking on AI \u2013 but it\u2019s far from the David v Goliath tale they\u2019d have you believe | Alexander Avila",
+        "subtitle": "The world\u2019s biggest music company is now in the AI business. Last year, Universal Music Group (UMG), alongside labels including Warner Records and Sony Music Entertainment sued two AI music startups f..."
+      },
+      "images": {
+        "a": "https://i.guim.co.uk/img/media/b2dd5ef0cc9ba94cf63aa13edaca49ba306a0738/804_0_3750_3000/master/3750.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctb3BpbmlvbnMucG5n&enable=upscale&s=c7186d6ee946ee292f9b957896bc6643"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "Music Industry Takes On AI Use",
+            "subtitle": "Universal files lawsuits against AI music startups"
+          },
+          "B": {
+            "title": "When Artists Clash With AI Tech",
+            "subtitle": "Music labels and creators face a legal crossroads"
+          },
+          "C": {
+            "title": "Big Labels Sue AI Startups Over Music",
+            "subtitle": "A fight over artists' control and AI training data"
+          },
+          "D": {
+            "title": "AI Lawsuits Highlight Copyright Challenges",
+            "subtitle": "UMG suits question AI's impact on creative rights"
+          }
+        },
+        "common_caption": "Big music companies enter the AI battle. Universal Music Group recently sued AI startups for using their music to train models without permission. However, UMG later partnered with one of these startups to launch an AI music platform while claiming to protect artist rights. This legal push raises tough questions about how copyright law fits with AI technology that challenges traditional ideas of creation and ownership. These lawsuits are changing how artists, labels, and the tech industry interact over AI's impact on creative work. What will this mean for the future of artist control and AI-generated content? Source: theguardian.com",
+        "image_keywords": [
+          "music studio",
+          "courtroom",
+          "artist protest",
+          "AI technology",
+          "law books"
+        ]
+      },
+      "ai_error": null
+    }
   }
 }

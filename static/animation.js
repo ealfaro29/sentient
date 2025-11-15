@@ -30,9 +30,9 @@ const Animation = {
     if (!sketchHost) return; 
     
     this.sketch = new p5(p => {
-      let W=0,H=0, COUNT=300;
+      let W=0,H=0, COUNT=600;
       let r,a,vr,x,y,done,vx,vy,w0;
-      const EPS=11, VMAX_R=3.2, VMAX_T=100.05;
+      const EPS=8, VMAX_R=2.2, VMAX_T=80.05;
       let gravityStart=0, gravityEnd=0, mode='ambient', accel=false;
       let explodeStart=0, explodeEnd=0, explodeResolve=null;
 
