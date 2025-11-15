@@ -25,52 +25,383 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 #host { max-width: min(300px, 80vw); opacity: 0; transition: opacity 0.5s ease-out; }
 #host.visible { opacity: 1; }
 
+/* --- BOTÓN "BACK" Y CLASE UTILITARIA --- */
+.is-hidden { 
+  display: none !important; 
+}
+#backBtn {
+  display: flex; /* Se muestra/oculta con .is-hidden */
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: #222;
+  color: var(--text);
+  border: 1px solid #333;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: 12px; /* Espacio entre Back y Next */
+}
+#backBtn:hover { 
+  background: #333; 
+  border-color: #555;
+}
 
-/* 1. Posicionamiento del Dashboard */
+
+/* --- INICIO DE NUEVOS ESTILOS DASHBOARD --- */
+
+/* 1. Contenedor Principal y Mitades */
 #editDashboard {
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 12px;
   max-height: 100%;
   
-  /* 2. Ocupará 3 columnas (pero está oculto) */
   grid-column: span 3 / span 3;
   display: none; 
   opacity: 0;
   transform: translateX(100%);
   transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  padding: 24px;
 }
 #editDashboard.is-visible {
   opacity: 1;
   transform: translateX(0);
 }
 
-/* 3. Estilos del Dashboard */
-.dash-section { padding: 16px; border-bottom: 1px solid var(--border); }
-.dash-section:last-child { border-bottom: none; }
-.dash-title { font-size: 1.1rem; font-weight: 700; color: var(--brand); margin-bottom: 12px; }
-.dash-subtitle { font-size: 0.8rem; font-weight: 500; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
-.dash-btngroup { display: flex; flex-wrap: wrap; gap: 8px; }
-.dash-button { background: #222; color: var(--text); border: 1px solid #333; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
-.dash-button:hover { background: #333; border-color: #555; }
-.dash-button.active { background: var(--brand); color: #000; border-color: var(--brand); }
-.dash-button[disabled] { opacity: 0.4; cursor: not-allowed; background: #111; }
+.dash-container-new {
+  display: flex;
+  gap: 24px;
+  height: 100%;
+}
+.dash-half-left, .dash-half-right {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto; 
+}
+.dash-main-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--brand);
+  margin-bottom: 8px;
+}
+hr.dash-separator {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+  flex-shrink: 0; 
+}
 
-/* 4. Estilos de Miniaturas de Foto */
-.photo-thumbnail { width: 60px; height: 75px; padding: 2px; border-width: 2px; }
-.photo-thumbnail img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+/* 2. Secciones y Controles */
+.dash-section-new {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dash-label-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.dash-grid-50-50 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.dash-form-group-new {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-form-group-new label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.dash-select-new {
+  background: #222;
+  color: var(--text);
+  border: 1px solid #333;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+.dash-select-new:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.2);
+}
+
+/* 3. Miniaturas de Fotos */
+.dash-button { 
+  background: #222; border: 1px solid #333; 
+  border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+}
+.dash-btngroup-photo {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.photo-thumbnail { 
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  padding: 2px; 
+  border-width: 2px; 
+}
+.photo-thumbnail img { 
+  width: 100%; height: 100%; object-fit: cover; border-radius: 6px; 
+}
 .photo-thumbnail.active { border-color: var(--brand); }
+.dash-button:hover { background: #333; border-color: #555; }
+.photo-thumbnail.active { 
+  background: var(--brand); 
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(204, 255, 0, 0.3);
+}
 
-/* 5. Estilos Mockup Sliders */
-.dash-mock-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.dash-slider { font-size: 0.9rem; color: var(--text-dim); }
-.dash-slider label { margin-right: 8px; }
-.dash-slider input[type="range"] { width: 100%; opacity: 0.5; /* Mockup */ }
+/* 4. Uploader (File Drop Zone) */
+.file-drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border: 2px dashed #333;
+  border-radius: 12px;
+  background: #111;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.file-drop-zone:hover {
+  border-color: var(--brand);
+  background: rgba(204, 255, 0, 0.05);
+  color: var(--brand);
+}
+.file-drop-input { display: none; }
+
+/* 5. Controles en Fila (Layouts, Overlay, Branding) */
+.dash-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap; 
+}
+.dash-btngroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dash-button-new {
+  background: #222;
+  color: var(--text);
+  border: 1px solid #333;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative; 
+}
+.dash-button-new:hover { background: #333; border-color: #555; }
+.dash-button-new.active { 
+  background: var(--brand); 
+  color: #000; 
+  border-color: var(--brand); 
+}
+.dash-button-new[disabled] { 
+  opacity: 0.4; 
+  cursor: not-allowed; 
+  background: #111; 
+}
+
+/* 6. Toggle Switch (Tag On/Off) */
+.dash-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dash-toggle-switch-new {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+.dash-toggle-switch-new input { display: none; }
+.dash-toggle-slider-new {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #333;
+  transition: .4s;
+  border-radius: 34px;
+}
+.dash-toggle-slider-new:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .dash-toggle-slider-new {
+  background-color: var(--brand);
+}
+input:checked + .dash-toggle-slider-new:before {
+  transform: translateX(20px);
+  background-color: black;
+}
+
+/* 7. Custom Color Picker y Input de Opacidad */
+.dash-color-btn-wrapper {
+  padding-right: 36px; 
+  overflow: hidden; 
+}
+.dash-color-picker-new {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 32px; 
+  height: 100%;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent; 
+}
+.dash-color-picker-new::-webkit-color-swatch {
+  border-radius: 6px;
+  border: 2px solid #222; 
+}
+.dash-color-btn-wrapper.active .dash-color-picker-new::-webkit-color-swatch {
+  border: 2px solid #000; 
+}
+.dash-color-picker-new::-moz-color-swatch {
+  border-radius: 6px;
+  border: 2px solid #222;
+}
+.dash-color-btn-wrapper.active .dash-color-picker-new::-moz-color-swatch {
+  border: 2px solid #000;
+}
+.dash-number-input {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: var(--text);
+  font-family: monospace;
+  padding: 6px 10px;
+  width: 60px;
+  font-size: 0.9rem;
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield; 
+  appearance: textfield;
+}
+.dash-number-input::-webkit-outer-spin-button,
+.dash-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none; 
+  margin: 0;
+}
+
+.dash-hex-input-new {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: var(--text);
+  font-family: monospace;
+  padding: 6px 10px;
+  width: 100px;
+  font-size: 0.9rem;
+  margin-top: 12px;
+  display: none; 
+}
+.dash-button-new.active[data-overlay-btn="custom"] ~ .dash-hex-input-new {
+  display: block; 
+}
+
+/* 8. Sliders 2x2 Grid */
+.dash-slider-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.dash-slider-new {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-slider-new label { font-weight: 600; }
+.dash-slider-new input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity .2s;
+}
+.dash-slider-new input[type="range"]:hover { opacity: 1; }
+.dash-slider-new input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--brand);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid black;
+}
+.dash-slider-new input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--brand);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid black;
+}
+/* --- FIN DE NUEVOS ESTILOS DASHBOARD --- */
 
 
 /* Mockups + canvas */
 .canvas-wrapper { aspect-ratio: 4/5; width: 100%; height: auto; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; background: #111; }
-.render-target { width: 1080px; height: 1350px; position: absolute; background: var(--bg-main); transform-origin: center center; will-change: transform; overflow: hidden; }
+.render-target { 
+  width: 1080px; 
+  height: 1350px; 
+  position: absolute; 
+  background: var(--bg-main); 
+  transform-origin: center center; 
+  will-change: transform; 
+  overflow: hidden; 
+  /* --- OUTLINE 3pt AÑADIDO --- */
+  border: 3pt solid #333;
+}
 .card-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: filter .25s ease; }
 .card-overlay { position: absolute; inset: 0; }
 .card-content { position: absolute; inset: 0; padding: 80px; display: flex; flex-direction: column; z-index: 2; }
@@ -96,8 +427,14 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .mockup.is-editing [contenteditable="true"] { 
   user-select: text; 
   cursor: text; 
-  min-width: 50px; 
+  min-width: 50px;
+  position: relative; 
+  padding-right: 40px; 
 }
+.mockup.is-editing .c-pill[contenteditable="true"] {
+  padding-right: 70px; 
+}
+
 .mockup.is-editing [contenteditable="true"]:focus { 
   outline: 3px solid var(--brand); 
   outline-offset: 6px; 
@@ -105,14 +442,12 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   background: rgba(0,0,0,0.2); 
   caret-color: var(--brand); 
   padding: 2px 5px; 
-}
-.mockup.is-editing .c-pill[contenteditable="true"] {
-  min-width: 150px; 
-  cursor: pointer; 
+  padding-right: 40px; 
 }
 .mockup.is-editing .c-pill[contenteditable="true"]:focus {
   outline-offset: 4px;
   padding: 16px 48px; 
+  padding-right: 70px; 
   background: transparent; 
 }
 
@@ -127,21 +462,42 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   user-select: none; 
 }
 
-#colorPickerDot {
+/* --- ESTILOS DE BOLITAS DE COLOR (NUEVO) --- */
+.colorPickerDot {
   position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 20px;
   height: 20px;
   border-radius: 50%;
   cursor: pointer;
   z-index: 80; 
   transition: all 0.2s ease-in-out;
-  border: 3px solid var(--bg-panel); 
+  border: 3px solid rgba(0,0,0,0.3); /* Borde oscuro semi-transparente */
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  display: none; 
 }
-#colorPickerDot[data-color="brand"] { background-color: var(--brand); }
-#colorPickerDot[data-color="white"] { background-color: white; }
-#colorPickerDot[data-color="black"] { background-color: black; }
-#colorPickerDot:hover { transform: scale(1.1); box-shadow: 0 0 0 3px var(--brand); }
+.mockup.is-editing .colorPickerDot {
+  display: block; 
+}
+.colorPickerDot[data-color="brand"] { background-color: var(--brand); }
+.colorPickerDot[data-color="white"] { background-color: white; }
+.colorPickerDot[data-color="black"] { background-color: black; }
+.colorPickerDot:hover { 
+  transform: translateY(-50%) scale(1.1); 
+  box-shadow: 0 0 0 3px var(--brand); 
+  border-color: rgba(0,0,0,0.8);
+}
+
+/* Posicionamiento de las bolitas del Pill */
+.c-pill .colorPickerDot[data-target="pillBgColor"] {
+  right: 10px;
+}
+.c-pill .colorPickerDot[data-target="pillTextColor"] {
+  right: 40px; /* 10px + 20px (ancho) + 10px (espacio) */
+}
+
 
 /* Estilos de Tarjeta (Overview) */
 .stage-grid { 
@@ -165,7 +521,7 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
 .mockup.active-stage { transform: scale(1.02); box-shadow: 0 0 8px 1px var(--brand), 0 15px 30px -10px rgba(0,0,0,0.8); z-index: 10; }
 .mockup.inactive { opacity: 1; transform: scale(0.98); filter: brightness(0.95); }
 
-/* 6. Clases de Animación de Grid Morph */
+/* Clases de Animación de Grid Morph */
 .mockup.is-exiting {
   opacity: 0 !important;
   transform: translateY(100px) scale(0.9) !important;
@@ -177,7 +533,7 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   cursor: default !important; 
 }
 
-/* 7. Cuando el Grid entra en modo edición */
+/* Cuando el Grid entra en modo edición */
 @media (min-width: 1024px) { /* Solo en 'lg' y superior */
   .stage-grid.in-edit-mode .mockup.is-editing {
     grid-column: 1 / 2; /* Mover a la primera columna */
@@ -186,7 +542,6 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
     grid-column: 2 / 5; /* Ocupar las 3 columnas restantes */
   }
   .stage-grid.in-edit-mode .mockup.is-exiting {
-    /* Ocultarlas completamente para que no ocupen espacio en el grid */
     display: none;
   }
 }

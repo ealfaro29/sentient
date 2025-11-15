@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LLM Comparison – Instagram Vertical</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #000000;
+      --card-bg: #101010;
+      --border-subtle: #262626;
+      --text-main: #ffffff;
+      --text-soft: #aaaaaa;
+      --accent: #06ac81;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #111 0, #000 55%, #000 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+      "Segoe UI", sans-serif;
+      color: var(--text-main);
+    }
+
+    .post-frame {
+      aspect-ratio: 4 / 5;
+      height: min(88vh, 1350px);
+      max-width: min(100vw - 16px, 1080px);
+      border-radius: 28px;
+      padding: 20px 18px 16px;
+      background: linear-gradient(145deg, #050505, #101010);
+      box-shadow:
+        0 32px 64px rgba(0, 0, 0, 0.85),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .post-header {
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .title-block h1 {
+      font-size: clamp(20px, 2.4vw, 26px);
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .title-block h1 span {
+      color: var(--accent);
+    }
+
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .table-wrapper {
+      flex: 1;
+      border-radius: 16px;
+      border: 1px solid var(--border-subtle);
+      background: radial-gradient(circle at top, #181818, #050505);
+      overflow: hidden;
+    }
+
+    table.comparison-table {
+      width: 100%;
+      height: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .comparison-table thead {
+      background: #111111;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #191919;
+      border-right: 1px solid #191919;
+      vertical-align: top;
+    }
+
+    .comparison-table th:last-child,
+    .comparison-table td:last-child {
+      border-right: none;
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comparison-table th {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #bbbbbb;
+      text-align: left;
+    }
+
+    .comparison-table td.model-name {
+      font-weight: 650;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .comparison-table td span.body {
+      display: block;
+      line-height: 1.3;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="post-frame">
+    <header class="post-header">
+      <div class="title-block">
+        <h1>
+          ChatGPT <span>vs</span> Grok <span>vs</span> Gemini <span>vs</span> Claude <span>vs</span> Perplexity
+        </h1>
+      </div>
+    </header>
+
+    <section class="content-area">
+      <div class="table-wrapper">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Best for</th>
+              <th>Core uses</th>
+              <th>Distinct strengths</th>
+              <th>Practical insight</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr>
+              <td class="model-name">ChatGPT</td>
+              <td><span class="body">Creative reasoning, coding support, flexible problem solving.</span></td>
+              <td><span class="body">Writing, ideation, code help, workflow automation, structured planning.</span></td>
+              <td><span class="body">Strong synthesis across domains, multimodal skill, consistent style control.</span></td>
+              <td><span class="body">Balanced choice when creativity and technical depth must coexist.</span></td>
+            </tr>
+
+            <tr>
+              <td class="model-name">Grok</td>
+              <td><span class="body">Real-time cultural pulse and personality-driven social commentary.</span></td>
+              <td><span class="body">Trends on X, sentiment snapshots, short and witty social posts.</span></td>
+              <td><span class="body">Fast reactions to live events, punchy tone, optimized for creators.</span></td>
+              <td><span class="body">Useful when speed and attitude matter more than analysis.</span></td>
+            </tr>
+
+            <tr>
+              <td class="model-name">Gemini</td>
+              <td><span class="body">Workflows inside Google Workspace and shared cloud documents.</span></td>
+              <td><span class="body">Docs, Sheets, Slides, structured research, project planning.</span></td>
+              <td><span class="body">Deep Workspace integration and team collaboration strength.</span></td>
+              <td><span class="body">Best if your work already lives inside Google’s ecosystem.</span></td>
+            </tr>
+
+            <tr>
+              <td class="model-name">Claude</td>
+              <td><span class="body">Deep reading, careful writing, long and sensitive documents.</span></td>
+              <td><span class="body">Contracts, policies, technical reports, rewriting dense text.</span></td>
+              <td><span class="body">Excellent nuance, long context stability, careful reasoning.</span></td>
+              <td><span class="body">Ideal when tone and precision matter more than speed.</span></td>
+            </tr>
+
+            <tr>
+              <td class="model-name">Perplexity</td>
+              <td><span class="body">Verified research, fact checking, citation-heavy answers.</span></td>
+              <td><span class="body">Academic queries, source comparison, factual summaries.</span></td>
+              <td><span class="body">Always shows sources, strong retrieval, good cross-checking.</span></td>
+              <td><span class="body">Perfect when evidence and traceability are mandatory.</span></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

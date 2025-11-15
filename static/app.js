@@ -20,7 +20,7 @@ const SENTIENT_THEME = {
     headlineFont: "'Inter', sans-serif",
     fontWeight: '800'
   },
-  overlays: { black: 'rgba(0,0,0,0.5)', white: 'rgba(255,255,255,0.3)' },
+  overlays: { black: 'rgba(0,0,0,0.5)', white: 'rgba(255,255,0.3)' },
   defaultLayouts: { A: 'layout-standard', B: 'layout-centered', C: 'layout-bold' }
 };
 
@@ -32,19 +32,21 @@ const App = {
     theme: {},
     url: '', 
     data: {
-      A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...', defaultTag: 'NEWS', titleColor: 'brand', subtitleColor: 'white' },
-      B: { title: 'SET',   subtitle: 'Choose variant...',       bg: '', tag: 'STORY',    layout: 'layout-centered', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'SET',   defaultSubtitle: 'Choose variant...', defaultTag: 'STORY', titleColor: 'brand', subtitleColor: 'white' },
-      C: { title: 'GO',    subtitle: 'Customize & export.',     bg: '', tag: 'BREAKING', layout: 'layout-bold',     caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GO',    defaultSubtitle: 'Customize & export.', defaultTag: 'BREAKING', titleColor: 'brand', subtitleColor: 'white' },
-      D: { title: 'GIGA', subtitle: 'Analyze & Synthesize.', bg: '', tag: 'NERD',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, overlayColor: 'black', isPlaceholder: true, defaultTitle: 'GIGA', defaultSubtitle: 'Analyze & Synthesize.', defaultTag: 'NERD', titleColor: 'brand', subtitleColor: 'white' } 
+      A: { title: 'READY', subtitle: 'Paste an article URL...', bg: '', tag: 'NEWS',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, brightness: 100, grayscale: 0, overlayColor: 'black', overlayOpacity: 50, isPlaceholder: true, defaultTitle: 'READY', defaultSubtitle: 'Paste an article URL...', defaultTag: 'NEWS', titleColor: 'brand', subtitleColor: 'white', pillBgColor: 'brand', pillTextColor: 'black' },
+      B: { title: 'SET',   subtitle: 'Choose variant...',       bg: '', tag: 'STORY',    layout: 'layout-centered', caption: '', blur: 0, contrast: 100, brightness: 100, grayscale: 0, overlayColor: 'black', overlayOpacity: 50, isPlaceholder: true, defaultTitle: 'SET',   defaultSubtitle: 'Choose variant...', defaultTag: 'STORY', titleColor: 'brand', subtitleColor: 'white', pillBgColor: 'brand', pillTextColor: 'black' },
+      C: { title: 'GO',    subtitle: 'Customize & export.',     bg: '', tag: 'BREAKING', layout: 'layout-bold',     caption: '', blur: 0, contrast: 100, brightness: 100, grayscale: 0, overlayColor: 'black', overlayOpacity: 50, isPlaceholder: true, defaultTitle: 'GO',    defaultSubtitle: 'Customize & export.', defaultTag: 'BREAKING', titleColor: 'brand', subtitleColor: 'white', pillBgColor: 'brand', pillTextColor: 'black' },
+      D: { title: 'GIGA', subtitle: 'Analyze & Synthesize.', bg: '', tag: 'NERD',     layout: 'layout-standard', caption: '', blur: 0, contrast: 100, brightness: 100, grayscale: 0, overlayColor: 'black', overlayOpacity: 50, isPlaceholder: true, defaultTitle: 'GIGA', defaultSubtitle: 'Analyze & Synthesize.', defaultTag: 'NERD', titleColor: 'brand', subtitleColor: 'white', pillBgColor: 'brand', pillTextColor: 'black' } 
     },
     editCardData: {}
   },
 
   async init() {
     this.cacheDOM();
-    // UIManager.bindEvents(this); // Movido a setAppState
     this.applyTheme();
     Animation.init(this); 
+    
+    // Vincular el botón de retroceso UNA VEZ
+    this.bindBackButton();
     
     this.setAppState('LANDING');
     window.addEventListener('resize', () => {
@@ -68,16 +70,12 @@ const App = {
       appStage: $('appStage'),
       dl: null, 
       nextBtn: $('nextBtn'), 
+      backBtn: $('backBtn'), // <-- BOTÓN "BACK" AÑADIDO
       
       overviewGrid: $('overviewGrid'), 
       editDashboard: $('editDashboard'),
 
-      // (Controles ocultos, no son necesarios)
-      iUrl: null, iFile: null, imgFileBtn: null, blur: null, contrast: null,
-      activeControls: null, layoutBtn: null, layoutValue: null, 
-      overlayBtn: null, overlayValue: null,
-      
-      colorPickerDot: $('colorPickerDot'),
+      colorPickerDot: null, // Obsoleto
     };
   },
 
@@ -102,6 +100,7 @@ const App = {
       this.els.breadcrumbs?.classList.remove('visible');
       this.els.nextBtn?.classList.remove('visible');
       this.els.host?.classList.remove('visible'); 
+      this.els.backBtn?.classList.add('is-hidden'); // Ocultar Back
 
       // Resetear el modo de edición del grid
       this.els.overviewGrid.classList.remove('in-edit-mode');
@@ -128,17 +127,13 @@ const App = {
       this.els.appStage.classList.remove('opacity-0', 'pointer-events-none');
       
       this.renderBreadcrumbs(); 
-      // --- INICIO DE CORRECCIÓN ---
-      this.updateTopControlBar(); // Error 1: Llamar a this.updateTopControlBar
-      // --- FIN DE CORRECCIÓN ---
+      this.updateTopControlBar(); 
       UIManager.renderAll(this); 
       UIManager.bindOverviewEvents(this); 
 
     } else if (mode === 'EDIT') { // Fase 2: Edición
       this.renderBreadcrumbs(); 
-      // --- INICIO DE CORRECCIÓN ---
-      this.updateTopControlBar(); // Error 1: Llamar a this.updateTopControlBar
-      // --- FIN DE CORRECCIÓN ---
+      this.updateTopControlBar(); 
       
       UIManager.renderEditCard(this);
       UIManager.bindEditEvents(this); 
@@ -162,6 +157,31 @@ const App = {
     root.style.setProperty('--font-headline-weight', t.fontConfig.fontWeight);
   },
 
+  // --- NUEVA FUNCIÓN: Vincular el botón "Back" ---
+  bindBackButton() {
+    if (this.els?.backBtn) {
+      this.els.backBtn.onclick = () => {
+        if (this.state.mode === 'TRANSITION') return; 
+        
+        this.state.mode = 'TRANSITION';
+        
+        // Ejecutar la animación de reseteo
+        UIManager.resetAnimations(this); 
+        
+        // Actualizar el estado de la app
+        this.state.appStep = 'pick_cover';
+        this.renderBreadcrumbs();
+        this.els.nextBtn.querySelector('span').textContent = 'Next >';
+        this.els.backBtn.classList.add('is-hidden');
+        
+        // Esperar a que la animación termine para cambiar al estado APP
+        setTimeout(() => {
+          this.setAppState('APP');
+        }, 700); // 700ms es la duración de la animación del grid
+      };
+    }
+  },
+
   updateTopControlBar() {
     if (this.els?.host) {
       let displayUrl = (this.state.url || '').replace(/^(https:\/\/|http:\/\/|www\.)/,'');
@@ -172,6 +192,16 @@ const App = {
       this.els.host.href = this.state.url || '#'; 
     }
 
+    // --- LÓGICA DE BOTONES ACTUALIZADA ---
+    
+    // 1. Mostrar/Ocultar Botón "Back"
+    if (this.state.appStep === 'edit_details') {
+      this.els.backBtn.classList.remove('is-hidden');
+    } else {
+      this.els.backBtn.classList.add('is-hidden');
+    }
+
+    // 2. Lógica del Botón "Next"
     if (this.els?.nextBtn) {
       this.els.nextBtn.onclick = () => {
         
@@ -187,14 +217,20 @@ const App = {
           this.state.mode = 'TRANSITION';
           
           this.state.editCardData = JSON.parse(JSON.stringify(this.state.data[this.state.active]));
-          this.state.editCardData.sourceVariant = this.state.active;
+          
+          this.state.editCardData.sourceVariant = {
+            title: this.state.active,
+            subtitle: this.state.active
+          };
+          
           this.state.editCardData.sourcePhoto = this.state.active;
-          this.state.editCardData.pillBgColor = 'brand';
-          this.state.editCardData.pillTextColor = 'black';
+          this.state.editCardData.showTag = this.state.editCardData.tag.trim().length > 0;
+          this.state.editCardData.customOverlayColor = '#CCFF00'; // Default
           
           this.state.appStep = 'edit_details';
           this.renderBreadcrumbs();
           this.els.nextBtn.querySelector('span').textContent = 'Generate >';
+          this.els.backBtn.classList.remove('is-hidden'); // Mostrar Back
           
           this.els.overviewGrid.classList.add('in-edit-mode');
           
@@ -214,10 +250,7 @@ const App = {
           }, 30); 
           
           setTimeout(() => {
-            this.state.mode = 'EDIT';
-            UIManager.renderEditCard(this);
-            UIManager.bindEditEvents(this); 
-            UIManager.updateDashboard(this);
+            this.setAppState('EDIT'); // Cambiar a setAppState
           }, 700); 
 
         } else if (this.state.appStep === 'edit_details') {
@@ -246,10 +279,11 @@ const App = {
   },
 
   updateCardColor(field, newColor) {
-    const colorField = field + 'Color';
+    const colorField = field; 
     if (this.state.editCardData && this.state.editCardData[colorField] !== undefined) {
       this.state.editCardData[colorField] = newColor;
       UIManager.renderEditCard(this); 
+      // UIManager.updateColorDots(this, document.getElementById(`mock${this.state.active}`));
     }
   },
 

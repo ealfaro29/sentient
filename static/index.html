@@ -24,25 +24,30 @@
 
     <div id="topControlBar" class="hidden absolute top-0 left-0 right-0 h-[60px] z-50 items-center justify-between px-4">
       
-      <div id="breadcrumbs" class="flex items-center gap-2 text-xs sm:text-sm">
-        <span class="breadcrumb-step" data-step="pick_cover">Pick a Cover</span>
-        <span class="breadcrumb-separator">&gt;</span>
-        <span class="breadcrumb-step" data-step="edit_details">Edit its details</span>
-        <span class="breadcrumb-separator">&gt;</span>
-        <span class="breadcrumb-step" data-step="gen_carousel">Generate a Carousel</span>
-        <span class="breadcrumb-separator">&gt;</span>
-        <span class="breadcrumb-step" data-step="export">Export and Save</span>
-      </div>
-
-      <div class="flex items-center">
+      <div class="flex items-center gap-4">
         <a id="host" href="#" target="_blank"
            class="font-bold transition-all
                   bg-black border border-[var(--brand)] rounded-full
                   px-4 py-1.5 text-xs text-white no-underline
                   max-w-xs truncate
-                  hover:bg-[rgba(204,255,0,0.1)] hover:text-[var(--brand)]
-                  mr-24"> 
+                  hover:bg-[rgba(204,255,0,0.1)] hover:text-[var(--brand)]"> 
         </a>
+        
+        <div id="breadcrumbs" class="flex items-center gap-2 text-xs sm:text-sm">
+          <span class="breadcrumb-step" data-step="pick_cover">Pick a Cover</span>
+          <span class="breadcrumb-separator">&gt;</span>
+          <span class="breadcrumb-step" data-step="edit_details">Edit its details</span>
+          <span class="breadcrumb-separator">&gt;</span>
+          <span class="breadcrumb-step" data-step="gen_carousel">Generate a Carousel</span>
+          <span class="breadcrumb-separator">&gt;</span>
+          <span class="breadcrumb-step" data-step="export">Export and Save</span>
+        </div>
+      </div>
+
+      <div class="flex items-center">
+        <button id="backBtn" class="is-hidden">
+          &lt; Back
+        </button>
         
         <button id="nextBtn" class="flex items-center justify-center gap-2 px-4 py-2 bg-[var(--brand)] text-black font-extrabold rounded-lg text-sm transition-transform hover:scale-105">
           <img src="mark.svg" alt="icon" class="w-4 h-4" />
@@ -51,7 +56,6 @@
       </div>
 
     </div>
-    
     <div id="particles"></div>
     <img id="logo" src="logo.svg" alt="logo" />
     <section id="landing" aria-label="Pantalla inicial">
@@ -181,61 +185,132 @@
               </div>
             </div>
             
-            <div id="editDashboard" class="h-full w-full p-2 overflow-y-auto">
+            <div id="editDashboard" class="h-full w-full overflow-y-auto">
               
-              <div class="dash-section">
-                <h3 class="dash-title">Variants</h3>
-                <div class="dash-btngroup">
-                  <button class="dash-button" data-variant-btn="A">Variant A</button>
-                  <button class="dash-button" data-variant-btn="B">Variant B</button>
-                  <button class="dash-button" data-variant-btn="C">Variant C</button>
-                  <button class="dash-button" data-variant-btn="D">Variant D</button>
+              <div class="dash-container-new">
+                
+                <div class="dash-half-left">
+                  <h3 class="dash-main-title">Content</h3>
+
+                  <div class="dash-section-new">
+                    <div class="dash-grid-50-50">
+                      <div class="dash-form-group-new">
+                        <label for="titleSelect">Titles</label>
+                        <select id="titleSelect" class="dash-select-new"></select>
+                      </div>
+                      <div class="dash-form-group-new">
+                        <label for="subtitleSelect">Subtitles</label>
+                        <select id="subtitleSelect" class="dash-select-new"></select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr class="dash-separator" />
+
+                  <div class="dash-section-new">
+                    <label class="dash-label-title">Photos</label>
+                    <div class="dash-btngroup-photo" id="dashPhotoGroup">
+                      <button class="dash-button photo-thumbnail" data-photo-btn="A"><img src="" alt="Photo A"></button>
+                      <button class="dash-button photo-thumbnail" data-photo-btn="B"><img src="" alt="Photo B"></button>
+                      <button class="dash-button photo-thumbnail" data-photo-btn="C"><img src="" alt="Photo C"></button>
+                      <button class="dash-button photo-thumbnail" data-photo-btn="D"><img src="" alt="Photo D"></button>
+                    </div>
+                  </div>
+
+                  <hr class="dash-separator" />
+
+                  <div class="dash-section-new">
+                    <label for="fileUpload" class="file-drop-zone">
+                      <span>Drag & Drop or Click to Upload</span>
+                      <input type="file" id="fileUpload" class="file-drop-input" accept="image/*">
+                    </label>
+                  </div>
                 </div>
-              </div>
-              <div class="dash-section">
-                <h3 class="dash-title">Photos</h3>
-                <div class="dash-btngroup" id="dashPhotoGroup">
-                  <button class="dash-button photo-thumbnail" data-photo-btn="A"><img src="" alt="Photo A"></button>
-                  <button class="dash-button photo-thumbnail" data-photo-btn="B"><img src="" alt="Photo B"></button>
-                  <button class="dash-button photo-thumbnail" data-photo-btn="C"><img src="" alt="Photo C"></button>
-                  <button class="dash-button photo-thumbnail" data-photo-btn="D"><img src="" alt="Photo D"></button>
-                </div>
-              </div>
-              <div class="dash-section">
-                <h3 class="dash-title">Photo Edit</h3>
-                <div class="dash-subtitle">Overlay</div>
-                <div class="dash-btngroup">
-                  <button class="dash-button" data-overlay-btn="black">Black</button>
-                  <button class="dash-button" data-overlay-btn="white">White</button>
-                  <button class="dash-button" data-overlay-btn="brand">Accent</button>
-                </div>
-                <div class="dash-subtitle mt-4">Adjustments (Mockup)</div>
-                <div class="dash-mock-controls">
-                  <div class="dash-slider"><label>Contrast</label><input type="range" min="50" max="200" value="100"></div>
-                  <div class="dash-slider"><label>Brightness</label><input type="range" min="50" max="200" value="100"></div>
-                  <div class="dash-slider"><label>Blur</label><input type="range" min="0" max="30" value="0"></div>
-                  <div class="dash-slider"><label>Grayscale</label><input type="range" min="0" max="100" value="0"></div>
-                  <div class="dash-slider"><label>Noise</label><input type="range" min="0" max="100" value="0"></div>
-                </div>
-              </div>
-              <div class="dash-section">
-                <h3 class="dash-title">Layout</h3>
-                <div class="dash-btngroup">
-                  <button class="dash-button" data-layout-btn="layout-standard">Bottom</button>
-                  <button class="dash-button" data-layout-btn="layout-centered">Centered</button>
-                  <button class="dash-button" data-layout-btn="layout-bold">Top</button>
-                </div>
-              </div>
-              <div class="dash-section">
-                <h3 class="dash-title">Super-elements (Mockup)</h3>
-                <div class="dash-btngroup">
-                  <button class="dash-button" disabled>Add Logo</button>
-                  <button class="dash-button" disabled>Add Pattern</button>
-                  <button class="dash-button" disabled>Add Frame</button>
+
+                <div class="dash-half-right">
+                  <h3 class="dash-main-title">Adjustments</h3>
+
+                  <div class="dash-section-new">
+                    <div class="dash-row">
+                      <label class="dash-label-title">Layouts</label>
+                      <div class="dash-btngroup">
+                        <button class="dash-button-new" data-layout-btn="layout-standard">Bottom</button>
+                        <button class="dash-button-new" data-layout-btn="layout-centered">Center</button>
+                        <button class="dash-button-new" data-layout-btn="layout-bold">Top</button>
+                      </div>
+                      <div class="dash-toggle-wrapper">
+                        <label for="tagToggle" class="dash-label-title">Tag</label>
+                        <label class="dash-toggle-switch-new">
+                          <input type="checkbox" id="tagToggle" checked>
+                          <span class="dash-toggle-slider-new"></span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr class="dash-separator" />
+
+                  <div class="dash-section-new">
+                    <div class="dash-row">
+                      <label class="dash-label-title">Overlay</label>
+                      <div class="dash-btngroup">
+                        <button class="dash-button-new" data-overlay-btn="black">Black</button>
+                        <button class="dash-button-new" data-overlay-btn="white">White</button>
+                        <button class="dash-button-new" data-overlay-btn="brand">Accent</button>
+                        
+                        <label class="dash-button-new dash-color-btn-wrapper" data-overlay-btn="custom">
+                          <span>Custom</span>
+                          <input type="color" id="overlayColorPicker" value="#CCFF00" class="dash-color-picker-new">
+                        </label>
+                      </div>
+                      <input type="number" id="overlayOpacityInput" class="dash-number-input" min="0" max="100" value="50">
+                    </div>
+                    <input type="text" id="overlayHexInput" value="#CCFF00" class="dash-hex-input-new" placeholder="#HEX">
+                  </div>
+                  
+                  <hr class="dash-separator" />
+
+                  <div class="dash-section-new">
+                    <label class="dash-label-title">Photo adjustments</label>
+                    <div class="dash-slider-grid-2x2">
+                      <div class="dash-slider-new">
+                        <label for="contrastSlider">Contrast</label>
+                        <input type="range" id="contrastSlider" min="50" max="200" value="100">
+                      </div>
+                      <div class="dash-slider-new">
+                        <label for="brightnessSlider">Brightness</label>
+                        <input type="range" id="brightnessSlider" min="50" max="200" value="100">
+                      </div>
+                      <div class="dash-slider-new">
+                        <label for="blurSlider">Blur</label>
+                        <input type="range" id="blurSlider" min="0" max="30" value="0">
+                      </div>
+                      <div class="dash-slider-new">
+                        <label for="grayscaleSlider">Grayscale</label>
+                        <input type="range" id="grayscaleSlider" min="0" max="100" value="0">
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr class="dash-separator" />
+
+                  <div class="dash-section-new">
+                    <div class="dash-row">
+                      <label class="dash-label-title">Branding</label>
+                      <div class="dash-btngroup">
+                        <button class="dash-button-new" disabled>Logo</button>
+                        <button class="dash-button-new" disabled>Frame</button>
+                        <button class="dash-button-new" disabled>Pattern</button>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
-            </div> </div> </div>
+            </div>
+            </div> 
+      </div>
     </main>
     
   </div>

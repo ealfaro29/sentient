@@ -14,11 +14,34 @@ const FIXED_FS = {
 };
 
 const COLOR_OPTIONS = ['brand', 'white', 'black'];
-const PILL_BG_OPTIONS = ['brand', 'white', 'black'];
-const PILL_TEXT_OPTIONS = ['black', 'white', 'brand'];
 
 function sizesFor(layout) {
   return FIXED_FS[layout] || FIXED_FS['layout-standard'];
+}
+
+// --- ACTUALIZADO: Helper para convertir color a RGBA con opacidad ---
+function colorToRgba(color, opacityPercent, customHex) {
+    const opacity = (parseFloat(opacityPercent) || 0) / 100;
+    let rgb = '0,0,0'; // Default a negro
+
+    if (color === 'black') {
+        rgb = '0,0,0';
+    } else if (color === 'white') {
+        rgb = '255,255,255'; // BLANCO PURO
+    } else if (color === 'brand') {
+        rgb = '204, 255, 0'; // De 'app.js'
+    } else if (color === 'custom' && isValidHex(customHex)) {
+        let hex = customHex.replace('#', '');
+        if (hex.length === 3) {
+            hex = hex.split('').map(char => char + char).join('');
+        }
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        rgb = `${r},${g},${b}`;
+    }
+    
+    return `rgba(${rgb}, ${opacity})`;
 }
 
 function getResolvedColor(d, stateColor) {
@@ -27,7 +50,7 @@ function getResolvedColor(d, stateColor) {
         case 'brand': return brandColor;
         case 'white': return '#FFF';
         case 'black': return '#000';
-        default: return brandColor;
+        default: return stateColor; // Permitir colores HEX
     }
 }
 
@@ -37,46 +60,41 @@ function getTextColor(d, element, defaultColor, stateColor) {
     return getResolvedColor(d, stateColor);
 }
 
-function positionColorPicker(app, el) {
-    const rect = el.getBoundingClientRect();
-    const stageRect = app.els.overviewGrid.getBoundingClientRect(); 
+// --- Helper para actualizar el estado desde los <select> de texto ---
+function updateTextFromVariant(app, field, selectValue) {
+    const d = app.state.editCardData;
+    const newText = app.state.data[selectValue][field];
+    d[field] = newText;
+    d.sourceVariant[field] = selectValue; 
     
-    if (!app.els.colorPickerDot) return;
+    const activeCardId = app.state.active;
+    const cardEl = document.getElementById(`card${activeCardId}`);
+    if (cardEl) {
+        const textEl = cardEl.querySelector(field === 'title' ? '.c-title' : '.c-subtitle');
+        if (textEl) {
+            textEl.textContent = newText;
+        }
+    }
+    
+    d.isPlaceholder = (d.title.trim() === '' && d.subtitle.trim() === '');
+    UIManager.renderEditCard(app);
+}
 
-    const offsetX = rect.right - stageRect.left;
-    const offsetY = rect.top - stageRect.top;
-    
-    const dotSize = 20; 
-    const margin = 10;
-    
-    app.els.colorPickerDot.style.left = `${offsetX - dotSize / 2 + margin}px`; 
-    app.els.colorPickerDot.style.top = `${offsetY - margin}px`;
-    
-    const isTitle = el.classList.contains('c-title');
-    const targetField = isTitle ? 'title' : 'subtitle';
-    const colorState = app.state.editCardData[targetField + 'Color']; 
-    
-    app.els.colorPickerDot.setAttribute('data-color', colorState);
-    app.els.colorPickerDot.style.visibility = 'visible';
-    
-    app.els.colorPickerDot.setAttribute('data-target-id', el.id);
-    app.els.colorPickerDot.setAttribute('data-target-field', targetField);
+function isValidHex(hex) {
+    return /^#([0-9A-F]{3}){1,2}$/i.test(hex);
 }
 
 
 export const UIManager = {
   // --- RENDERING CORE ---
 
-  // 1. renderCard (Vista Overview) - EDICIÓN ELIMINADA
+  // 1. renderCard (Vista Overview)
   renderCard(app, v, tid = `card${v}`) {
     const c = document.getElementById(tid);
     if (!c) return;
 
     const d = app.state.data[v];
-    const ovs = (app.state.theme && app.state.theme.overlays)
-      ? app.state.theme.overlays
-      : { black: 'rgba(0,0,0,0.5)', white: 'rgba(255,255,255,0.3)' };
-
+    
     const imgEl = c.closest('.mockup').querySelector('.card-bg');
     if (d.bg && d.bg.length > 0) {
       const proxyUrl = `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
@@ -84,9 +102,13 @@ export const UIManager = {
     } else {
       imgEl.src = '';
     }
-    imgEl.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%)`;
+    
+    // --- FILTROS ACTUALIZADOS (con grayscale) ---
+    imgEl.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%) brightness(${d.brightness}%) grayscale(${d.grayscale}%)`;
 
-    c.querySelector('.card-overlay').style.background = d.overlayColor === 'white' ? ovs.white : ovs.black;
+    // --- OVERLAY ACTUALIZADO (con opacidad) ---
+    c.querySelector('.card-overlay').style.background = colorToRgba(d.overlayColor, d.overlayOpacity, d.customOverlayColor);
+    
     c.querySelector('.card-content').className = `card-content ${d.layout}`;
     
     const p = c.querySelector('.c-pill');
@@ -111,16 +133,16 @@ export const UIManager = {
     t.removeAttribute('contenteditable');
     s.removeAttribute('contenteditable');
 
-    // Restaurar estilos de pill
-    p.style.backgroundColor = '';
-    p.style.color = '';
+    p.style.backgroundColor = getResolvedColor(d, d.pillBgColor);
+    p.style.color = getResolvedColor(d, d.pillTextColor);
+    p.style.display = (d.isPlaceholder || !d.tag || d.tag.trim() === '') ? 'none' : 'flex';
 
     const fs = sizesFor(d.layout);
     t.style.fontSize = `${fs.title}px`; t.style.lineHeight = fs.titleLH;
     s.style.display = ''; s.style.fontSize = `${fs.subtitle}px`; s.style.lineHeight = fs.subLH;
   },
 
-  // 2. Nueva función: renderEditCard (aplica datos de 'editCardData' a la tarjeta activa)
+  // 2. renderEditCard (Aplica datos de 'editCardData' a la tarjeta activa)
   renderEditCard(app) {
     const cardId = app.state.active;
     if (!cardId) return;
@@ -128,21 +150,19 @@ export const UIManager = {
     if (!c) return;
 
     const d = app.state.editCardData; 
-    const ovs = (app.state.theme && app.state.theme.overlays)
-      ? app.state.theme.overlays
-      : { black: 'rgba(0,0,0,0.5)', white: 'rgba(255,255,255,0.3)' };
 
     const imgEl = c.closest('.mockup').querySelector('.card-bg');
     if (d.bg && d.bg.length > 0) {
       const proxyUrl = `/api/proxy_image?url=${encodeURIComponent(d.bg)}`;
       imgEl.src = d.bg.startsWith('data:') ? d.bg : proxyUrl;
     }
-    imgEl.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%)`;
+    
+    // --- FILTROS ACTUALIZADOS (con grayscale) ---
+    imgEl.style.filter = `blur(${d.blur}px) contrast(${d.contrast}%) brightness(${d.brightness}%) grayscale(${d.grayscale}%)`;
 
-    let overlayBg = ovs.black;
-    if (d.overlayColor === 'white') overlayBg = ovs.white;
-    else if (d.overlayColor === 'brand') overlayBg = 'rgba(204, 255, 0, 0.4)'; 
-    c.querySelector('.card-overlay').style.background = overlayBg;
+    // --- OVERLAY ACTUALIZADO (con opacidad) ---
+    c.querySelector('.card-overlay').style.background = colorToRgba(d.overlayColor, d.overlayOpacity, d.customOverlayColor);
+    
     c.querySelector('.card-content').className = `card-content ${d.layout}`;
     
     const p = c.querySelector('.c-pill');
@@ -163,29 +183,85 @@ export const UIManager = {
     t.style.color = getTextColor(d, t, brandColor, d.titleColor);
     s.style.color = getTextColor(d, s, subtitleDefaultColor, d.subtitleColor);
 
-    // Aplicar nuevos colores de Pill
     p.style.backgroundColor = getResolvedColor(d, d.pillBgColor);
     p.style.color = getResolvedColor(d, d.pillTextColor);
+    p.style.display = d.showTag ? 'flex' : 'none';
 
     const fs = sizesFor(d.layout);
     t.style.fontSize = `${fs.title}px`; t.style.lineHeight = fs.titleLH;
     s.style.display = ''; s.style.fontSize = `${fs.subtitle}px`; s.style.lineHeight = fs.subLH;
+    
+    // Actualizar los colores de las bolitas
+    this.updateColorDots(app, c.closest('.mockup'));
+  },
+  
+  // --- FUNCIÓN DE BOLITAS DE COLOR ACTUALIZADA ---
+  updateColorDots(app, activeMock) {
+    if (!activeMock) return;
+    const d = app.state.editCardData;
+    
+    const titleDot = activeMock.querySelector('.colorPickerDot[data-target="titleColor"]');
+    if (titleDot) titleDot.style.backgroundColor = getResolvedColor(d, d.titleColor);
+    
+    const subtitleDot = activeMock.querySelector('.colorPickerDot[data-target="subtitleColor"]');
+    if (subtitleDot) subtitleDot.style.backgroundColor = getResolvedColor(d, d.subtitleColor);
+
+    const pillBgDot = activeMock.querySelector('.colorPickerDot[data-target="pillBgColor"]');
+    if (pillBgDot) pillBgDot.style.backgroundColor = getResolvedColor(d, d.pillBgColor);
+    
+    const pillTextDot = activeMock.querySelector('.colorPickerDot[data-target="pillTextColor"]');
+    if (pillTextDot) pillTextDot.style.backgroundColor = getResolvedColor(d, d.pillTextColor);
   },
 
-  // 3. Nueva función: updateDashboard (Actualiza los botones activos)
+  // 3. updateDashboard (Actualizado)
   updateDashboard(app) {
     const d = app.state.editCardData;
     const dash = app.els.editDashboard;
     if (!dash) return;
     
-    dash.querySelectorAll('[data-variant-btn]').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.variantBtn === d.sourceVariant);
-    });
+    const titleSelect = dash.querySelector('#titleSelect');
+    const subtitleSelect = dash.querySelector('#subtitleSelect');
     
+    // --- 1. Dinamizar Dropdowns (SOLO SE HACE UNA VEZ) ---
+    if (titleSelect.options.length === 0) {
+        CARD_IDS.forEach(id => {
+            const data = app.state.data[id];
+            
+            const titleOpt = document.createElement('option');
+            titleOpt.value = id; 
+            let titleText = data.title || data.defaultTitle || 'Variant ' + id;
+            titleOpt.textContent = titleText.substring(0, 15) + (titleText.length > 15 ? '...' : '');
+            titleSelect.appendChild(titleOpt);
+
+            const subtitleOpt = document.createElement('option');
+            subtitleOpt.value = id;
+            let subtitleText = data.subtitle || data.defaultSubtitle || 'Subtitle ' + id;
+            subtitleOpt.textContent = subtitleText.substring(0, 15) + (subtitleText.length > 15 ? '...' : '');
+            subtitleSelect.appendChild(subtitleOpt);
+        });
+    }
+    
+    // --- 2. Sincronizar Selects (CON LÓGICA DE PRE-SELECCIÓN) ---
+    if (d.sourceVariant?.title === 'custom') {
+        titleSelect.selectedIndex = -1; // Deseleccionar
+    } else {
+        titleSelect.value = d.sourceVariant?.title; // Seleccionar A, B, C, o D
+    }
+    
+    if (d.sourceVariant?.subtitle === 'custom') {
+        subtitleSelect.selectedIndex = -1;
+    } else {
+        subtitleSelect.value = d.sourceVariant?.subtitle;
+    }
+
+    // --- 3. Sincronizar el resto de controles ---
+    
+    // Sincronizar Botones de Foto
     dash.querySelectorAll('[data-photo-btn]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.photoBtn === d.sourcePhoto);
     });
 
+    // Rellenar miniaturas de fotos
     CARD_IDS.forEach(id => {
       const imgEl = dash.querySelector(`#dashPhotoGroup [data-photo-btn="${id}"] img`);
       if(imgEl) {
@@ -198,13 +274,41 @@ export const UIManager = {
       }
     });
 
-    dash.querySelectorAll('[data-overlay-btn]').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.overlayBtn === d.overlayColor);
-    });
-
+    // Sincronizar Botones de Layout
     dash.querySelectorAll('[data-layout-btn]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.layoutBtn === d.layout);
     });
+    
+    // Sincronizar Toggle de Tag
+    dash.querySelector('#tagToggle').checked = d.showTag;
+
+    // Sincronizar Botones de Overlay
+    let activeOverlay = d.overlayColor;
+    if (isValidHex(activeOverlay)) {
+        activeOverlay = 'custom';
+        d.customOverlayColor = d.overlayColor; 
+    }
+    
+    dash.querySelectorAll('[data-overlay-btn]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.overlayBtn === activeOverlay);
+    });
+
+    // --- SINCRONIZAR NUEVO INPUT DE OPACIDAD ---
+    dash.querySelector('#overlayOpacityInput').value = d.overlayOpacity;
+
+    // Sincronizar Color Picker y HEX Input
+    const colorPicker = dash.querySelector('#overlayColorPicker');
+    const hexInput = dash.querySelector('#overlayHexInput');
+    const color = d.customOverlayColor || '#CCFF00';
+    
+    colorPicker.value = color;
+    hexInput.value = color;
+
+    // --- SINCRONIZAR SLIDERS (con grayscale) ---
+    dash.querySelector('#contrastSlider').value = d.contrast;
+    dash.querySelector('#brightnessSlider').value = d.brightness;
+    dash.querySelector('#blurSlider').value = d.blur;
+    dash.querySelector('#grayscaleSlider').value = d.grayscale || 0;
   },
 
   renderAll(app) {
@@ -222,11 +326,6 @@ export const UIManager = {
       const scale = Math.min(w.clientWidth / CARD_W, w.clientHeight / CARD_H);
       c.style.transform = `scale(${scale})`;
     });
-    
-    const activeElement = document.activeElement;
-    if (app.state.mode === 'EDIT' && activeElement && (activeElement.classList.contains('c-title') || activeElement.classList.contains('c-subtitle'))) {
-        positionColorPicker(app, activeElement);
-    }
   },
 
   handlePaste(e) {
@@ -244,6 +343,11 @@ export const UIManager = {
 
     if (key) {
       app.updateCardData(app.state.editCardData, key, newText);
+      
+      if (type === 'title' || type === 'subtitle') {
+          app.state.editCardData.sourceVariant[type] = 'custom'; 
+          this.updateDashboard(app); 
+      }
     }
   },
 
@@ -279,111 +383,89 @@ export const UIManager = {
     });
   },
 
+  // 6. bindEditEvents (REESCRITO para bolitas de color)
   bindEditEvents(app) {
     const activeCardId = app.state.active;
     const activeMock = document.getElementById(`mock${activeCardId}`);
     if (!activeMock) return;
 
-    // LÓGICA DEL CONTROL DE COLOR
-    if (!app.els.colorPickerDot) {
+    // --- LÓGICA DE BOLITAS DE COLOR ---
+    const createDot = (targetField) => {
         const dot = document.createElement('div');
-        dot.id = 'colorPickerDot';
-        dot.style.visibility = 'hidden';
-        dot.style.pointerEvents = 'none'; 
-        app.els.overviewGrid.appendChild(dot); 
-        app.els.colorPickerDot = dot; 
+        dot.className = 'colorPickerDot';
+        dot.dataset.target = targetField;
         
-        dot.addEventListener('mousedown', (e) => {
+        dot.onmousedown = (e) => {
             e.preventDefault(); 
-            const targetField = e.currentTarget.getAttribute('data-target-field');
-            const currentColor = app.state.editCardData[targetField + 'Color'];
+            e.stopPropagation();
+            
+            const d = app.state.editCardData;
+            const currentColor = d[targetField];
             const currentIndex = COLOR_OPTIONS.findIndex(c => c === currentColor);
             const nextColor = COLOR_OPTIONS[(currentIndex + 1) % COLOR_OPTIONS.length];
             
             app.updateCardColor(targetField, nextColor);
-            
-            const targetId = e.currentTarget.getAttribute('data-target-id');
-            document.getElementById(targetId)?.focus();
-            positionColorPicker(app, document.getElementById(targetId));
-        });
-    }
+        };
+        return dot;
+    };
 
-    // Listeners para campos de texto (SOLO en tarjeta activa)
+    // --- Listeners para campos de texto ---
     activeMock.querySelectorAll('.c-title, .c-subtitle, .c-pill').forEach(el => {
-      el.setAttribute('contenteditable', 'true'); // HABILITAR EDICIÓN
+      el.setAttribute('contenteditable', 'true'); 
       el.id = el.id || (`editable-${activeCardId}-` + Math.random().toString(36).substring(2, 9)); 
       
       let type;
-      if (el.classList.contains('c-title')) type = 'title';
-      else if (el.classList.contains('c-subtitle')) type = 'subtitle';
-      else if (el.classList.contains('c-pill')) type = 'tag';
+      if (el.classList.contains('c-title')) {
+          type = 'title';
+          if (!el.querySelector('.colorPickerDot')) { // Evitar duplicados
+            el.appendChild(createDot('titleColor'));
+          }
+      }
+      else if (el.classList.contains('c-subtitle')) {
+          type = 'subtitle';
+          if (!el.querySelector('.colorPickerDot')) {
+            el.appendChild(createDot('subtitleColor'));
+          }
+      }
+      else if (el.classList.contains('c-pill')) {
+          type = 'tag';
+          if (!el.querySelector('.colorPickerDot')) {
+            el.appendChild(createDot('pillBgColor'));
+            el.appendChild(createDot('pillTextColor'));
+          }
+      }
       
-      const isColorEditable = (type === 'title' || type === 'subtitle');
-
-      el.onfocus = () => {
-        if (isColorEditable) {
-          app.els.colorPickerDot.style.pointerEvents = 'auto'; 
-          positionColorPicker(app, el);
-        }
-      };
-
+      el.onfocus = null; // Obsoleto
       el.onblur = () => {
         this.updateTextFromCard(app, el, type);
-        
-        if (isColorEditable) {
-          setTimeout(() => {
-              const nextFocusedElement = document.activeElement;
-              if (app.els.colorPickerDot && nextFocusedElement !== app.els.colorPickerDot && !el.contains(nextFocusedElement)) {
-                  app.els.colorPickerDot.style.visibility = 'hidden';
-                  app.els.colorPickerDot.style.pointerEvents = 'none'; 
-              }
-          }, 50);
-        }
       };
-      
       el.onkeydown = (e) => {
         if (e.key === 'Enter') {
           e.preventDefault(); 
           el.blur(); 
         }
       };
-      
       el.onpaste = (e) => {
         this.handlePaste(e);
       };
     });
+    
+    this.updateColorDots(app, activeMock);
 
-    // Listeners para el Pill (Fondo y Texto)
-    const editPill = activeMock.querySelector('.c-pill');
-    if (editPill) {
-      editPill.onclick = () => {
-        const d = app.state.editCardData;
-        const currentIndex = PILL_BG_OPTIONS.findIndex(c => c === d.pillBgColor);
-        d.pillBgColor = PILL_BG_OPTIONS[(currentIndex + 1) % PILL_BG_OPTIONS.length];
-        this.renderEditCard(app);
-      };
-      editPill.oncontextmenu = (e) => {
-        e.preventDefault();
-        const d = app.state.editCardData;
-        const currentIndex = PILL_TEXT_OPTIONS.findIndex(c => c === d.pillTextColor);
-        d.pillTextColor = PILL_TEXT_OPTIONS[(currentIndex + 1) % PILL_TEXT_OPTIONS.length];
-        this.renderEditCard(app);
-      };
-    }
 
-    // Listeners para el Dashboard
+    // --- Listeners para el Dashboard ---
     const dash = app.els.editDashboard;
     if (dash) {
-      dash.querySelectorAll('[data-variant-btn]').forEach(btn => {
-        btn.onclick = () => {
-          const variantId = btn.dataset.variantBtn;
-          app.state.editCardData.title = app.state.data[variantId].title;
-          app.state.editCardData.subtitle = app.state.data[variantId].subtitle;
-          app.state.editCardData.sourceVariant = variantId;
-          this.renderEditCard(app);
-          this.updateDashboard(app);
-        };
-      });
+      
+      // 1. Selects de Texto (mitad izquierda)
+      dash.querySelector('#titleSelect').onchange = (e) => {
+        updateTextFromVariant(app, 'title', e.target.value);
+      };
+      dash.querySelector('#subtitleSelect').onchange = (e) => {
+        updateTextFromVariant(app, 'subtitle', e.target.value);
+      };
+
+      // 2. Botones de Foto (mitad izquierda)
       dash.querySelectorAll('[data-photo-btn]').forEach(btn => {
         btn.onclick = () => {
           const photoId = btn.dataset.photoBtn;
@@ -393,13 +475,23 @@ export const UIManager = {
           this.updateDashboard(app);
         };
       });
-      dash.querySelectorAll('[data-overlay-btn]').forEach(btn => {
-        btn.onclick = () => {
-          app.state.editCardData.overlayColor = btn.dataset.overlayBtn;
-          this.renderEditCard(app);
-          this.updateDashboard(app);
-        };
-      });
+      
+      // 3. Uploader de Archivo (mitad izquierda)
+      dash.querySelector('#fileUpload').onchange = (e) => {
+          const file = e.target.files[0];
+          if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                  app.state.editCardData.bg = event.target.result;
+                  app.state.editCardData.sourcePhoto = 'custom'; 
+                  this.renderEditCard(app);
+                  this.updateDashboard(app);
+              };
+              reader.readAsDataURL(file);
+          }
+      };
+
+      // 4. Botones de Layout (mitad derecha)
       dash.querySelectorAll('[data-layout-btn]').forEach(btn => {
         btn.onclick = () => {
           app.state.editCardData.layout = btn.dataset.layoutBtn;
@@ -407,6 +499,72 @@ export const UIManager = {
           this.updateDashboard(app);
         };
       });
+
+      // 5. Toggle de Tag (mitad derecha)
+      dash.querySelector('#tagToggle').onchange = (e) => {
+        app.state.editCardData.showTag = e.target.checked;
+        this.renderEditCard(app);
+      };
+
+      // 6. Botones de Overlay (mitad derecha)
+      dash.querySelectorAll('[data-overlay-btn]').forEach(btn => {
+        if (btn.dataset.overlayBtn !== 'custom') {
+          btn.onclick = () => {
+            app.state.editCardData.overlayColor = btn.dataset.overlayBtn;
+            this.renderEditCard(app);
+            this.updateDashboard(app);
+          };
+        }
+      });
+      
+      // 7. Input de Opacidad (NUEVO)
+      dash.querySelector('#overlayOpacityInput').oninput = (e) => {
+          app.state.editCardData.overlayOpacity = e.target.value;
+          this.renderEditCard(app);
+      };
+
+      // 8. Custom Color Picker (mitad derecha)
+      const colorPicker = dash.querySelector('#overlayColorPicker');
+      const hexInput = dash.querySelector('#overlayHexInput');
+      
+      colorPicker.oninput = (e) => {
+          app.state.editCardData.overlayColor = 'custom';
+          app.state.editCardData.customOverlayColor = e.target.value;
+          hexInput.value = e.target.value;
+          this.renderEditCard(app); 
+          this.updateDashboard(app); 
+      };
+      
+      hexInput.onchange = (e) => {
+          if (isValidHex(e.target.value)) {
+              app.state.editCardData.overlayColor = 'custom';
+              app.state.editCardData.customOverlayColor = e.target.value;
+              colorPicker.value = e.target.value;
+              this.renderEditCard(app);
+              this.updateDashboard(app);
+          } else {
+            hexInput.value = app.state.editCardData.customOverlayColor;
+          }
+      };
+
+      // 9. Sliders 2x2 (mitad derecha, con grayscale)
+      dash.querySelector('#contrastSlider').oninput = (e) => {
+        app.state.editCardData.contrast = e.target.value;
+        this.renderEditCard(app);
+      };
+      dash.querySelector('#brightnessSlider').oninput = (e) => {
+        app.state.editCardData.brightness = e.target.value;
+        this.renderEditCard(app);
+      };
+      dash.querySelector('#blurSlider').oninput = (e) => {
+        app.state.editCardData.blur = e.target.value;
+        this.renderEditCard(app);
+      };
+      dash.querySelector('#grayscaleSlider').oninput = (e) => {
+        app.state.editCardData.grayscale = e.target.value;
+        this.renderEditCard(app);
+      };
+
     }
   },
 
@@ -415,6 +573,9 @@ export const UIManager = {
     const activeMock = document.getElementById(`mock${cardId}`);
     if (!activeMock) return;
 
+    // --- QUITAR BOLITAS DE COLOR ---
+    activeMock.querySelectorAll('.colorPickerDot').forEach(dot => dot.remove());
+
     // Quitar listeners de texto/pill
     activeMock.querySelectorAll('.c-title, .c-subtitle, .c-pill').forEach(el => {
       el.removeAttribute('contenteditable');
@@ -422,8 +583,13 @@ export const UIManager = {
       el.onblur = null;
       el.onkeydown = null;
       el.onpaste = null;
-      el.onclick = null;
-      el.oncontextmenu = null;
     });
+    
+    // Limpiar dropdowns para la próxima vez
+    const dash = app.els.editDashboard;
+    if (dash) {
+        dash.querySelector('#titleSelect').innerHTML = '';
+        dash.querySelector('#subtitleSelect').innerHTML = '';
+    }
   }
 };
