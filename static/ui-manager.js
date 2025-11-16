@@ -671,20 +671,16 @@ export const UIManager = {
     element.querySelectorAll('.colorPickerDot').forEach(dot => dot.style.display = 'none');
 
     try {
-      // --- CORRECCIÓN DE CORS: AÑADIR fetchRequestInit ---
+      
+      // --- INICIO DE LA MODIFICACIÓN (según solicitud del usuario) ---
       const dataUrl = await htmlToImage.toPng(element, {
         canvasWidth: 1080,
         canvasHeight: 1350,
-        pixelRatio: 1, // Forzar 1:1 para 1080x1350
-        fetchRequestInit: { // <-- LA SOLUCIÓN
-          mode: 'no-cors'
-        },
-        style: {
-          // Forzar la escala 1:1 durante la captura
-          transform: 'scale(1)', 
-          margin: 0
-        }
+        pixelRatio: 1,
+        fetchRequestInit: { mode: 'no-cors' }, // Allow fetching cross-domain CSS/images
+        style: { transform: 'scale(1)', margin: 0 }
       });
+      // --- FIN DE LA MODIFICACIÓN ---
       
       // Crear enlace y descargar
       const link = document.createElement('a');
