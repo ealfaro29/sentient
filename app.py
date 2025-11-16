@@ -418,10 +418,15 @@ def proxy_image():
         r = requests.get(img_url, headers=BROWSER_HEADERS, timeout=15, stream=True)
         r.raise_for_status()
         content_type = r.headers.get('Content-Type', 'image/jpeg')
+        
+        # === INICIO DE LA MODIFICACIÓN ===
         headers = {
             'Content-Type': content_type,
             'Cache-Control': 'public, max-age=300',
+            'Access-Control-Allow-Origin': '*'  # Permite el acceso de origen cruzado
         }
+        # === FIN DE LA MODIFICACIÓN ===
+        
         def generate():
             for chunk in r.iter_content(chunk_size=64 * 1024):
                 if chunk:

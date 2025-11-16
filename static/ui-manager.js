@@ -651,7 +651,7 @@ export const UIManager = {
     }
   },
 
-  // --- FUNCIÓN DE DESCARGA AÑADIDA ---
+  // --- FUNCIÓN DE DESCARGA (MODIFICADA) ---
   async downloadCard(app) {
     const cardId = app.state.active;
     if (!cardId) {
@@ -670,17 +670,40 @@ export const UIManager = {
     // Ocultar temporalmente las bolitas de color
     element.querySelectorAll('.colorPickerDot').forEach(dot => dot.style.display = 'none');
 
+    // === INICIO DE LA MODIFICACIÓN (escalado + artefacto) ===
+    
+    // 1. Guardar la transformación original del elemento
+    const originalTransform = element.style.transform;
+
+    // 2. Guardar estilos originales del tag y eliminarlos temporalmente
+    const pillElement = element.querySelector('.c-pill');
+    let originalPillShadow = '';
+    let originalPillFilter = '';
+
+    if (pillElement) {
+        originalPillShadow = pillElement.style.boxShadow;
+        originalPillFilter = pillElement.style.filter;
+        pillElement.style.boxShadow = 'none';
+        pillElement.style.filter = 'none';
+    }
+
+    // 3. Forzar escala 1:1 para la captura
+    element.style.transform = 'scale(1)';
+    // === FIN DE LA MODIFICACIÓN ===
+
     try {
       
-      // --- INICIO DE LA MODIFICACIÓN (según solicitud del usuario) ---
-      const dataUrl = await htmlToImage.toPng(element, {
-        canvasWidth: 1080,
-        canvasHeight: 1350,
-        pixelRatio: 1,
-        fetchRequestInit: { mode: 'no-cors' }, // Allow fetching cross-domain CSS/images
-        style: { transform: 'scale(1)', margin: 0 }
+      const canvas = await html2canvas(element, {
+          useCORS: true,        
+          width: 1080,          // Forzar ancho de renderizado
+          height: 1350,         // Forzar alto de renderizado
+          scale: 1,             // 1:1 pixel ratio
+          backgroundColor: '#000', 
+          logging: false        
       });
-      // --- FIN DE LA MODIFICACIÓN ---
+
+      // Convertir el canvas resultante a Data URL
+      const dataUrl = canvas.toDataURL('image/png');
       
       // Crear enlace y descargar
       const link = document.createElement('a');
@@ -692,9 +715,20 @@ export const UIManager = {
       console.error('Download failed', err);
       toast('Error generating image. Check console.', 'error');
     } finally {
+      // === INICIO DE LA MODIFICACIÓN (restaurar) ===
+      
+      // 4. Restaurar la transformación original
+      element.style.transform = originalTransform;
+
+      // 5. Restaurar estilos originales del tag
+      if (pillElement) {
+          pillElement.style.boxShadow = originalPillShadow;
+          pillElement.style.filter = originalPillFilter;
+      }
+      // === FIN DE LA MODIFICACIÓN (restaurar) ===
+
       // Volver a mostrar las bolitas de color
       element.querySelectorAll('.colorPickerDot').forEach(dot => {
-        // Volver a aplicar el display :focus (o block si estaba en foco)
         dot.style.display = ''; 
       });
     }
