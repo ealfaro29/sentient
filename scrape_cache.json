@@ -1,6 +1,6 @@
 {
   "https://www.theatlantic.com/family/2025/11/naked-locker-room-end/684907/": {
-    "ts": 1763153762.6488059,
+    "ts": 1763254398.600683,
     "data": {
       "source": "THEATLANTIC.COM",
       "original": {
@@ -13,29 +13,29 @@
       "ai_content": {
         "variants": {
           "A": {
-            "title": "Locker Rooms Shift to Private Changing",
-            "subtitle": "New gym designs favor privacy over communal nudity"
+            "title": "Locker Rooms Shift Toward Privacy",
+            "subtitle": "Gyms replace communal nudity with private stalls."
           },
           "B": {
-            "title": "From Nudity to Privacy: Gym Culture Evolves",
-            "subtitle": "How locker rooms reflect changing social norms"
+            "title": "From Naked to Private: Gym Changes",
+            "subtitle": "A personal story on evolving locker room norms."
           },
           "C": {
-            "title": "End of Naked Locker Rooms?",
-            "subtitle": "Gyms enforce private changing stalls universally"
+            "title": "Locker Rooms Ban Naked Changing",
+            "subtitle": "New rules end decades-old communal nudity tradition."
           },
           "D": {
-            "title": "Locker Room Designs Embrace Privacy Trends",
-            "subtitle": "Trade reports show communal showers vanish by 2017"
+            "title": "Locker Room Design Embraces Privacy",
+            "subtitle": "Studies show drop in communal showers since 2017."
           }
         },
-        "common_caption": "Locker rooms are changing, nudity declines quietly. A recent report reveals many public gyms now require private stalls for changing, replacing open locker rooms. This shift comes as facilities aim to accommodate diverse gender identities and address concerns around privacy and consent. The move alters long-standing social norms where communal nudity in same-sex spaces was once typical. This change reshapes how Americans experience their bodies and others' outside media portrayals. How will the loss of casual nudity affect social comfort and body image perceptions? Source: theatlantic.com",
+        "common_caption": "Locker rooms are losing communal nudity norms. A recent trend in gym design, highlighted by reports from trade publications and firsthand experiences, shows a sharp shift toward private changing spaces that respect diverse gender identities. This change impacts traditional expectations about nakedness in public fitness areas. The adjustments are responses to evolving cultural views on gender and safety concerns around privacy and consent, as well as the rise of phone cameras raising legal questions. As communal nudity fades, many Americans may only encounter naked bodies on screens or in private, signaling a cultural shift with subtle but lasting effects. How does reducing public nakedness influence our perception of the human body? Source: theatlantic.com",
         "image_keywords": [
-          "gym locker room",
-          "private changing stall",
-          "public pool",
-          "locker room design",
-          "gender inclusive facilities"
+          "locker room",
+          "gym interior",
+          "privacy stalls",
+          "people changing",
+          "swimming pool locker area"
         ]
       },
       "ai_error": null
@@ -203,6 +203,48 @@
           "artist protest",
           "AI technology",
           "law books"
+        ]
+      },
+      "ai_error": null
+    }
+  },
+  "https://www.nbcnews.com/news/us-news/charlotte-north-carolina-border-patrol-operation-rcna244106": {
+    "ts": 1763248042.9603834,
+    "data": {
+      "source": "NBCNEWS.COM",
+      "original": {
+        "title": "Border Patrol operations start in Charlotte as officials urge calm",
+        "subtitle": "CHARLOTTE, N.C. \u2014 Federal agents have started making arrests Saturday as Border Patrol deployments began in the city, a shift the Department of Homeland Security said was intended to \"ensure Americans..."
+      },
+      "images": {
+        "a": "https://media-cldnry.s-nbcnews.com/image/upload/t_nbcnews-fp-1200-630,f_auto,q_auto:best/rockcms/2025-11/251115-Border-Patrol-ch-1228-480bc3.jpg"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "Border Patrol arrests begin in Charlotte",
+            "subtitle": "DHS rolls out public safety operations in city"
+          },
+          "B": {
+            "title": "Inside Charlotte's Border Patrol sweep",
+            "subtitle": "Community reacts to federal migrant arrests"
+          },
+          "C": {
+            "title": "Border Patrol raids spark fear in Charlotte",
+            "subtitle": "Tensions rise as arrests start Friday morning"
+          },
+          "D": {
+            "title": "Analysis of Charlotte Border Patrol deployment",
+            "subtitle": "Impact on public safety and migrant populations"
+          }
+        },
+        "common_caption": "Border Patrol starts arrests in Charlotte Saturday. Federal agents began arresting migrants in Charlotte as part of a new Border Patrol deployment announced by the Department of Homeland Security. This shift focuses on public safety by targeting undocumented immigrants alleged to be linked with crimes, according to DHS officials. Local leaders emphasized that the Charlotte-Mecklenburg Police Department is not involved in immigration enforcement and urged the community to stay calm amid growing tensions. The operation has raised concerns over potential unlawful detentions and community impact, especially among families with children and immigrant groups. This also follows scrutiny faced by similar actions in cities like Chicago and Portland where warrantless arrests and protests occurred. Charlotte's immigrant advocates distributed legal rights information to support those affected. This development could influence local public safety dynamics and immigrant relations. How will Charlotte's community respond to ongoing Border Patrol actions? Source: nbcnews.com",
+        "image_keywords": [
+          "Charlotte cityscape",
+          "Border Patrol agent",
+          "immigrant bakery",
+          "protest flyer",
+          "shopping center parking lot"
         ]
       },
       "ai_error": null

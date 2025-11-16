@@ -65,8 +65,6 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 12px;
-  /* --- ALTURA CORREGIDA (sin height: 100%) --- */
-  max-height: 95%; 
   
   grid-column: span 3 / span 3;
   display: none; 
@@ -74,6 +72,8 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   transform: translateX(100%);
   transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   padding: 24px;
+  
+  /* La altura será forzada por JS */
 }
 #editDashboard.is-visible {
   opacity: 1;
@@ -86,12 +86,21 @@ body { width: 100vw; height: 100vh; overflow: hidden; background-color: #000 !im
   height: 100%;
 }
 .dash-half-left, .dash-half-right {
-  width: 50%;
+  /* --- CAMBIO PARA EVITAR SCROLL --- */
+  flex: 1; 
   display: flex;
   flex-direction: column;
   gap: 16px;
   overflow-y: auto; 
+  min-width: 0; /* Corrección de Flexbox */
 }
+/* --- SEPARADOR VERTICAL --- */
+.dash-separator-vertical {
+  width: 1px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
 .dash-main-title {
   font-size: 1.25rem;
   font-weight: 800;
@@ -205,6 +214,20 @@ hr.dash-separator {
 }
 .file-drop-input { display: none; }
 
+/* --- NUEVO GRID 75/25 --- */
+.dash-grid-75-25 {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 16px;
+  align-items: stretch; /* Asegura que los hijos tengan la misma altura */
+}
+.dash-grid-75-25 .file-drop-zone,
+.dash-grid-75-25 .dash-button-full {
+  height: 100%; /* Forzar altura completa */
+  margin: 0; /* Resetear márgenes */
+}
+
+
 /* 5. Controles en Fila (Layouts, Overlay, Branding) */
 .dash-row {
   display: flex;
@@ -241,6 +264,25 @@ hr.dash-separator {
   cursor: not-allowed; 
   background: #111; 
 }
+/* --- BOTÓN DE DESCARGA FULL-WIDTH --- */
+.dash-button-full {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  background: var(--brand);
+  color: #000;
+  border-color: var(--brand);
+  height: 100%; /* Añadido para estirar */
+  display: flex; /* Añadido para centrar */
+  align-items: center; /* Añadido para centrar */
+  justify-content: center; /* Añadido para centrar */
+}
+.dash-button-full:hover {
+  background: #fff;
+  border-color: #fff;
+}
+
 
 /* 6. Toggle Switch (Tag On/Off) */
 .dash-toggle-wrapper {
@@ -300,9 +342,9 @@ input:checked + .dash-toggle-slider-new:before {
   height: 34px;
 }
 /* --- ESTILO ARCOÍRIS --- */
-.dash-color-btn-wrapper[data-overlay-btn="custom"] {
+.rainbow-bg {
   background: conic-gradient(from 0.5turn, red, orange, yellow, green, blue, indigo, violet, red);
-  padding: 2px; /* Padding para crear el "borde" de gradiente */
+  padding: 0; /* Sin padding */
 }
 
 .dash-color-picker-new {
@@ -317,24 +359,16 @@ input:checked + .dash-toggle-slider-new:before {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
+  /* --- Hacer el picker invisible --- */
+  opacity: 0;
   background-color: transparent; 
 }
 .dash-color-picker-new::-webkit-color-swatch {
   border-radius: 6px;
   border: none;
 }
-/* --- AJUSTE PARA EL BOTÓN ARCOÍRIS --- */
-.dash-color-btn-wrapper[data-overlay-btn="custom"] .dash-color-picker-new {
-  position: relative; /* Quitar 'absolute' */
-  width: 100%;
-  height: 100%;
-}
-.dash-color-btn-wrapper[data-overlay-btn="custom"] .dash-color-picker-new::-webkit-color-swatch {
-  border-radius: 4px; /* Radio más pequeño para el interior */
-  border: none;
-}
-.dash-color-btn-wrapper[data-overlay-btn="custom"] .dash-color-picker-new::-moz-color-swatch {
-  border-radius: 4px;
+.dash-color-picker-new::-moz-color-swatch {
+  border-radius: 6px;
   border: none;
 }
 
@@ -346,8 +380,9 @@ input:checked + .dash-toggle-slider-new:before {
   gap: 8px;
 }
 .dash-slider-group-horizontal .dash-label-title {
-  text-transform: none; /* 'Opacity' no debe estar en mayúsculas */
-  color: var(--text);
+  text-transform: none; 
+  /* --- COLOR DE TEXTO CONSISTENTE --- */
+  color: var(--text-dim);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -474,6 +509,10 @@ input:checked + .dash-toggle-slider-new:before {
 .layout-bold .c-title, .layout-bold .c-subtitle { max-width: 860px; }
 
 .c-pill { align-self: flex-start; padding: 16px 48px; background: var(--brand); color: var(--bg-main); font-size: 36px; font-weight: 900; border-radius: 100px; margin-bottom: 50px; letter-spacing: -1px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); transition: background-color 0.2s, color 0.2s; }
+/* --- TAG CENTRADO --- */
+.layout-centered .c-pill { 
+  align-self: center; 
+}
 
 .c-title { font-family: var(--font-headline, Inter), sans-serif; font-weight: var(--font-headline-weight, 800); color: var(--brand); text-transform: uppercase; letter-spacing: -1px; line-height: 0.98; word-break: normal; overflow-wrap: normal; hyphens: manual; white-space: normal; font-size: 84px; }
 .c-subtitle { font-family: var(--font-card-body, Inter), sans-serif; color: #fff; font-weight: 500; letter-spacing: -0.5px; line-height: 1.15; margin-top: 24px; word-break: normal; overflow-wrap: normal; hyphens: manual; white-space: normal; font-size: 32px; }
@@ -520,10 +559,10 @@ input:checked + .dash-toggle-slider-new:before {
 .colorPickerDot {
   position: absolute;
   /* --- MÁS GRANDE --- */
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   /* --- POR FUERA --- */
-  right: -40px; 
+  right: -44px; 
   top: 50%;
   transform: translateY(-50%);
   border-radius: 50%;
@@ -534,9 +573,11 @@ input:checked + .dash-toggle-slider-new:before {
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
   display: none; 
 }
-.mockup.is-editing .colorPickerDot {
+/* --- LÓGICA DE FOCO --- */
+.mockup.is-editing [contenteditable="true"]:focus > .colorPickerDot {
   display: block; 
 }
+
 .colorPickerDot[data-color="brand"] { background-color: var(--brand); }
 .colorPickerDot[data-color="white"] { background-color: white; }
 .colorPickerDot[data-color="black"] { background-color: black; }
@@ -548,16 +589,16 @@ input:checked + .dash-toggle-slider-new:before {
 
 /* --- APILADO (STACKED) PARA EL PILL --- */
 .c-pill .colorPickerDot[data-target="pillBgColor"] {
-  transform: translateY(-15px); /* Mover arriba */
+  transform: translateY(-17px); /* Mover arriba */
 }
 .c-pill .colorPickerDot[data-target="pillTextColor"] {
-  transform: translateY(15px); /* Mover abajo */
+  transform: translateY(17px); /* Mover abajo */
 }
 .c-pill .colorPickerDot[data-target="pillBgColor"]:hover {
-  transform: translateY(-15px) scale(1.1);
+  transform: translateY(-17px) scale(1.1);
 }
 .c-pill .colorPickerDot[data-target="pillTextColor"]:hover {
-  transform: translateY(15px) scale(1.1);
+  transform: translateY(17px) scale(1.1);
 }
 
 
@@ -569,7 +610,7 @@ input:checked + .dash-toggle-slider-new:before {
 .mockup {
   cursor: default; 
   /* --- ALTURA CORREGIDA --- */
-  max-height: 95%; /* Altura máxima */
+  max-height: 95%; 
   width: 100%; 
   min-width: 0; 
   background: #000; 
@@ -606,13 +647,15 @@ input:checked + .dash-toggle-slider-new:before {
   cursor: default !important; 
 }
 
-/* Cuando el Grid entra en modo edición */
+/* --- SOLUCIÓN DE ALTURA EXACTA (CSS) --- */
 @media (min-width: 1024px) { /* Solo en 'lg' y superior */
   .stage-grid.in-edit-mode .mockup.is-editing {
     grid-column: 1 / 2; 
+    /* --- REVERTIDO: JS se encarga de la altura --- */
   }
   .stage-grid.in-edit-mode #editDashboard {
     grid-column: 2 / 5; 
+    min-height: 0; 
   }
   .stage-grid.in-edit-mode .mockup.is-exiting {
     display: none;

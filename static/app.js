@@ -24,6 +24,22 @@ const SENTIENT_THEME = {
   defaultLayouts: { A: 'layout-standard', B: 'layout-centered', C: 'layout-bold' }
 };
 
+// --- FUNCIÓN HELPER PARA SINCRONIZAR ALTURA ---
+function syncDashboardHeight() {
+  if (App.state.mode !== 'EDIT' && App.state.mode !== 'TRANSITION') return; // Permitir en transición
+  
+  const activeCardEl = document.getElementById(`mock${App.state.active}`);
+  const dashboardEl = App.els.editDashboard;
+  
+  if (activeCardEl && dashboardEl) {
+    // Medir el mockup
+    const height = activeCardEl.offsetHeight;
+    // Aplicar la altura exacta al dashboard
+    dashboardEl.style.height = `${height}px`;
+  }
+}
+// --- FIN HELPER ---
+
 const App = {
   state: {
     active: null, 
@@ -45,12 +61,14 @@ const App = {
     this.applyTheme();
     Animation.init(this); 
     
-    // Vincular el botón de retroceso UNA VEZ
     this.bindBackButton();
     
     this.setAppState('LANDING');
+    
+    // --- LISTENER DE RESIZE ACTUALIZADO ---
     window.addEventListener('resize', () => {
       UIManager.fitStage(this);
+      syncDashboardHeight(); // Sincronizar altura al reescalar
     });
   },
   
@@ -74,6 +92,8 @@ const App = {
       
       overviewGrid: $('overviewGrid'), 
       editDashboard: $('editDashboard'),
+      
+      downloadBtn: $('downloadBtn'), // <-- BOTÓN DE DESCARGA AÑADIDO
 
       colorPickerDot: null, // Obsoleto
     };
@@ -100,12 +120,13 @@ const App = {
       this.els.breadcrumbs?.classList.remove('visible');
       this.els.nextBtn?.classList.remove('visible');
       this.els.host?.classList.remove('visible'); 
-      this.els.backBtn?.classList.add('is-hidden'); // Ocultar Back
+      this.els.backBtn?.classList.add('is-hidden'); 
 
       // Resetear el modo de edición del grid
       this.els.overviewGrid.classList.remove('in-edit-mode');
       this.els.editDashboard.classList.remove('is-visible');
       this.els.editDashboard.style.display = 'none';
+      this.els.editDashboard.style.height = ''; // <-- Limpiar altura
       CARD_IDS.forEach(id => {
         const el = document.getElementById(`mock${id}`);
         if (el) {
@@ -165,6 +186,9 @@ const App = {
         
         this.state.mode = 'TRANSITION';
         
+        // --- Limpiar la altura del dashboard ---
+        this.els.editDashboard.style.height = ''; 
+        
         // Ejecutar la animación de reseteo
         UIManager.resetAnimations(this); 
         
@@ -177,21 +201,32 @@ const App = {
         // Esperar a que la animación termine para cambiar al estado APP
         setTimeout(() => {
           this.setAppState('APP');
-        }, 700); // 700ms es la duración de la animación del grid
+        }, 700); 
       };
     }
   },
 
   updateTopControlBar() {
-    // --- LÓGICA DEL HOST/URL REVERTIDA A LA ORIGINAL ---
+    // --- LÓGICA DEL HOST/URL SIMPLIFICADA ---
     if (this.els?.host) {
-      let displayUrl = (this.state.url || '').replace(/^(https:\/\/|http:\/\/|www\.)/,'');
-      if (displayUrl.endsWith('/')) {
-        displayUrl = displayUrl.slice(0, -1);
+      let displayUrl = "sentient.io"; // Default
+      if (this.state.url) {
+        try {
+          // 1. Crear un URL object: https://.../path/ -> www.theatlantic.com
+          let hostname = new URL(this.state.url).hostname; 
+          // 2. Remove "www.": www.theatlantic.com -> theatlantic.com
+          displayUrl = hostname.replace('www.', ''); 
+        } catch (e) {
+          // Fallback por si la URL es inválida
+          displayUrl = (this.state.url.split('/')[0] || "sentient.io").replace('www.', '');
+        }
       }
-      this.els.host.textContent = displayUrl || "sentient.io"; // Fallback por si no hay URL
+      
+      this.els.host.textContent = displayUrl;
       this.els.host.href = this.state.url || '#'; 
-      this.els.host.onclick = null; // Asegurarse de que sea clickable
+      this.els.host.onclick = (e) => {
+        if (!this.state.url) e.preventDefault();
+      };
     }
     
     // 1. Mostrar/Ocultar Botón "Back"
@@ -245,12 +280,16 @@ const App = {
           });
           
           this.els.editDashboard.style.display = 'block';
+          
+          // --- CORRECCIÓN DE CENTRADO: APLICAR ALTURA ANTES DE ANIMAR ---
+          syncDashboardHeight(); 
+          
           setTimeout(() => { 
             this.els.editDashboard.classList.add('is-visible');
           }, 30); 
           
           setTimeout(() => {
-            this.setAppState('EDIT'); // Cambiar a setAppState
+            this.setAppState('EDIT');
           }, 700); 
 
         } else if (this.state.appStep === 'edit_details') {
@@ -324,9 +363,8 @@ const App = {
   },
 
   async downloadHD() {
-    const v = this.state.active;
-    const source = document.getElementById(`card${v}`);
-    // ...
+    // Esta función ahora está en UIManager
+    UIManager.downloadCard(this);
   }
 };
 

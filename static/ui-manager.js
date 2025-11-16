@@ -1,6 +1,7 @@
 // static/ui-manager.js
 
-import { CARD_IDS, LAYOUTS, OVERLAYS } from './utils.js';
+// --- CORRECCIÓN: "toast" AÑADIDO A LA IMPORTACIÓN ---
+import { CARD_IDS, LAYOUTS, OVERLAYS, toast } from './utils.js';
 
 const CARD_W = 1080;
 const CARD_H = 1350;
@@ -19,7 +20,7 @@ function sizesFor(layout) {
   return FIXED_FS[layout] || FIXED_FS['layout-standard'];
 }
 
-// --- ACTUALIZADO: Helper para convertir color a RGBA con opacidad ---
+// --- Helper para convertir color a RGBA con opacidad ---
 function colorToRgba(color, opacityPercent, customHex) {
     const opacity = (parseFloat(opacityPercent) || 0) / 100;
     let rgb = '0,0,0'; // Default a negro
@@ -80,6 +81,13 @@ function safeUpdateText(el, newText) {
       // Si no hay nodo de texto, crearlo (y ponerlo antes de las bolitas)
       el.prepend(document.createTextNode(newText));
     }
+}
+
+// --- Helper para Sentence Case ---
+function toSentenceCase(str) {
+  if (!str) return '';
+  // Capitaliza la primera letra y pone el RESTO en minúsculas
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 // --- Helper para actualizar el estado desde los <select> de texto ---
@@ -254,15 +262,15 @@ export const UIManager = {
             
             const titleOpt = document.createElement('option');
             titleOpt.value = id; 
-            let titleText = data.title || data.defaultTitle || 'Variant ' + id;
-            // --- CAMBIO A 24 CARACTERES ---
+            // --- "Sentence case" y 24 caracteres ---
+            let titleText = toSentenceCase(data.title || data.defaultTitle || 'Variant ' + id);
             titleOpt.textContent = titleText.substring(0, 24) + (titleText.length > 24 ? '...' : '');
             titleSelect.appendChild(titleOpt);
 
             const subtitleOpt = document.createElement('option');
             subtitleOpt.value = id;
-            let subtitleText = data.subtitle || data.defaultSubtitle || 'Subtitle ' + id;
-            // --- CAMBIO A 24 CARACTERES ---
+            // --- "Sentence case" y 24 caracteres ---
+            let subtitleText = toSentenceCase(data.subtitle || data.defaultSubtitle || 'Subtitle ' + id);
             subtitleOpt.textContent = subtitleText.substring(0, 24) + (subtitleText.length > 24 ? '...' : '');
             subtitleSelect.appendChild(subtitleOpt);
         });
@@ -319,6 +327,16 @@ export const UIManager = {
     dash.querySelectorAll('[data-overlay-btn]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.overlayBtn === activeOverlay);
     });
+    
+    // --- LÓGICA DEL BOTÓN ARCOÍRIS ---
+    const customBtn = dash.querySelector('[data-overlay-btn="custom"]');
+    if (activeOverlay === 'custom') {
+        customBtn.classList.remove('rainbow-bg');
+        customBtn.style.backgroundColor = d.customOverlayColor;
+    } else {
+        customBtn.classList.add('rainbow-bg');
+        customBtn.style.backgroundColor = '';
+    }
 
     // --- SINCRONIZAR NUEVO SLIDER DE OPACIDAD ---
     dash.querySelector('#overlayOpacitySlider').value = d.overlayOpacity;
@@ -521,7 +539,14 @@ export const UIManager = {
           }
       };
 
-      // 4. Botones de Layout (mitad derecha)
+      // --- 4. BOTÓN DE DESCARGA (mitad izquierda) ---
+      if (app.els.downloadBtn) { // Asegurarse de que el botón exista
+        app.els.downloadBtn.onclick = () => {
+          this.downloadCard(app);
+        };
+      }
+
+      // 5. Botones de Layout (mitad derecha)
       dash.querySelectorAll('[data-layout-btn]').forEach(btn => {
         btn.onclick = () => {
           app.state.editCardData.layout = btn.dataset.layoutBtn;
@@ -530,13 +555,13 @@ export const UIManager = {
         };
       });
 
-      // 5. Toggle de Tag (mitad derecha)
+      // 6. Toggle de Tag (mitad derecha)
       dash.querySelector('#tagToggle').onchange = (e) => {
         app.state.editCardData.showTag = e.target.checked;
         this.renderEditCard(app);
       };
 
-      // 6. Botones de Overlay (mitad derecha)
+      // 7. Botones de Overlay (mitad derecha)
       dash.querySelectorAll('[data-overlay-btn]').forEach(btn => {
         if (btn.dataset.overlayBtn !== 'custom') {
           btn.onclick = () => {
@@ -547,13 +572,13 @@ export const UIManager = {
         }
       });
       
-      // 7. Input de Opacidad (AHORA ES SLIDER)
+      // 8. Input de Opacidad (AHORA ES SLIDER)
       dash.querySelector('#overlayOpacitySlider').oninput = (e) => {
           app.state.editCardData.overlayOpacity = e.target.value;
           this.renderEditCard(app);
       };
 
-      // 8. Custom Color Picker (mitad derecha)
+      // 9. Custom Color Picker (mitad derecha)
       const colorPicker = dash.querySelector('#overlayColorPicker');
       const hexInput = dash.querySelector('#overlayHexInput');
       
@@ -577,7 +602,7 @@ export const UIManager = {
           }
       };
 
-      // 9. Sliders 2x2 (mitad derecha, con grayscale)
+      // 10. Sliders 2x2 (mitad derecha, con grayscale)
       dash.querySelector('#contrastSlider').oninput = (e) => {
         app.state.editCardData.contrast = e.target.value;
         this.renderEditCard(app);
@@ -624,5 +649,51 @@ export const UIManager = {
         dash.querySelector('#titleSelect').innerHTML = '';
         dash.querySelector('#subtitleSelect').innerHTML = '';
     }
+  },
+
+  // --- FUNCIÓN DE DESCARGA AÑADIDA ---
+  async downloadCard(app) {
+    const cardId = app.state.active;
+    if (!cardId) {
+      toast("No active card selected.", "error");
+      return;
+    }
+    
+    const element = document.getElementById(`card${cardId}`);
+    if (!element) {
+      toast("Card element not found.", "error");
+      return;
+    }
+    
+    toast("Generating HD image... please wait.", "info");
+    
+    // Ocultar temporalmente las bolitas de color
+    element.querySelectorAll('.colorPickerDot').forEach(dot => dot.style.display = 'none');
+
+    try {
+      const dataUrl = await htmlToImage.toPng(element, {
+        canvasWidth: 1080,
+        canvasHeight: 1350,
+        pixelRatio: 1, // Forzar 1:1 para 1080x1350
+        style: {
+          transform: 'scale(1)', 
+          margin: 0
+        }
+      });
+      
+      // Crear enlace y descargar
+      const link = document.createElement('a');
+      link.download = `sentient-card-${cardId}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+    } catch (err) {
+      console.error('Download failed', err);
+      toast('Error generating image. Check console.', 'error');
+    } finally {
+      // Volver a mostrar las bolitas de color
+      element.querySelectorAll('.colorPickerDot').forEach(dot => dot.style.display = 'block');
+    }
   }
+
 };

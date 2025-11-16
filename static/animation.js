@@ -19,7 +19,17 @@ const Animation = {
   // --- Utils ---
   $: (id) => document.getElementById(id),
   rect: (el) => { const r = el.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height }; },
-  hostFrom: (seed) => { try { return new URL(seed).host || seed; } catch { return seed; } },
+  
+  // --- INICIO DE CORRECCIÓN ---
+  // (La función ahora usa .hostname y quita 'www.')
+  hostFrom: (seed) => { 
+    try { 
+      return (new URL(seed).hostname.replace('www.', '') || seed); 
+    } catch { 
+      return seed; 
+    } 
+  },
+  // --- FIN DE CORRECCIÓN ---
 
   // --- Lógica de P5 (partículas) ---
   initSketch: function() {
@@ -30,9 +40,9 @@ const Animation = {
     if (!sketchHost) return; 
     
     this.sketch = new p5(p => {
-      let W=0,H=0, COUNT=600;
+      let W=0,H=0, COUNT=300;
       let r,a,vr,x,y,done,vx,vy,w0;
-      const EPS=8, VMAX_R=2.2, VMAX_T=80.05;
+      const EPS=11, VMAX_R=3.2, VMAX_T=100.05;
       let gravityStart=0, gravityEnd=0, mode='ambient', accel=false;
       let explodeStart=0, explodeEnd=0, explodeResolve=null;
 
@@ -252,11 +262,7 @@ const Animation = {
         const hostLabel = _app.els.host; 
         if (hostLabel) {
             hostLabel.textContent = seedHost;
-            // --- INICIO DE CORRECCIÓN ---
             // (La visibilidad ahora se controla por la clase .visible en data-handler.js)
-            // hostLabel.style.opacity = '1';
-            // hostLabel.style.transform = 'translateY(0)';
-            // --- FIN DE CORRECCIÓN ---
         }
 
         if (_app.els.landing) {
@@ -266,18 +272,16 @@ const Animation = {
         }
         
     } catch (err) {
-        // --- INICIO DE CORRECCIÓN ---
-        // 2. Error _failToLanding corregido
+        // Error _failToLanding corregido
         console.error('[scrapeContent] error', err);
         pill.classList.remove('is-pulsing'); 
         if (pill) pill.style.display = 'none'; 
         
         // Llamar a la función de fallback original que sí existe
         DataHandler._failToLanding(_app, seed, err.message || 'Link unreachable or scraping failed.');
-        // --- FIN DE CORRECCIÓN ---
     } finally {
       this.state.started = false;
-    }
+  }
   },
 
   start: function(isFallback = false) { 
@@ -308,7 +312,7 @@ const Animation = {
     if (window.p5) {
         this.initSketch();
     } else {
-        console.error("p5.js not loaded!");
+        console.error("p5.js not loaded!");
         return;
     }
 
