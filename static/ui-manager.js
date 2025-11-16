@@ -671,11 +671,16 @@ export const UIManager = {
     element.querySelectorAll('.colorPickerDot').forEach(dot => dot.style.display = 'none');
 
     try {
+      // --- CORRECCIÓN DE CORS: AÑADIR fetchRequestInit ---
       const dataUrl = await htmlToImage.toPng(element, {
         canvasWidth: 1080,
         canvasHeight: 1350,
         pixelRatio: 1, // Forzar 1:1 para 1080x1350
+        fetchRequestInit: { // <-- LA SOLUCIÓN
+          mode: 'no-cors'
+        },
         style: {
+          // Forzar la escala 1:1 durante la captura
           transform: 'scale(1)', 
           margin: 0
         }
@@ -692,7 +697,10 @@ export const UIManager = {
       toast('Error generating image. Check console.', 'error');
     } finally {
       // Volver a mostrar las bolitas de color
-      element.querySelectorAll('.colorPickerDot').forEach(dot => dot.style.display = 'block');
+      element.querySelectorAll('.colorPickerDot').forEach(dot => {
+        // Volver a aplicar el display :focus (o block si estaba en foco)
+        dot.style.display = ''; 
+      });
     }
   }
 
