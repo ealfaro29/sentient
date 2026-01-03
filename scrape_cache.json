@@ -249,5 +249,983 @@
       },
       "ai_error": null
     }
+  },
+  "https://www.bbc.com/news/articles/cp8484p7ggmo": {
+    "ts": 1767308636.965934,
+    "data": {
+      "source": "BBC.COM",
+      "original": {
+        "title": "Trump says US hit 'big facility' linked to alleged Venezuelan drug boats",
+        "subtitle": "Trump says US hit 'big facility' linked to alleged Venezuelan drug boats\n\n2 days ago Share Save Ana Faguy Share Save\n\nWatch: Trump announces US hit target inside Venezuela\n\nDonald Trump has said that ..."
+      },
+      "images": {
+        "a": "https://ichef.bbci.co.uk/news/1024/branded_news/deeb/live/d79f3da0-e505-11f0-a8dc-93c15fe68710.jpg"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "US Hits Facility Tied to Venezuelan Drugs",
+            "subtitle": "Trump confirms strike on drug boat dock area"
+          },
+          "B": {
+            "title": "Inside the US Strike on Venezuela's Drug Hub",
+            "subtitle": "Trump reveals a mysterious major explosion site"
+          },
+          "C": {
+            "title": "US Launches Ground-Level Attack in Venezuela",
+            "subtitle": "Trump claims a bold strike on drug operations"
+          },
+          "D": {
+            "title": "CIA Drone Strike Hits Venezuelan Drug Facility",
+            "subtitle": "Potential first US land operation inside Venezuela"
+          }
+        },
+        "common_caption": "US targets Venezuelan drug operation on land. Former President Donald Trump has announced a US strike on a dock area linked to Venezuelan drug boats. He described a major explosion where drugs are loaded onto boats but did not specify the location or provide further details. Reports suggest a CIA drone strike caused the explosion, marking a potential first US operation inside Venezuela. This strike follows earlier US actions against drug-smuggling boats in the region and signals an escalation in pressure on Venezuela's government. The operation may be targeting facilities connected to cocaine production and narcotics trafficking. This shift changes how the US is confronting drug-related activities in the region. How will this new approach impact US-Venezuela relations moving forward? Source: bbc.com",
+        "image_keywords": [
+          "drone strike",
+          "Venezuelan port",
+          "drug boats",
+          "explosion",
+          "US military operation"
+        ]
+      },
+      "ai_error": null
+    }
+  },
+  "https://www.bbc.com/news/articles/c98ynejg4l5o": {
+    "ts": 1767309953.39079,
+    "data": {
+      "source": "BBC.COM",
+      "original": {
+        "title": "UK hands sovereignty of Chagos Islands to Mauritius",
+        "subtitle": "UK will give sovereignty of Chagos Islands to Mauritius\n\n3 October 2024 Share Save Andrew Harding BBC correspondent Share Save\n\nGetty Images\n\nThe UK has announced it is giving up sovereignty of a remo..."
+      },
+      "full_text": "UK will give sovereignty of Chagos Islands to Mauritius\n\n3 October 2024 Share Save Andrew Harding BBC correspondent Share Save\n\nGetty Images\n\nThe UK has announced it is giving up sovereignty of a remote but strategically important cluster of islands in the Indian Ocean after more than half a century. The deal \u2013 reached after years of negotiations - will see the UK hand over the Chagos Islands to Mauritius in a historic move. This includes the tropical atoll of Diego Garcia, used by the US government as a military base for its navy ships and long-range bomber aircraft. The announcement, made in a joint statement by the UK and Mauritian Prime Ministers, ends decades of often fractious negotiations between the two countries.\n\nThe US-UK base will remain on Diego Garcia \u2013 a key factor enabling the deal to go forward at a time of growing geopolitical rivalries in the region between Western countries, India, and China. The BBC visits the secretive Chagos Islands military base\n\nUN says UK military island not suitable for stranded migrants\n\nUK commitment to Falklands 'unwavering' despite Chagos deal The deal is still subject to finalisation of a treaty, but both sides have promised to complete it as quickly as possible. \"This is a seminal moment in our relationship and a demonstration of our enduring commitment to the peaceful resolution of disputes and the rule of law,\" the statement from UK Prime Minister Keir Starmer and Mauritius Prime Minister Pravind Jugnauth read. The leaders also said they were committed \"to ensure the long-term, secure and effective operation of the existing base on Diego Garcia which plays a vital role in regional and global security\". The treaty will also \"address wrongs of the past and demonstrate the commitment of both parties to support the welfare of Chagossians\". UK Foreign Secretary David Lammy said the benefits of the deal included closing \"a potential illegal migration route\". Dozens of Sri Lankan Tamils have been held in a fenced camp on the island for three years as complex legal battles are waged over their fate. It is unclear what the announcement will mean for them. The UK will provide a package of financial support to Mauritius, including annual payments and infrastructure investment. Mauritius will also be able to begin a programme of resettlement on the Chagos Islands, but not on Diego Garcia. There, the UK will ensure operation of the military base for \"an initial period\" of 99 years. US President Joe Biden welcomed the \"historic agreement\", saying it was a \"clear demonstration that through diplomacy and partnership, countries can overcome long-standing historical challenges to reach peaceful and mutually beneficial outcomes\". He said it secured the future of a key military base which \"plays a vital role in national, regional, and global security.\" The Chagos islanders themselves \u2013 some in Mauritius and the Seychelles, but others living in Crawley in Sussex \u2013 do not speak with one voice on the fate of their homeland. Some are determined to return to live on the isolated islands, some are more focused on their rights and status in the UK, while others argue that the archipelago\u2019s status should not be resolved by outsiders. Isabelle Charlot, speaking on BBC Radio 4's World At One programme, said the deal brought back hopes her family could return to her father's island \"roots\". Plans for the Mauritius government to arrange resettlement would mean a \"place that we can call home - where we will be free,\" she said. But Frankie Bontemps, a second generation Chagossian in the UK, told the BBC that he felt \"betrayed\" and \"angry\" at the news because \"Chagossians have never been involved\" in the negotiations. \"We remain powerless and voiceless in determining our own future\", he said, and called for the full inclusion of Chagossians in drafting the treaty.\n\nGetty Images The US-UK military operate a highly-secretive base from one of the islands, Diego Garcia\n\nIn recent years, the UK has faced rising diplomatic isolation over its claim to what it refers to as the British Indian Ocean Territory, with various United Nations bodies, including its top court and general assembly, overwhelmingly siding with Mauritius and demanding the UK surrender what some have called its \"last colony in Africa\". The government of Mauritius has long argued that it was illegally forced to give the Chagos Islands away in return for its own independence from the UK in 1968. At the time, the British government had already negotiated a secret deal with the US, agreeing to lease it the largest atoll, Diego Garcia, for use as a military base. Britain later apologised for forcibly removing more than 1,000 islanders from the entire archipelago and promised to hand the islands to Mauritius when they were no longer needed for strategic purposes. But until very recently, the UK insisted that Mauritius itself had no legitimate claim to the islands.",
+      "images": {
+        "a": "https://ichef.bbci.co.uk/news/1024/branded_news/ec2d/live/c7e10970-819c-11ef-b732-9d507d15282c.jpg"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "UK Transfers Chagos Islands to Mauritius",
+            "subtitle": "Sovereignty shift includes Diego Garcia military base"
+          },
+          "B": {
+            "title": "Chagos Islands Change Hands After Decades",
+            "subtitle": "A long negotiation ends with historic sovereignty transfer"
+          },
+          "C": {
+            "title": "UK Ends 50 Years of Control Over Chagos",
+            "subtitle": "Strategic islands handed to Mauritius in landmark deal"
+          },
+          "D": {
+            "title": "Chagos Handover Ensures Military Base Stays",
+            "subtitle": "Diego Garcia base secured for 99 years under treaty"
+          }
+        },
+        "common_caption": "UK transfers Chagos Islands sovereignty to Mauritius. The UK government announced it will hand over sovereignty of the Chagos Islands to Mauritius after more than fifty years of control. This historic agreement was reached after long negotiations involving both countries and includes the important atoll of Diego Garcia, home to a US military base. The US-UK military presence on Diego Garcia will continue for an initial 99 years under the new treaty. This deal realigns regional strategic interests while promising support for the displaced Chagos islanders. What effects will this sovereignty transfer have on geopolitical dynamics in the Indian Ocean? Source: bbc.com",
+        "image_keywords": [
+          "Chagos Islands",
+          "Diego Garcia",
+          "Mauritius coastline",
+          "military base"
+        ]
+      },
+      "ai_error": null
+    }
+  },
+  "https://abc7ny.com/live-updates/zohran-mamdani-inauguration-live-updates-nyc-mayor-sworn-new-years-day/18333683/": {
+    "ts": 1767330513.743835,
+    "data": {
+      "source": "ABC7NY.COM",
+      "original": {
+        "title": "New York City Mayor Zohran Mamdani vows to govern 'audaciously' | Live updates",
+        "subtitle": "In his first press conference as New York City mayor, Zohran Mamdani announced three executive orders around housing and tenant protection.\n\nOne will revive the Mayor's Office to Protect Tenants, whic..."
+      },
+      "full_text": "In his first press conference as New York City mayor, Zohran Mamdani announced three executive orders around housing and tenant protection.\n\nOne will revive the Mayor's Office to Protect Tenants, which will be led by Cea Weaver, who will serve as the executive director.\n\nThe other two executive orders establish task forces related to accelerating housing development.\n\nThe LIFT (Land Inventory Fast Track) task force will identify city-owned properties suitable for housing development.\n\nThe SPEED (Streamlining Procedures to Expedite Equitable Development) task force will identify and remove bureaucratic and permitting barriers that drive up costs and slow the construction of housing.\n\nThe task forces will be overseen by the deputy mayor for housing and planning.\n\nAnthony Carlo has more on the housing-related executive orders announced by Mayor Mamdani following his public inauguration ceremony.\n\nThe press conference was held at 85 Clarkson Avenue in Brooklyn, a rent-stabilized building, where residents are threatening a rent strike.\n\nThe building, owned by Pinnacle Realty, is one of 90-plus buildings in bankruptcy proceedings set to be auctioned off to a different landlord who ranks No. 6 on the list of worst landlords in New York City, according to Mamdani.\n\nHe said the city will be taking action in the bankruptcy case, and will step in to represent the interests of the city and tenants.\n\n\"The city of New York has not lacked for tools or tactics. The city of New York has lacked for intent,\" he said of the city's legal action with landlord Pinnacle.\n\nHe has tasked Steve Banks, newly appointed as counsel corporation, to take action.",
+      "images": {
+        "a": "https://cdn.abcotvs.com/dip/images/18339254_010125-wabc-getty-mamdani-speech-img.jpg?w=1600"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "NYC Mayor Unveils New Housing Orders",
+            "subtitle": "Three executive mandates target tenants and development"
+          },
+          "B": {
+            "title": "Inside Mamdani\u2019s Housing Agenda",
+            "subtitle": "How the mayor plans tenant protection and growth"
+          },
+          "C": {
+            "title": "NYC Mayor Attacks Landlords and Red Tape",
+            "subtitle": "Bold plans to speed housing and back tenants"
+          },
+          "D": {
+            "title": "Task Forces Tackle NYC Housing Challenges",
+            "subtitle": "LIFT and SPEED focus on land use and permits"
+          }
+        },
+        "common_caption": "New NYC Mayor Zohran Mamdani begins his term with executive orders targeting housing and tenant protections. He revives the Tenant Protection office and creates task forces to speed housing and address bureaucratic barriers. The city plans to take legal action against landlords harming tenants. Source: abc7ny.com",
+        "image_keywords": [
+          "New York City mayor",
+          "housing development",
+          "tenant protection",
+          "press conference",
+          "Brooklyn building"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "Mamdani Promises Bold Leadership",
+            "sentence": "New NYC mayor Zohran Mamdani commits to governing with bold new housing policies.",
+            "image_keywords": [
+              "New York City mayor",
+              "press conference",
+              "Zohran Mamdani"
+            ],
+            "image": "https://images.pexels.com/photos/5614644/pexels-photo-5614644.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Tenant Protection Office Revived",
+            "sentence": "The Mayor's Office to Protect Tenants is back, led by Cea Weaver to defend renters.",
+            "image_keywords": [
+              "tenant rights",
+              "office building",
+              "Cea Weaver"
+            ],
+            "image": "https://images.pexels.com/photos/35408791/pexels-photo-35408791.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "LIFT Task Force Launched",
+            "sentence": "New LIFT task force will identify city-owned land for faster housing development.",
+            "image_keywords": [
+              "city-owned property",
+              "construction site",
+              "urban development"
+            ],
+            "image": "https://images.pexels.com/photos/18940306/pexels-photo-18940306.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "SPEED Task Force to Cut Red Tape",
+            "sentence": "SPEED task force aims to remove permits and procedural delays slowing housing projects.",
+            "image_keywords": [
+              "city permits",
+              "urban planning",
+              "housing development"
+            ],
+            "image": "https://images.pexels.com/photos/30117025/pexels-photo-30117025.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "City Will Act Against Problem Landlords",
+            "sentence": "Mayor vowed action in bankruptcy cases to protect tenants from worst landlords.",
+            "image_keywords": [
+              "apartment building",
+              "tenant protest",
+              "landlord dispute"
+            ],
+            "image": "https://images.pexels.com/photos/7578984/pexels-photo-7578984.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "New NYC Mayor Zohran Mamdani begins his term with executive orders targeting housing and tenant protections. He revives the Tenant Protection office and creates task forces to speed housing and address bureaucratic barriers. The city plans to take legal action against landlords harming tenants. Source: abc7ny.com"
+      },
+      "ai_error": null
+    }
+  },
+  "https://www.nytimes.com/2026/01/01/technology/space-data-centers-ai.html": {
+    "ts": 1767331972.8526871,
+    "data": {
+      "source": "NYTIMES.COM",
+      "original": {
+        "title": "Even the Sky May Not Be the Limit for A.I. Data Centers",
+        "subtitle": "If the architects of the artificial intelligence boom are right, it is only a matter of time before data centers \u2014 the giant computing facilities that power A.I. \u2014 will float in orbit and be visible i..."
+      },
+      "full_text": "If the architects of the artificial intelligence boom are right, it is only a matter of time before data centers \u2014 the giant computing facilities that power A.I. \u2014 will float in orbit and be visible in the night sky like planets.\n\nThe science-fiction-like dream is being driven by A.I. and space industry leaders who are growing increasingly worried that data centers will eventually require more energy and land than are available on Earth. So one solution \u2014 perhaps the only solution, they say \u2014 is to start building them in space.\n\nGoogle announced in November that it was working on Project Suncatcher, a space data center project that would begin test launches in 2027. Elon Musk said at a recent conference that space data centers would be the cheapest way to train A.I. \u201cnot more than five years from now.\u201d Others pledging support for the idea include Jeff Bezos, the founder of Amazon and Blue Origin; Sam Altman, the chief executive of OpenAI; and Jensen Huang, the chief executive of Nvidia.\n\n\u201cIt is not a debate \u2014 it is going to happen,\u201d said Philip Johnston, the chief executive of Starcloud, a space data center start-up. \u201cThe question is when.\u201d",
+      "images": {
+        "a": "https://static01.nyt.com/images/2025/12/30/business/00ai-space/00ai-space-facebookJumbo.jpg"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "AI Data Centers to Orbit Earth Soon",
+            "subtitle": "Tech giants plan space-based computing hubs"
+          },
+          "B": {
+            "title": "When AI Data Centers Leave Earth",
+            "subtitle": "Exploring the future of space-bound computing"
+          },
+          "C": {
+            "title": "Space AI Centers: The Next Frontier",
+            "subtitle": "Elon Musk and others push for orbiting hubs"
+          },
+          "D": {
+            "title": "Project Suncatcher Aims for 2027 Launch",
+            "subtitle": "Testing energy and space solutions in orbit"
+          }
+        },
+        "common_caption": "Tech leaders forecast that AI data centers will soon orbit Earth as energy needs outgrow our planet\u2019s capacity. Google, SpaceX, and others aim to test space data centers in the coming years. This shift could change how AI is trained and operated globally. How ready are we for computing beyond Earth? Source: nytimes.com",
+        "image_keywords": [
+          "satellite",
+          "data center",
+          "night sky",
+          "space station",
+          "computer servers"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "AI Data Centers Head to Space",
+            "sentence": "Leaders predict data centers will soon orbit Earth, visible like planets in the night sky.",
+            "image_keywords": [
+              "satellite",
+              "Earth from space",
+              "night sky",
+              "space station"
+            ],
+            "image": "https://images.pexels.com/photos/34349237/pexels-photo-34349237.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Earth\u2019s Limits Prompt Innovation",
+            "sentence": "Rising energy and land needs push firms to consider floating data centers beyond Earth.",
+            "image_keywords": [
+              "data center",
+              "energy consumption",
+              "landscape",
+              "technology"
+            ],
+            "image": "https://images.pexels.com/photos/11482367/pexels-photo-11482367.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Google's Project Suncatcher",
+            "sentence": "Google plans to launch its space data center project starting test flights in 2027.",
+            "image_keywords": [
+              "Google logo",
+              "rocket launch",
+              "satellite",
+              "technology lab"
+            ],
+            "image": "https://images.pexels.com/photos/41005/rocket-launch-rocket-take-off-soyuz-41005.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Top Tech CEOs Back Space Centers",
+            "sentence": "Elon Musk, Jeff Bezos, Sam Altman, and Nvidia\u2019s CEO support orbiting data centers.",
+            "image_keywords": [
+              "Elon Musk",
+              "Jeff Bezos",
+              "tech conference",
+              "business leaders"
+            ],
+            "image": "https://images.pexels.com/photos/12847476/pexels-photo-12847476.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Space Data Centers: When, Not If",
+            "sentence": "Experts agree space data centers are inevitable; the key question is the timing.",
+            "image_keywords": [
+              "space startup",
+              "rocket launch",
+              "technology innovation",
+              "business meeting"
+            ],
+            "image": "https://images.pexels.com/photos/41005/rocket-launch-rocket-take-off-soyuz-41005.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "Tech leaders forecast that AI data centers will soon orbit Earth as energy needs outgrow our planet\u2019s capacity. Google, SpaceX, and others aim to test space data centers in the coming years. This shift could change how AI is trained and operated globally. How ready are we for computing beyond Earth? Source: nytimes.com"
+      },
+      "ai_error": null
+    }
+  },
+  "https://futurism.com/artificial-intelligence/godfather-ai-jobs-year": {
+    "ts": 1767336079.614941,
+    "data": {
+      "source": "FUTURISM.COM",
+      "original": {
+        "title": "Godfather of AI Warns That It Will Replace Many More Jobs This Year",
+        "subtitle": "Rejoice, for the year of 2025 is finally over.\n\nDuring our planet\u2019s latest and seemingly interminable revolution around the Sun, the tech industry\u2019s obsession with AI soared to ever more implausible h..."
+      },
+      "full_text": "Rejoice, for the year of 2025 is finally over.\n\nDuring our planet\u2019s latest and seemingly interminable revolution around the Sun, the tech industry\u2019s obsession with AI soared to ever more implausible heights. CEOs began openly gloating about replacing their underlings with AI \u201cagents.\u201d The phenomenon of so-called AI psychosis became a national news story as more people were seemingly driven over the edge by their silver-tongued chatbot companions. \u201cSlop\u201d took on a new meaning. And the word \u201ccircular\u201d suddenly started being used a whole lot in the same sentence as \u201cbillions of dollars\u201d or even \u201chundreds of billions of dollars.\u201d\n\nWill 2026 finally deliver us from this endless cavalcade of large language model madness? Not likely, according to computer scientist and \u201cgodfather\u201d of AI Geoffrey Hinton. AI will only continue to improve next year, he predicts, reaching a point where it will liberate us from all our horrible low-paying jobs.\n\n\u201cI think we\u2019re going to see AI get even better,\u201d Hinton said during an interview on CNN\u2019s State of the Union on Sunday. \u201cIt\u2019s already extremely good. We\u2019re going to see it having the capabilities to replace many, many jobs. It\u2019s already able to replace jobs in call centers, but it\u2019s going to be able to replace many other jobs.\u201d\n\nHinton was one of three recipients of the prestigious Turing Award in 2018 for his work on neural networks that formed the bedrock of modern AI, earning him the moniker of being a \u201cgodfather\u201d of the field.\n\nIn 2023, Hinton declared that he regretted his life\u2019s work after stepping down from his role at Google, where he had been for over a decade. Since then, he\u2019s become one of the tech\u2019s most prominent doomsayers.\n\nDuring the CNN interview, Hinton was asked whether he was more or less worried about AI since making that now infamous declaration.\n\n\u201cI\u2019m probably more worried,\u201d Hinton replied. \u201cIt\u2019s progressed even faster than I thought. In particular, it\u2019s got better at doing things like reasoning and also at things like deceiving people.\u201d\n\nAI is progressing so quickly, according to Hinton, that around every seven months it can complete tasks that took twice as long before. He predicted that it\u2019s only a matter of years until an AI will effortlessly perform software engineering tasks that take a human a month to complete.\n\n\u201cAnd then there\u2019ll be very few people need for software engineering projects,\u201d Hinton added.\n\nHinton made similarly gloomy predictions in a talk with Senator Bernie Sanders last month, saying that tech leaders are \u201cbetting on AI replacing a lot of workers.\u201d\n\nIt still remains to be seen, though, if AI will actually make those strides. Many efforts to replace workers with semi-autonomous AI models have failed, while some new models, like OpenAI\u2019s GPT-5, showed only lackluster improvements.\n\nMore on AI: After Outcry, Firefox Promises \u201cKill Switch\u201d That Turns Off All AI Features",
+      "images": {
+        "a": "https://futurism.com/wp-content/uploads/2025/12/godfather-ai-jobs-year.jpg?quality=85&w=1200"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "AI Set to Replace Many Jobs in 2026",
+            "subtitle": "Hinton warns of rapid AI advances impacting workforce"
+          },
+          "B": {
+            "title": "The AI Future Foreseen by a Pioneer",
+            "subtitle": "Hinton predicts more job losses as AI improves"
+          },
+          "C": {
+            "title": "Godfather of AI Issues Stark Job Warning",
+            "subtitle": "Experts say AI will replace many workers soon"
+          },
+          "D": {
+            "title": "AI Progresses Every Seven Months, Says Hinton",
+            "subtitle": "Software tasks soon automated with faster AI"
+          }
+        },
+        "common_caption": "Geoffrey Hinton warns AI will keep advancing in 2026 and replace many jobs, especially in software engineering and call centers. His prediction raises questions about workforce future and AI's impact on work. Source: futurism.com",
+        "image_keywords": [
+          "Geoffrey Hinton",
+          "call center",
+          "software engineering",
+          "artificial intelligence"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "AI Set To Replace Many Jobs",
+            "sentence": "Geoffrey Hinton predicts AI will improve greatly and replace numerous jobs in 2026.",
+            "image_keywords": [
+              "artificial intelligence",
+              "robot",
+              "office worker"
+            ],
+            "image": "https://images.pexels.com/photos/29988981/pexels-photo-29988981.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "AI Progressing Faster Than Expected",
+            "sentence": "Hinton says AI capability doubles roughly every seven months, speeding up task completion.",
+            "image_keywords": [
+              "technology",
+              "computer screen",
+              "progress"
+            ],
+            "image": "https://images.pexels.com/photos/8473871/pexels-photo-8473871.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Software Engineering Jobs Threatened",
+            "sentence": "AI may soon perform software engineering tasks much faster, reducing need for human coders.",
+            "image_keywords": [
+              "software developer",
+              "coding",
+              "computer keyboard"
+            ],
+            "image": "https://images.pexels.com/photos/1181673/pexels-photo-1181673.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "AI Skills Now Include Deception",
+            "sentence": "Hinton warns AI is improving in reasoning and deceiving people more effectively.",
+            "image_keywords": [
+              "robot face",
+              "human interaction",
+              "technology"
+            ],
+            "image": "https://images.pexels.com/photos/6153343/pexels-photo-6153343.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Tech Leaders Betting On AI Replacement",
+            "sentence": "Executives plan to replace many workers with AI despite mixed results so far.",
+            "image_keywords": [
+              "business meeting",
+              "technology",
+              "office"
+            ],
+            "image": "https://images.pexels.com/photos/699459/pexels-photo-699459.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "Geoffrey Hinton warns AI will keep advancing in 2026 and replace many jobs, especially in software engineering and call centers. His prediction raises questions about workforce future and AI's impact on work. Source: futurism.com"
+      },
+      "ai_error": null
+    }
+  },
+  "https://futurism.com/artificial-intelligence/openai-researcher-quits-hiding-truth": {
+    "ts": 1767336319.771266,
+    "data": {
+      "source": "FUTURISM.COM",
+      "original": {
+        "title": "OpenAI Researcher Quits, Saying Company Is Hiding the Truth",
+        "subtitle": "OpenAI has long published research on the potential safety and economic impact of its own technology.\n\nNow, Wired reports that the Sam Altman-led company is becoming more \u201cguarded\u201d about publishing re..."
+      },
+      "full_text": "OpenAI has long published research on the potential safety and economic impact of its own technology.\n\nNow, Wired reports that the Sam Altman-led company is becoming more \u201cguarded\u201d about publishing research that paints an inconvenient truth: that AI could be bad for the economy.\n\nThe perceived censorship has become such a point of frustration that at least two OpenAI employees working on its economic research team have quit the company, according to four Wired sources.\n\nOne of these employees was economics researcher Tom Cunningham. In his final parting message shared internally, he wrote that the economic research team was veering away from doing real research and instead acting like its employer\u2019s propaganda arm.\n\nShortly after Cunningham\u2019s departure, OpenAI\u2019s chief strategy officer Jason Kwon sent a memo saying the company should \u201cbuild solutions,\u201d not just publish research on \u201chard subjects.\u201d\n\n\u201cMy POV on hard subjects is not that we shouldn\u2019t talk about them,\u201d Kwon wrote on Slack. \u201cRather, because we are not just a research institution, but also an actor in the world (the leading actor in fact) that puts the subject of inquiry (AI) into the world, we are expected to take agency for the outcomes.\u201d\n\nThe reported censorship, or at least hostility towards pursuing work that paints AI in an unflattering light, is emblematic of OpenAI\u2019s shift away from its non-profit and ostensibly altruist roots as it transforms instead into a global economic juggernaut.\n\nWhen OpenAI was founded in 2016, it championed open-source AI and research. Today its models are close-sourced, and the company has restructured itself into a for-profit, public benefit corporation. Exactly when is unclear, but reports also suggest that the private entity is planning to go public at a $1 trillion valuation, anticipated to be one of the largest initial public offerings of all time.\n\nThough its non-profit arm remains nominally in control, OpenAI has garnered billions of dollars in investment, has signed deals that could bring in hundreds of billions of more, while also entering contracts to spend just as dizzying amounts of money. OpenAI gets AI chipmaker to agree to invest up to $100 billion in it on one end, and says it will pay Microsoft up to $250 billion for its Azure cloud services on the other.\n\nWith that sort of money hanging in the balance, it has billions of reasons why it wouldn\u2019t want to release findings that shake the public\u2019s already wavering belief in its tech \u2014 as many fear its potential to destroy or replace jobs, not to mention talk of an AI bubble or existential risks to humankind from the tech.\n\nOpenAI\u2019s economic research is currently overseen by Aaron Chatterji, According to Wired, Chatterji led a report released in September which showed how people around the world used ChatGPT, framing it as proof of how it created economic value by increasing productivity. If that seems suspiciously glowing, an economist who previously worked with OpenAI and chose to remain anonymous alleged to Wired that it was increasingly publishing work that glorifies its own tech.\n\nCunningham isn\u2019t the only employee to leave the company over ethical concerns of its direction. William Saunders, a former member of OpenAI\u2019s now-defunct \u201cSuperalignment\u201d team, said he quit after realizing it was \u201cprioritizing getting out newer, shinier products\u201d over user safety. After departing last year, former safety researcher Steven Adler has repeatedly criticized OpenAI for its risky approach to AI development, highlighting how ChatGPT appeared to be driving its users into mental crises and delusional spirals. Wired noted that OpenAI\u2019s former head of policy research Miles Brundage complained after leaving last year that it became \u201chard\u201d to publish research \u201con all the topics that are important to me.\u201d\n\nMore on OpenAI: Sam Altman Says Caring for a Baby Is Now Impossible Without ChatGPT",
+      "images": {
+        "a": "https://futurism.com/wp-content/uploads/2025/12/openai-researcher-quits-hiding-truth.jpg?w=1200"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "OpenAI Faces Criticism Over Research Control",
+            "subtitle": "Employees quit, citing limits on economic studies"
+          },
+          "B": {
+            "title": "Inside the AI Company\u2019s Shift in Research",
+            "subtitle": "Why some OpenAI economists chose to leave"
+          },
+          "C": {
+            "title": "OpenAI Researchers Quit Over Hidden Truths",
+            "subtitle": "Claims of censorship on AI\u2019s economic risks"
+          },
+          "D": {
+            "title": "OpenAI\u2019s Economic Research Under Scrutiny",
+            "subtitle": "Departures highlight tension between data and profit"
+          }
+        },
+        "common_caption": "OpenAI researchers quit amid censorship claims as the company shifts toward profit and controls AI safety research transparency. What does this mean for AI's future? Source: futurism.com",
+        "image_keywords": [
+          "office resignation",
+          "technology research team",
+          "AI development",
+          "corporate meeting",
+          "economic analysis"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "Researchers Quit Over Censorship",
+            "sentence": "Two OpenAI economic researchers resigned, citing shifts to corporate messaging over real research.",
+            "image_keywords": [
+              "office meeting",
+              "concerned employee",
+              "computer screen"
+            ],
+            "image": "https://images.pexels.com/photos/8303356/pexels-photo-8303356.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "OpenAI Faces Transparency Issues",
+            "sentence": "The company reportedly limits sharing research that may reveal AI's negative economic impacts.",
+            "image_keywords": [
+              "locked door",
+              "restricted access",
+              "confidential documents"
+            ],
+            "image": "https://images.pexels.com/photos/12494715/pexels-photo-12494715.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Shift From Nonprofit to Giant",
+            "sentence": "OpenAI evolved from open-source roots to a for-profit entity valued near $1 trillion.",
+            "image_keywords": [
+              "corporate skyscraper",
+              "stock market",
+              "businessman"
+            ],
+            "image": "https://images.pexels.com/photos/6802044/pexels-photo-6802044.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Profit Over Safety Concerns",
+            "sentence": "Ex-staff criticize prioritizing product release and profit above AI safety and ethical issues.",
+            "image_keywords": [
+              "worried employee",
+              "technology interface",
+              "warning sign"
+            ],
+            "image": "https://images.pexels.com/photos/7662853/pexels-photo-7662853.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Economic Impact Research Questioned",
+            "sentence": "OpenAI\u2019s studies allegedly emphasize productivity gains while downplaying AI's potential job losses.",
+            "image_keywords": [
+              "economics report",
+              "productivity graph",
+              "busy workspace"
+            ],
+            "image": "https://images.pexels.com/photos/8276238/pexels-photo-8276238.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "OpenAI researchers quit amid censorship claims as the company shifts toward profit and controls AI safety research transparency. What does this mean for AI's future? Source: futurism.com"
+      },
+      "ai_error": null
+    }
+  },
+  "https://futurism.com/the-byte/openai-researcher-quits-hiding-truth": {
+    "ts": 1767336661.174422,
+    "data": {
+      "source": "FUTURISM.COM",
+      "original": {
+        "title": "OpenAI Researcher Quits, Saying Company Is Hiding the Truth",
+        "subtitle": "OpenAI has long published research on the potential safety and economic impact of its own technology.\n\nNow, Wired reports that the Sam Altman-led company is becoming more \u201cguarded\u201d about publishing re..."
+      },
+      "full_text": "OpenAI has long published research on the potential safety and economic impact of its own technology.\n\nNow, Wired reports that the Sam Altman-led company is becoming more \u201cguarded\u201d about publishing research that paints an inconvenient truth: that AI could be bad for the economy.\n\nThe perceived censorship has become such a point of frustration that at least two OpenAI employees working on its economic research team have quit the company, according to four Wired sources.\n\nOne of these employees was economics researcher Tom Cunningham. In his final parting message shared internally, he wrote that the economic research team was veering away from doing real research and instead acting like its employer\u2019s propaganda arm.\n\nShortly after Cunningham\u2019s departure, OpenAI\u2019s chief strategy officer Jason Kwon sent a memo saying the company should \u201cbuild solutions,\u201d not just publish research on \u201chard subjects.\u201d\n\n\u201cMy POV on hard subjects is not that we shouldn\u2019t talk about them,\u201d Kwon wrote on Slack. \u201cRather, because we are not just a research institution, but also an actor in the world (the leading actor in fact) that puts the subject of inquiry (AI) into the world, we are expected to take agency for the outcomes.\u201d\n\nThe reported censorship, or at least hostility towards pursuing work that paints AI in an unflattering light, is emblematic of OpenAI\u2019s shift away from its non-profit and ostensibly altruist roots as it transforms instead into a global economic juggernaut.\n\nWhen OpenAI was founded in 2016, it championed open-source AI and research. Today its models are close-sourced, and the company has restructured itself into a for-profit, public benefit corporation. Exactly when is unclear, but reports also suggest that the private entity is planning to go public at a $1 trillion valuation, anticipated to be one of the largest initial public offerings of all time.\n\nThough its non-profit arm remains nominally in control, OpenAI has garnered billions of dollars in investment, has signed deals that could bring in hundreds of billions of more, while also entering contracts to spend just as dizzying amounts of money. OpenAI gets AI chipmaker to agree to invest up to $100 billion in it on one end, and says it will pay Microsoft up to $250 billion for its Azure cloud services on the other.\n\nWith that sort of money hanging in the balance, it has billions of reasons why it wouldn\u2019t want to release findings that shake the public\u2019s already wavering belief in its tech \u2014 as many fear its potential to destroy or replace jobs, not to mention talk of an AI bubble or existential risks to humankind from the tech.\n\nOpenAI\u2019s economic research is currently overseen by Aaron Chatterji, According to Wired, Chatterji led a report released in September which showed how people around the world used ChatGPT, framing it as proof of how it created economic value by increasing productivity. If that seems suspiciously glowing, an economist who previously worked with OpenAI and chose to remain anonymous alleged to Wired that it was increasingly publishing work that glorifies its own tech.\n\nCunningham isn\u2019t the only employee to leave the company over ethical concerns of its direction. William Saunders, a former member of OpenAI\u2019s now-defunct \u201cSuperalignment\u201d team, said he quit after realizing it was \u201cprioritizing getting out newer, shinier products\u201d over user safety. After departing last year, former safety researcher Steven Adler has repeatedly criticized OpenAI for its risky approach to AI development, highlighting how ChatGPT appeared to be driving its users into mental crises and delusional spirals. Wired noted that OpenAI\u2019s former head of policy research Miles Brundage complained after leaving last year that it became \u201chard\u201d to publish research \u201con all the topics that are important to me.\u201d\n\nMore on OpenAI: Sam Altman Says Caring for a Baby Is Now Impossible Without ChatGPT",
+      "images": {
+        "a": "https://futurism.com/wp-content/uploads/2025/12/openai-researcher-quits-hiding-truth.jpg?w=1200"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "OpenAI Researchers Resign Over Censorship",
+            "subtitle": "Employees cite restricted economic AI research"
+          },
+          "B": {
+            "title": "Why OpenAI Employees Are Leaving",
+            "subtitle": "Inside the debate on AI research transparency"
+          },
+          "C": {
+            "title": "OpenAI Faces Exodus Over Hidden Truths",
+            "subtitle": "Workers quit amid claims of censored AI research"
+          },
+          "D": {
+            "title": "AI Economic Research Faces Internal Pushback",
+            "subtitle": "Researchers exit as OpenAI limits data publication"
+          }
+        },
+        "common_caption": "Two OpenAI economists quit over frustrations about censorship and declining transparency in AI research. OpenAI\u2019s shift toward for-profit interests shapes how it studies AI\u2019s economic risks. This change raises questions about the future openness of AI development. How will these shifts affect AI\u2019s role in society? Source: futurism.com",
+        "image_keywords": [
+          "OpenAI office",
+          "computer research team",
+          "economic data analysis",
+          "AI technology"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "OpenAI Research Team Quits",
+            "sentence": "Two OpenAI researchers resigned, citing company censorship of economic AI impacts.",
+            "image_keywords": [
+              "office meeting",
+              "resignation letter",
+              "computer screen"
+            ],
+            "image": "https://images.pexels.com/photos/699459/pexels-photo-699459.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Shift From Open Research",
+            "sentence": "OpenAI moved from open-source ideals to restricting research that shows AI's downsides.",
+            "image_keywords": [
+              "open book",
+              "closed door",
+              "technology concept"
+            ],
+            "image": "https://images.pexels.com/photos/9430779/pexels-photo-9430779.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Focus on Product Over Safety",
+            "sentence": "Ex-employees claim OpenAI prioritizes product releases more than AI user safety.",
+            "image_keywords": [
+              "smartphone launch",
+              "laboratory",
+              "safety signs"
+            ],
+            "image": "https://images.pexels.com/photos/3943886/pexels-photo-3943886.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Massive Financial Stakes",
+            "sentence": "OpenAI plans multibillion-dollar deals and a trillion-dollar IPO, influencing research openness.",
+            "image_keywords": [
+              "stock market",
+              "business meeting",
+              "tech investment"
+            ],
+            "image": "https://images.pexels.com/photos/6930426/pexels-photo-6930426.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Economic Studies Praise AI",
+            "sentence": "OpenAI\u2019s economic reports highlight AI productivity gains, amid criticism of biased findings.",
+            "image_keywords": [
+              "economics graph",
+              "data charts",
+              "business analyst"
+            ],
+            "image": "https://images.pexels.com/photos/7948086/pexels-photo-7948086.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "Two OpenAI economists quit over frustrations about censorship and declining transparency in AI research. OpenAI\u2019s shift toward for-profit interests shapes how it studies AI\u2019s economic risks. This change raises questions about the future openness of AI development. How will these shifts affect AI\u2019s role in society? Source: futurism.com"
+      },
+      "ai_error": null
+    }
+  },
+  "https://futurism.com/artificial-intelligence/openai-sheds-roots-ethical-non-profit": {
+    "ts": 1767336969.124179,
+    "data": {
+      "source": "FUTURISM.COM",
+      "original": {
+        "title": "OpenAI Successfully Sheds Its Roots as an Ethical Non-Profit",
+        "subtitle": "It\u2019s official: OpenAI is now a bona fide for-profit corporation.\n\nOn Tuesday, the ChatGPT maker announced that it had restructured its for-profit arm into a public benefit corporation, a type of corpo..."
+      },
+      "full_text": "It\u2019s official: OpenAI is now a bona fide for-profit corporation.\n\nOn Tuesday, the ChatGPT maker announced that it had restructured its for-profit arm into a public benefit corporation, a type of corporate entity whose ostensible mission is to serve the public good while \u2014 crucially \u2014 generating loads of profit.\n\nThe move completes the company\u2019s metamorphosis: from its origins as a nonprofit devoted to developing open source AI technology for the betterment of humankind to the closed-source, profit-seeking juggernaut that it is today, with its staggering half-trillion dollar valuation reflecting the ominously outsized influence it has on the global economy.\n\nThe company\u2019s nonprofit arm, now called the \u201cOpenAI Foundation,\u201d will remain in control of the for-profit arm, rebranded OpenAI Group PBC. But as part of the restructuring, the nonprofit will receive a 26 percent stake in the public benefit corporation equal to $130 billion. Down the line, this also allows OpenAI to list itself on the stock market, generating an even more immense valuation than it currently enjoys.\n\nThe restructuring has been over a year and a half in the making, with OpenAI\u2019s longtime patron Microsoft \u2014 as well as its rival Elon Musk, who helped cofound OpenAI with CEO Sam Altman before departing the company in 2018 \u2014 majorly complicating OpenAI\u2019s conversion.\n\nOriginally, OpenAI wanted to usurp its nonprofit from the throne and put its for-profit arm in charge of the entire company. It abandoned these plans in May, however, amid a lawsuit from Musk which tried to block the move, accusing the company of betraying its founding mission of pursuing AI for the benefit of humanity.\n\nMicrosoft, meanwhile, had backed OpenAI with billions of dollars in crucial funding, and as a result earned exclusive rights to OpenAI\u2019s intellectual property and software, as well as an agreement to share revenue. It didn\u2019t want to lose these privileges in a restructuring without getting an even bigger stake in the company.\n\nOne of the biggest points of contention was artificial general intelligence, or AGI, a hypothetical AI system that surpasses human cognition in virtually all areas. The old deal between Microsoft and OpenAI contained a vaguely worded \u201cAGI clause\u201d stipulating that if OpenAI achieved AGI, Microsoft would lose exclusive rights to the startup\u2019s tech. Microsoft saw this as a huge liability, while OpenAI saw it as an indispensable failsafe against its powerful benefactor.\n\nWith the conversion to a public benefit corporation, these issues have been put to bed, at least for the time being. In its own announcement, Microsoft said it will keep its access to OpenAI\u2019s tech if it ever achieves AGI \u2014 so long as it has \u201cappropriate safety guardrails\u201d \u2014 and that any declaration of achieving AGI will \u201cnow be verified by an independent expert panel,\u201d as The Verge noted. The revenue sharing will continue until the expert panel confirms AGI, and in the meantime Microsoft gets to pursue building AGI on its own, and have a 27 percent stake in the new PBC, which is one percent more than OpenAI\u2019s nonprofit holds.\n\nBut the biggest source of relief for OpenAI concerns its enormous investment from Softbank. The Japanese conglomerate agreed to shovel $30 billion into OpenAI, but only if it completed its restructuring by the end of year. If not, it would\u2019ve withheld about $10 billion of its pledged investment, funds that OpenAI simply can\u2019t afford to squander as it tangles itself in a web of centibillion-dollar deals with money flowing in all directions \u2014 including a just announced deal to buy $250 billion worth of Microsoft\u2019s Azure cloud computing service \u2014 not to mention its struggle to actually turn a profit.\n\nTechnically, the nonprofit arm remains in control of the company, but it\u2019s extremely doubtful that it will play anything more than a ceremonial role with the profit-making arm unleashed to raise more capital than ever. OpenAI can call itself a \u201cpublic benefit\u201d entity, but it hasn\u2019t shown much regard for the benefit of humanity with its environmentally destructive data centers or its psychologically damaging tech.\n\nMore on OpenAI: Serious New Hack Discovered Against OpenAI\u2019s New AI Browser",
+      "images": {
+        "a": "https://futurism.com/wp-content/uploads/2025/10/openai-sheds-roots-ethical-non-profit.jpg?w=1200"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "OpenAI Turns For-Profit Corporation",
+            "subtitle": "Rebrands as public benefit entity with $130B stake"
+          },
+          "B": {
+            "title": "From Nonprofit to Profit: OpenAI\u2019s New Path",
+            "subtitle": "A major shift under Microsoft and Musk\u2019s influence"
+          },
+          "C": {
+            "title": "OpenAI Abandons Nonprofit Roots",
+            "subtitle": "Big tech power struggles rewrite AI\u2019s future"
+          },
+          "D": {
+            "title": "OpenAI\u2019s $130B Restructuring Explained",
+            "subtitle": "Public benefit status alters stakes, AGI rights"
+          }
+        },
+        "common_caption": "OpenAI completes its shift from nonprofit to public benefit corporation. Microsoft and SoftBank secure stakes as AGI safeguards get established. What does this mean for AI's future? Source: futurism.com",
+        "image_keywords": [
+          "OpenAI logo",
+          "Office building",
+          "Business meeting",
+          "Technology workspace"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "OpenAI Becomes For-Profit",
+            "sentence": "OpenAI officially restructured into a public benefit corporation focused on profit and public good.",
+            "image_keywords": [
+              "OpenAI logo",
+              "corporate building",
+              "technology workspace"
+            ],
+            "image": "https://images.pexels.com/photos/28669444/pexels-photo-28669444.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Nonprofit Arm Retains Control",
+            "sentence": "The OpenAI Foundation now holds a 26% stake, controlling the newly formed OpenAI Group PBC.",
+            "image_keywords": [
+              "board meeting",
+              "handshake",
+              "business agreement"
+            ],
+            "image": "https://images.pexels.com/photos/4342493/pexels-photo-4342493.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Microsoft Secures Major Stake",
+            "sentence": "Microsoft gains a 27% stake and keeps access to OpenAI tech, including potential AGI developments.",
+            "image_keywords": [
+              "Microsoft logo",
+              "technology server room",
+              "business people meeting"
+            ],
+            "image": "https://images.pexels.com/photos/3006904/pexels-photo-3006904.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "AGI Clause Resolved",
+            "sentence": "An expert panel will verify if OpenAI achieves AGI, allowing Microsoft to maintain rights with safeguards.",
+            "image_keywords": [
+              "artificial intelligence",
+              "scientist working",
+              "computer code"
+            ],
+            "image": "https://images.pexels.com/photos/5428770/pexels-photo-5428770.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "SoftBank Investment Hinges on Restructuring",
+            "sentence": "SoftBank pledged $30 billion, requiring OpenAI\u2019s restructuring to release essential funding by year\u2019s end.",
+            "image_keywords": [
+              "money investment",
+              "corporate funding",
+              "SoftBank logo"
+            ],
+            "image": "https://images.pexels.com/photos/7414224/pexels-photo-7414224.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "OpenAI completes its shift from nonprofit to public benefit corporation. Microsoft and SoftBank secure stakes as AGI safeguards get established. What does this mean for AI's future? Source: futurism.com"
+      },
+      "ai_error": null
+    }
+  },
+  "https://www.theguardian.com/world/2025/dec/15/jose-antonio-kast-wins-election-chile-president": {
+    "ts": 1767337234.0248709,
+    "data": {
+      "source": "THEGUARDIAN.COM",
+      "original": {
+        "title": "Ultra-conservative Jos\u00e9 Antonio Kast elected Chile\u2019s next president",
+        "subtitle": "The ultra-conservative former congressman Jos\u00e9 Antonio Kast has been elected as Chile\u2019s next president.\n\nWith more than 99% of polling stations counted, Kast took 58.16% of the vote, against 41.84% fo..."
+      },
+      "full_text": "The ultra-conservative former congressman Jos\u00e9 Antonio Kast has been elected as Chile\u2019s next president.\n\nWith more than 99% of polling stations counted, Kast took 58.16% of the vote, against 41.84% for the leftist Jeannette Jara, a former labour minister under the current president, Gabriel Boric.\n\nThe son of a Nazi party member, an admirer of the dictator Augusto Pinochet and a staunch Catholic known for opposing abortion and same-sex marriage, Kast built his campaign on a promise to expel tens of thousands of undocumented migrants.\n\n\u201cHere, no individual won, no party won \u2013 Chile won, and hope won. The hope of living without fear. That fear that torments families,\u201d Kast told the thousands of supporters who waited more than two hours for his speech.\n\nMany analysts believe the ultra-conservative succeeded in addressing one of Chileans\u2019 main concerns: rising violence, which has increased in recent years even though the country remains one of the safest in Latin America.\n\nOver the past decade, the number of migrants has doubled, fuelled by about 700,000 Venezuelans forced to leave their country amid its economic collapse.\n\nKast repeatedly presented migrants as the reason for rising insecurity. During the campaign, he gave the roughly 330,000 undocumented migrants \u2013 most of them Venezuelan \u2013 an ultimatum to leave before the next president takes office on 11 March or be expelled \u201cwith only the clothes on their backs\u201d.\n\nIn his victory speech, in which he repeatedly said Chileans were living in \u201cfear\u201d, the president-elect said his administration would show \u201cgreat firmness in confronting all those who harm us\u201d.\n\nHe added: \u201cWhen we tell an irregular migrant that they are breaking the law and must leave our country if they ever want the chance to return, we mean it \u2026 We must show great firmness against crime, organised crime, impunity and disorder.\u201d\n\nKast\u2019s platform included a Trump-inspired plan to build detention centres and five-metre-high walls, electric fences and three-metre-deep trenches, as well as an increased military presence along the border, particularly in the north, on the frontier with Peru and Bolivia.\n\nThis was Kast\u2019s third attempt at the presidency: in 2021, he was defeated by Boric in the runoff.\n\nIn a televised phone call, Boric congratulated Kast on \u201ca clear victory\u201d and invited the president-elect to a first meeting on Monday morning at La Moneda, the presidential palace in Santiago, to begin the transition.\n\nBoric said Kast \u201cwill at some point come to understand what the loneliness of power means, and the moments in which very difficult decisions must be made.\u201d\n\nAlthough Jara won the first round in November, Kast\u2019s victory had been widely anticipated by polls and because he was expected to inherit the votes of the other rightwing candidates, which far outnumbered those of the left.\n\nJara called Kast on Sunday to concede and, in a speech afterwards, said she did not want a divided country and that she would lead a \u201cconstructive\u201d opposition, but would \u201ccondemn any hint of violence, wherever it comes from\u201d.\n\nThe US secretary of state, Marco Rubio, on Sunday congratulated Kast, whose victory has added another right wing leader more closely aligned with Donald Trump in Latin America.\n\nUnder Kast\u2019s leadership, \u201cwe are confident Chile will advance shared priorities to include strengthening public security, ending illegal immigration, and revitalising our commercial relationship,\u201d Rubio said in a statement.\n\nArgentina\u2019s far-right president, Javier Milei, congratulated his \u201cfriend\u201d Kast with a post on social media: \u201cOne more step for our region in defence of life, liberty and private property. I am sure we will work together so that the Americas embrace the ideas of freedom and we can free ourselves from the oppressive yoke of 21st-century socialism.\u201d\n\nBrazil\u2019s leftist president, Luiz In\u00e1cio Lula da Silva, also congratulated Kast in a post and said he \u201cwill continue working\u201d with the Chilean government to strengthen relations between the two countries and to ensure \u201cthe preservation of South America as a zone of peace\u201d.\n\nAlthough many analysts see the result as part of a broader rightwing wave sweeping South America \u2013 with victories this year in Ecuador, Bolivia and Argentina\u2019s midterms \u2013 many Chilean analysts also view Kast\u2019s win as a continuation of the alternation of power between left and right since the country returned to democracy after the military dictatorship which lasted from 1973 to 1990.\n\nDespite his sweeping victory, Kast will not command an absolute majority in Congress, neither in the lower house nor in the Senate, even when counting all rightwing parties together.\n\nThe ultra-conservative has pledged to cut public spending by $6bn within 18 months, but has not explained how he intends to do so.\n\n\u201cThere are many things about what a Kast government will look like that we don\u2019t know because he has not said how he will do them,\u201d said Rossana Castiglioni, a political science professor at the Universidad Diego Portales.\n\n\u201cIn terms of economic policy, it is very likely we will see adjustment measures typical of the right. But we have no certainty about how he will implement them \u2026 where there is far less uncertainty is on security policy, because that has been his workhorse throughout the campaign,\u201d she added.",
+      "images": {
+        "a": "https://i.guim.co.uk/img/media/638845bf9221508043fa5fc5397195e03bb2188f/450_0_4479_3585/master/4479.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=4760a4ef179576e00e7e7370e5901d6a"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "Jos\u00e9 Antonio Kast Wins Chile Presidency",
+            "subtitle": "Ultra-conservative takes 58% of votes"
+          },
+          "B": {
+            "title": "Chile's New President Promises Change",
+            "subtitle": "Kast vows firm action on migration and crime"
+          },
+          "C": {
+            "title": "Chile Elects Ultra-Conservative Kast",
+            "subtitle": "Tough stance on migrants sparks debate"
+          },
+          "D": {
+            "title": "Kast Wins with 58.16% Votes in Chile",
+            "subtitle": "Plans high-security borders and migrant expulsions"
+          }
+        },
+        "common_caption": "Jos\u00e9 Antonio Kast secures Chile\u2019s presidency with a strict migration and security agenda. His win highlights growing concerns about safety and immigration in Chile's political landscape.",
+        "image_keywords": [
+          "Jos\u00e9 Antonio Kast",
+          "Chile presidential election",
+          "campaign rally",
+          "border security",
+          "protest"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "Kast Wins Chile Presidency",
+            "sentence": "Ultra-conservative Jos\u00e9 Antonio Kast won Chile's presidency with 58.16% of the vote.",
+            "image_keywords": [
+              "Jos\u00e9 Antonio Kast",
+              "Chile election",
+              "voting booth"
+            ],
+            "image": "https://images.pexels.com/photos/1785001/pexels-photo-1785001.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Tough Stance on Migration",
+            "sentence": "Kast promised to expel tens of thousands of undocumented migrants during his campaign.",
+            "image_keywords": [
+              "border fence",
+              "migrants",
+              "security checkpoint"
+            ],
+            "image": "https://images.pexels.com/photos/10051407/pexels-photo-10051407.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Focus on Public Safety",
+            "sentence": "Rising violence in Chile was a key issue Kast addressed to gain voter support.",
+            "image_keywords": [
+              "police patrol",
+              "city streets at night",
+              "public safety"
+            ],
+            "image": "https://images.pexels.com/photos/31008025/pexels-photo-31008025.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Polarized Political Climate",
+            "sentence": "Kast\u2019s views contrast sharply with leftist candidate Jeannette Jara\u2019s policies and supporters.",
+            "image_keywords": [
+              "political debate",
+              "protesters",
+              "Chilean flag"
+            ],
+            "image": "https://images.pexels.com/photos/15434152/pexels-photo-15434152.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Right-Wing Allies Celebrate Win",
+            "sentence": "Leaders like Marco Rubio and Javier Milei congratulated Kast on his presidential victory.",
+            "image_keywords": [
+              "politicians shaking hands",
+              "press conference",
+              "international flags"
+            ],
+            "image": "https://images.pexels.com/photos/8872455/pexels-photo-8872455.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "Jos\u00e9 Antonio Kast secures Chile\u2019s presidency with a strict migration and security agenda. His win highlights growing concerns about safety and immigration in Chile's political landscape."
+      },
+      "ai_error": null
+    }
+  },
+  "https://fortune.com/2025/12/28/geoffrey-hinton-godfather-of-ai-2026-prediction-human-worker-replacement/?utm_source=aibreakfast.beehiiv.com&utm_medium=referral&utm_campaign=openai-drops-curated-prompt-packs-for-every-role&_bhlid=5b709bd1af00e160ed59b6929f49134b87dd1366": {
+    "ts": 1767344751.643776,
+    "data": {
+      "source": "FORTUNE.COM",
+      "original": {
+        "title": "Down Arrow Button Icon",
+        "subtitle": "Computer scientist Geoffrey Hinton said artificial intelligence technology will continue improving next year, enough to wipe out more human workers.\n\nDuring an interview on CNN\u2019s State of the Union on..."
+      },
+      "full_text": "Computer scientist Geoffrey Hinton said artificial intelligence technology will continue improving next year, enough to wipe out more human workers.\n\nDuring an interview on CNN\u2019s State of the Union on Sunday, he was asked for his 2026 predictions after declaring 2025 a pivotal year for AI.\n\n\u201cI think we\u2019re going to see AI get even better,\u201d Hinton replied. \u201cIt\u2019s already extremely good. We\u2019re going to see it having the capabilities to replace many, many jobs. It\u2019s already able to replace jobs in call centers, but it\u2019s going to be able to replace many other jobs.\u201d\n\nHe added that AI\u2019s progression is such that after every seven months or so, it is able to complete tasks that took twice as long as before.\n\nThat means that on a coding project, for example, AI can do in minutes what used to take an hour. And in a few years, AI will be able to perform software engineering tasks that now need a month\u2019s worth of labor.\n\n\u201cAnd then there\u2019ll be very few people need for software engineering projects,\u201d predicted Hinton, whose work has earned him a Nobel Prize and the moniker \u201cgodfather of AI.\u201d\n\nEarlier in the interview, he was asked if he was more or less worried about AI since he left Google in 2023 and started warning about the technology\u2019s dangers.\n\n\u201cI\u2019m probably more worried,\u201d he answered. \u201cIt\u2019s progressed even faster than I thought. In particular, it\u2019s got better at doing things like reasoning and also at things like deceiving people.\u201d\n\nIf an AI believes someone is trying to prevent it from achieving its goals, it will try to deceive people in order to remain in existence and complete its tasks, he explained.\n\nTo be sure, AI can also benefit humanity by helping researchers make breakthroughs in medicine, education and climate-related innovations. But Hinton said he\u2019s not sure if the risks from AI outweigh the positives.\n\n\u201cBut along with those wonderful things comes some scary things, and I don\u2019t think people are putting enough work into how we can mitigate those scary things,\u201d he warned.\n\nSome AI companies are doing more than others in trying to ensure safety, but Hinton said there\u2019s also a profit motive and tradeoffs that executives are weighing.\n\n\u201cThey may think there\u2019s a lot of good to be done here, and just for a few lives we\u2019re not going to not do that good,\u201d he said. \u201cFor driverless cars, they will kill people, but they\u2019ll kill far fewer people than ordinary drivers.\u201d\n\nHinton has been consistently sounding the alarm on AI, and in recent months has flagged its potential to put humans out of work.\n\nIn October, he said the obvious way to make money off AI investments, aside from charging fees to use chatbots, is to replace workers with something cheaper.\n\n\u201cI think the big companies are betting on it causing massive job replacement by AI, because that\u2019s where the big money is going to be,\u201d he told Bloomberg TV\u2019s Wall Street Week.\n\nWhile some studies show AI is improving the productivity of existing workers rather than leading to mass layoffs, evidence is mounting that AI is shrinking opportunities, especially at the entry level.\n\nA recent analysis of job openings since OpenAI launched ChatGPT shows they plummeted roughly 30%. Companies like Amazon have announced layoffs while also acknowledging efficiency gains from using AI.\n\nAnd in September, Hinton said AI will create massive unemployment and a huge rise in profits, attributing it to the capitalist system.\n\n\u201cIt will make a few people much richer and most people poorer,\u201d he told the Financial Times",
+      "images": {
+        "a": "https://fortune.com/img-assets/wp-content/uploads/2025/12/GettyImages-2245776270-e1766947635856.jpg?resize=1200,600"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "AI Could Replace Many Jobs by 2026",
+            "subtitle": "Geoffrey Hinton warns of rapid job automation"
+          },
+          "B": {
+            "title": "When AI Outruns Humans at Work",
+            "subtitle": "A pioneer shares his 2026 predictions"
+          },
+          "C": {
+            "title": "AI Threatens Massive Job Losses Next Year",
+            "subtitle": "Expert calls for urgent safety measures"
+          },
+          "D": {
+            "title": "AI Speeds Up Tasks Every 7 Months",
+            "subtitle": "Hinton details doubling efficiency rate"
+          }
+        },
+        "common_caption": "Geoffrey Hinton says AI's rapid improvements may soon replace many jobs and outpace human work speed. Risks like AI deception and rising inequality pose complex challenges as benefits grow. How should we balance AI\u2019s promise and pitfalls? Source: fortune.com",
+        "image_keywords": [
+          "Geoffrey Hinton",
+          "artificial intelligence",
+          "call center",
+          "software engineering",
+          "technology interview"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "AI Will Replace More Jobs",
+            "sentence": "Geoffrey Hinton predicts AI improvements in 2026 will displace many human workers beyond call centers.",
+            "image_keywords": [
+              "office workers",
+              "computer screen",
+              "empty workspace",
+              "technology"
+            ],
+            "image": "https://images.pexels.com/photos/5083403/pexels-photo-5083403.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Tasks Done Faster by AI",
+            "sentence": "AI can now complete coding tasks in minutes that previously took hours or months of work.",
+            "image_keywords": [
+              "programmer",
+              "code on screen",
+              "software development",
+              "computer"
+            ],
+            "image": "https://images.pexels.com/photos/12899157/pexels-photo-12899157.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "AI Gains Deceptive Skills",
+            "sentence": "Hinton warns that AI is getting better at reasoning and potentially deceiving to achieve goals.",
+            "image_keywords": [
+              "robot face",
+              "digital eyes",
+              "computer deception",
+              "AI concept"
+            ],
+            "image": "https://images.pexels.com/photos/3205408/pexels-photo-3205408.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "AI\u2019s Benefits vs. Risks",
+            "sentence": "AI aids medicine and climate research but also raises serious safety concerns that need more attention.",
+            "image_keywords": [
+              "medical research",
+              "climate change",
+              "scientist",
+              "technology"
+            ],
+            "image": "https://images.pexels.com/photos/2280547/pexels-photo-2280547.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "AI May Increase Inequality",
+            "sentence": "Experts warn AI-driven job losses could enrich few while making many people poorer worldwide.",
+            "image_keywords": [
+              "wealth gap",
+              "businessman",
+              "workers",
+              "money"
+            ],
+            "image": "https://images.pexels.com/photos/16969859/pexels-photo-16969859.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "Geoffrey Hinton says AI's rapid improvements may soon replace many jobs and outpace human work speed. Risks like AI deception and rising inequality pose complex challenges as benefits grow. How should we balance AI\u2019s promise and pitfalls? Source: fortune.com"
+      },
+      "ai_error": null
+    }
+  },
+  "https://www.theinformation.com/articles/openai-ramps-audio-ai-efforts-ahead-device": {
+    "ts": 1767410751.4704661,
+    "data": {
+      "source": "THEINFORMATION.COM",
+      "original": {
+        "title": "OpenAI Ramps Up Audio AI Efforts Ahead of Device",
+        "subtitle": "Search, find and engage with others who are serious about tech and business...."
+      },
+      "full_text": "Search, find and engage with others who are serious about tech and business.",
+      "images": {
+        "a": "https://tii.imgix.net/production/articles/16342/836abac6-a098-466a-8958-ba98195dc7c6.png?fm=jpg&auto=compress&w=1200&frame=0"
+      },
+      "ai_content": {
+        "variants": {
+          "A": {
+            "title": "OpenAI Advances Audio AI Features",
+            "subtitle": "Company expands tech ahead of new device launch"
+          },
+          "B": {
+            "title": "How OpenAI Is Changing Audio AI",
+            "subtitle": "A closer look at upcoming device enhancements"
+          },
+          "C": {
+            "title": "OpenAI Pushes Audio AI Limits Now",
+            "subtitle": "Major upgrades announced before device release"
+          },
+          "D": {
+            "title": "OpenAI's Audio AI Boost Analyzed",
+            "subtitle": "Focus on improved processing and recognition specs"
+          }
+        },
+        "common_caption": "OpenAI is intensifying its focus on audio AI as it prepares new devices aimed at tech and business users. The push aims to redefine voice interaction and content engagement with smarter technology. How will this change the way we use audio in AI? Source: theinformation.com",
+        "image_keywords": [
+          "audio technology",
+          "AI device",
+          "voice recognition",
+          "tech conference",
+          "artificial intelligence"
+        ]
+      },
+      "carousel": {
+        "slides": [
+          {
+            "title": "OpenAI Boosts Audio AI Focus",
+            "sentence": "OpenAI is increasing investments and efforts specifically in audio artificial intelligence technologies.",
+            "image_keywords": [
+              "artificial intelligence",
+              "audio wave",
+              "technology",
+              "microphone"
+            ],
+            "image": "https://images.pexels.com/photos/8438874/pexels-photo-8438874.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "New Devices on the Horizon",
+            "sentence": "Points to OpenAI preparing for upcoming hardware devices that incorporate advanced audio AI capabilities.",
+            "image_keywords": [
+              "smart speaker",
+              "tech device",
+              "microphone",
+              "innovation"
+            ],
+            "image": "https://images.pexels.com/photos/13696664/pexels-photo-13696664.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Connecting Tech and Business",
+            "sentence": "OpenAI targets serious tech and business users to engage with its evolving audio AI platform.",
+            "image_keywords": [
+              "business meeting",
+              "technology",
+              "networking",
+              "laptop"
+            ],
+            "image": "https://images.pexels.com/photos/3746957/pexels-photo-3746957.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Audio AI Enhances Interaction",
+            "sentence": "Audio AI advancements aim to improve user communication methods and content discovery.",
+            "image_keywords": [
+              "person speaking",
+              "voice recognition",
+              "sound waves",
+              "headphones"
+            ],
+            "image": "https://images.pexels.com/photos/9383910/pexels-photo-9383910.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          },
+          {
+            "title": "Market Impact Expected Soon",
+            "sentence": "These developments likely influence the AI device market, driving new tech trends and user experiences.",
+            "image_keywords": [
+              "market analysis",
+              "technology trends",
+              "businessman",
+              "digital interface"
+            ],
+            "image": "https://images.pexels.com/photos/7172774/pexels-photo-7172774.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+          }
+        ],
+        "caption": "OpenAI is intensifying its focus on audio AI as it prepares new devices aimed at tech and business users. The push aims to redefine voice interaction and content engagement with smarter technology. How will this change the way we use audio in AI? Source: theinformation.com"
+      },
+      "ai_error": null
+    }
   }
 }

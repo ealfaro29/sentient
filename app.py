@@ -174,6 +174,96 @@ def get_ai_data(title: str = None, text: str = None, source: str = None, keyword
         return None, str(e)
 
 
+def get_carousel_data(title: str, text: str, source: str):
+    """
+    Generate carousel content with multiple options: 2, 3, 4, and 5 slides.
+    AI recommends the best option based on article content.
+    Each slide has a short title, a sentence, and image keywords.
+    Plus a longer caption for the text card.
+    """
+    if not OPENAI_CLIENT or not OPENAI_ASSISTANT_ID:
+        return None, "Faltan credenciales OpenAI"
+    
+    try:
+        prompt_content = f"""
+        Article data:
+        TITLE: {title}
+        SOURCE: {source}
+        TEXT: {text[:4000]}
+        
+        Task:
+        Analyze this article and extract the 5 most important and interesting main ideas.
+        For each idea, create a carousel slide with:
+        1. A short, punchy TITLE (3-8 words max, attention-grabbing)
+        2. A SENTENCE that expands on the title (10-20 words, clear and engaging)
+        3. IMAGE_KEYWORDS: 2-4 specific keywords for finding a relevant stock photo on Pexels
+        
+        Also:
+        - Create a CAPTION: A longer, engaging caption (100-200 characters) for an Instagram post.
+        - RECOMMEND the ideal number of slides (2, 3, 4, or 5) based on:
+          * Article complexity and depth
+          * Number of distinct key points
+          * Audience engagement potential
+          * Content richness
+        
+        Return a JSON object with this structure:
+        {{
+            "recommended_slides": 3,  // Your recommendation: 2, 3, 4, or 5
+            "recommendation_reason": "Brief reason for your choice",
+            "slides": [
+                {{
+                    "title": "Short Punchy Title",
+                    "sentence": "Engaging sentence that expands the title.",
+                    "image_keywords": ["keyword1", "keyword2", "keyword3"]
+                }},
+                ... (always provide exactly 5 slides, frontend will use subset based on selection)
+            ],
+            "caption": "Longer engaging caption for the post..."
+        }}
+        """
+
+        run = OPENAI_CLIENT.beta.threads.create_and_run_poll(
+            assistant_id=OPENAI_ASSISTANT_ID,
+            thread={
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": prompt_content
+                    }
+                ]
+            },
+            poll_interval_ms=2000,
+            timeout=50
+        )
+        
+        if run.status == 'completed':
+            msgs = OPENAI_CLIENT.beta.threads.messages.list(thread_id=run.thread_id)
+            try:
+                text_response = msgs.data[0].content[0].text.value
+                json_match = re.search(r'```json\s*([\s\S]+?)\s*```', text_response)
+                if json_match:
+                    payload_str = json_match.group(1)
+                else:
+                    payload_str = text_response
+                
+                payload = json.loads(payload_str)
+                
+                # Ensure recommended_slides has a default
+                if 'recommended_slides' not in payload:
+                    payload['recommended_slides'] = min(len(payload.get('slides', [])), 5)
+                if 'recommendation_reason' not in payload:
+                    payload['recommendation_reason'] = 'Based on article content analysis'
+                    
+                return payload, None
+            except Exception as e:
+                return None, f"Carousel AI JSON parse error: {e} | Response was: {text_response[:200]}"
+        else:
+            return None, f"Carousel AI no completado: {run.status}"
+    except Exception as e:
+        return None, str(e)
+
+
+
 def infer_search_info(url: str):
     try:
         parsed = urlparse(url)
@@ -256,6 +346,48 @@ def search_image():
 
     images = get_pexels_images(query, count=count)
     return jsonify({'imageUrls': images}), 200
+
+
+@app.route('/api/generate_carousel', methods=['POST'])
+def generate_carousel():
+    """
+    Generate carousel slides from article content.
+    Expects: { "title": "...", "text": "...", "source": "..." }
+    Returns: { "slides": [...], "caption": "...", "error": null }
+    """
+    payload = request.get_json(silent=True) or {}
+    title = payload.get('title', '').strip()
+    text = payload.get('text', '').strip()
+    source = payload.get('source', '').strip()
+    
+    if not title or not text:
+        return jsonify({'error': 'Missing title or text'}), 400
+    
+    # Generate carousel data via AI
+    carousel_data, carousel_err = get_carousel_data(title, text, source)
+    
+    if carousel_err or not carousel_data:
+        return jsonify({'error': carousel_err or 'Failed to generate carousel'}), 500
+    
+    # Get slides from carousel data
+    slides = carousel_data.get('slides', [])
+    caption = carousel_data.get('caption', '')
+    
+    # Fetch images for each slide using Pexels
+    for slide in slides:
+        keywords = slide.get('image_keywords', [])
+        if keywords:
+            query = ' '.join(keywords)
+            images = get_pexels_images(query, count=1)
+            slide['image'] = images[0] if images else ''
+        else:
+            slide['image'] = ''
+    
+    return jsonify({
+        'slides': slides,
+        'caption': caption,
+        'error': None
+    }), 200
 
 
 @app.route('/api/scrape', methods=['POST'])
@@ -355,14 +487,47 @@ def scrape():
                 'D': fallback_variant_d
             }
 
+        # Generate carousel data upfront
+        carousel_data = None
+        carousel_slides = []
+        carousel_caption = common_caption
+        
+        if text and title:
+            print("🎨 Generating carousel data...")
+            carousel_payload, carousel_err = get_carousel_data(title, text, source)
+            
+            if carousel_payload and not carousel_err:
+                carousel_data = carousel_payload
+                carousel_slides = carousel_payload.get('slides', [])
+                carousel_caption = carousel_payload.get('caption', common_caption)
+                
+                # Fetch images for each carousel slide
+                for slide in carousel_slides:
+                    keywords = slide.get('image_keywords', [])
+                    if keywords:
+                        query = ' '.join(keywords)
+                        images_result = get_pexels_images(query, count=1)
+                        slide['image'] = images_result[0] if images_result else ''
+                    else:
+                        slide['image'] = ''
+                
+                print(f"✅ Generated {len(carousel_slides)} carousel slides")
+            else:
+                print(f"⚠️ Carousel generation failed: {carousel_err}")
+        
         result = {
             "source": source.upper() if source else "UNKNOWN",
             "original": original,
+            "full_text": text,  # Include full text for carousel generation
             "images": images, 
             "ai_content": {
                 "variants": final_variants,
-                "common_caption": common_caption,
+                "common_caption": carousel_caption,  # Use carousel caption if available
                 "image_keywords": ai_payload.get('image_keywords', search_query.split()) if ai_payload else search_query.split()
+            },
+            "carousel": {
+                "slides": carousel_slides,
+                "caption": carousel_caption
             },
             "ai_error": ai_err
         }
